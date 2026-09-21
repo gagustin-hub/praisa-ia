@@ -1,0 +1,1379 @@
+{
+  "name": "Praisa IA - CAF Web",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "view"
+            },
+            {
+              "name": "object",
+              "value": "dmovim"
+            },
+            {
+              "name": "dmovim",
+              "value": "={{ $('Chat - Entrada').item.json.chatInput.match(/\\d+/)[0] }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Movimiento').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "b2c13713-e771-448d-9615-7a23be2c4651",
+      "name": "CAF - Consultar movimiento",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        620,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Clasifica la intención del mensaje del usuario.\n\nResponde solamente con una de estas palabras:\nproducto\nmovimiento\ncliente\nexistencia\notro\n\nUsa:\n- producto: si pregunta por información general de un producto o código de producto.\n- movimiento: si pregunta por un movimiento, detalle de movimiento o número de movimiento.\n- cliente: si pregunta por un cliente, cuenta de cliente o información de cliente.\n- existencia: si pregunta por existencia, stock, inventario, disponibilidad o cuántas unidades hay de un producto.\n- otro: si no corresponde a ninguno.\n\nMensaje del usuario:\n{{ $('Chat - Entrada').item.json.chatInput }}",
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -720,
+        0
+      ],
+      "id": "cb9f148b-75aa-4124-a22a-8bf5d1309342",
+      "name": "IA - Clasificar intención"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        220
+      ],
+      "id": "503408da-c5cd-401e-a2d4-5d2ed16adde9",
+      "name": "DeepSeek - Clasificador",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "upQT39PDJSE90yDE",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -950,
+        0
+      ],
+      "id": "a0d21b30-8e1f-4434-9986-debd4b79b8c0",
+      "name": "Chat - Entrada",
+      "webhookId": "31f3a969-f3ac-47ee-abe1-bd759f44e0ba"
+    },
+    {
+      "parameters": {
+        "message": "={{\n\"Información consultada directamente en CAF Web:\\n\\n\" +\n\"🔹 Código: \" + $('CAF - Consultar movimiento').item.json.dmovim.codpro + \"\\n\" +\n\"🔹 Producto: \" + $('CAF - Consultar movimiento').item.json.dmovim.nombre_prod + \"\\n\" +\n\"🔹 Cantidad: \" + Number($('CAF - Consultar movimiento').item.json.dmovim.cant).toFixed(0) + \"\\n\" +\n\"🔹 Precio unitario: Q\" + Number($('CAF - Consultar movimiento').item.json.dmovim.precio).toLocaleString(\"en-US\", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + \"\\n\" +\n\"🔹 Total: Q\" + Number($('CAF - Consultar movimiento').item.json.dmovim.calc_dtotal).toLocaleString(\"en-US\", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + \"\\n\" +\n\"🔹 Movimiento: \" + $('CAF - Consultar movimiento').item.json.dmovim.movim\n}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1180,
+        100
+      ],
+      "id": "d6965949-d46b-4363-a0c2-f203997e7b13",
+      "name": "Respuesta - Movimiento",
+      "webhookId": "01c9a88a-58b4-4a28-8340-792735374841"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4ef7584f-a088-4e4e-aa00-5476e3aa7018",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        900,
+        180
+      ],
+      "id": "4627b58f-50a4-4fc2-9065-e90c9643dbac",
+      "name": "¿Movimiento encontrado?"
+    },
+    {
+      "parameters": {
+        "message": "No encontré información para el registro consultado en CAF Web. Verifica el número e inténtalo nuevamente.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1180,
+        260
+      ],
+      "id": "50d563ca-af7d-4ab4-919e-ab1cb75d9c07",
+      "name": "Error - Movimiento",
+      "webhookId": "109e7c10-14c9-4884-a69f-1ee7d1fed4c3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ac0dfa53-3bbc-4d96-a85c-460f8d5388d9",
+              "leftValue": "={{ $('IA - Clasificar intención').item.json.text.trim().toLowerCase() }}",
+              "rightValue": "producto",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -470,
+        0
+      ],
+      "id": "57459edf-7e75-46e3-802d-e1425632d237",
+      "name": "¿Es producto?"
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "view"
+            },
+            {
+              "name": "object",
+              "value": "prod"
+            },
+            {
+              "name": "codpro",
+              "value": "={{ \n($('Chat - Entrada').item.json.chatInput\n.toUpperCase()\n.match(/\\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}\\b/) || [''])[0]\n}}"
+            },
+            {
+              "name": "empresa",
+              "value": "01"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Producto').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        340,
+        -220
+      ],
+      "id": "38cb27b3-bf7c-4d56-b0a9-626c245907b9",
+      "name": "CAF - Consultar producto"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "49b32b30-e7b9-4310-9b81-f8f129b3572b",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        620,
+        -220
+      ],
+      "id": "a8947b0a-ffda-46bb-9571-24565a7487ce",
+      "name": "¿Producto encontrado?"
+    },
+    {
+      "parameters": {
+        "message": "={{\n\"Información consultada directamente en CAF Web:\\n\\n\" +\n\"🔹 Código: \" + $json.prod.codpro.trim() + \"\\n\" +\n\"🔹 Producto: \" + $json.prod.nombre_prod.trim() + \"\\n\" +\n\"🔹 Categoría: \" + $json.prod.categoria.trim() + \"\\n\" +\n\"🔹 Código fabricante: \" + ($json.prod.codigo_fabricante || \"\").trim() + \"\\n\" +\n\"🔹 Unidad: \" + ($json.prod.umedida || \"\").trim()\n}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        900,
+        -300
+      ],
+      "id": "f2f9fa48-e7f6-4ec2-a680-828127ab751e",
+      "name": "Respuesta - Producto",
+      "webhookId": "662274e3-65da-4193-8f85-fedb4a331ce6"
+    },
+    {
+      "parameters": {
+        "message": "No encontré el producto solicitado en CAF Web. Verifica el código e inténtalo nuevamente.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        900,
+        -140
+      ],
+      "id": "56dc4f75-e8bb-4472-a0d7-cf4c1f2f72b1",
+      "name": "Error - Producto",
+      "webhookId": "d9285ee2-9913-4155-9736-47513d1aac1c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "10ce3c2a-9aba-431c-ab93-4cee9feb0c16",
+              "leftValue": "={{ $('IA - Clasificar intención').item.json.text.trim().toLowerCase() }}",
+              "rightValue": "movimiento",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -220,
+        180
+      ],
+      "id": "5b6aba95-d5df-46d9-822d-071bc5ed7526",
+      "name": "¿Es movimiento?"
+    },
+    {
+      "parameters": {
+        "message": "Hola, soy Praisa IA. Puedo ayudarte a consultar productos, movimientos, clientes y existencias directamente en CAF Web. También puedo orientarte con consultas técnicas y comerciales conforme vayamos incorporando más información al asistente. ¿Qué necesitas consultar?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        620,
+        1040
+      ],
+      "id": "878597c5-5295-414d-8463-5d2f58f89f4e",
+      "name": "Respuesta - General",
+      "webhookId": "416e1af0-907f-4f67-8f89-84860ec607ca"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "login"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "username",
+              "value": "crm"
+            },
+            {
+              "name": "password",
+              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        60,
+        -220
+      ],
+      "id": "4506673f-ebff-4fc9-a88b-0462fe96b64a",
+      "name": "CAF - Obtener JWT Producto"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "login"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "username",
+              "value": "crm"
+            },
+            {
+              "name": "password",
+              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        340,
+        180
+      ],
+      "id": "91f524b8-57b8-45ea-bac6-900baef1284d",
+      "name": "CAF - Obtener JWT Movimiento"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a7132e8f-36a6-4240-9b51-dac8766a90b2",
+              "leftValue": "={{ (($('Chat - Entrada').item.json.chatInput || '').toUpperCase().match(/\\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}\\b/) || [''])[0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -220,
+        -220
+      ],
+      "id": "582ed657-bf5e-4895-b27f-db8e6ee7a5f1",
+      "name": "¿Código de producto válido?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "962c1727-0c89-4f0d-b17a-a4bdc7573dda",
+              "leftValue": "={{ (($('Chat - Entrada').item.json.chatInput || '').match(/\\d+/) || [''])[0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        60,
+        180
+      ],
+      "id": "45d8e41e-142e-441b-8137-39fb9416e06d",
+      "name": "¿Número de movimiento válido?"
+    },
+    {
+      "parameters": {
+        "message": "Claro. Para consultar el producto directamente en CAF Web necesito el código del producto. Por ejemplo: 06SPI0142.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        60,
+        -60
+      ],
+      "id": "6458032e-1f06-477f-85a3-ed7a279cc8bb",
+      "name": "Solicitar - Código producto",
+      "webhookId": "2ad72181-c46f-4077-b057-a2200074a097"
+    },
+    {
+      "parameters": {
+        "message": "Claro. Para consultar ese registro en CAF Web necesito el número de movimiento o detalle. Por ejemplo: 8960.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        340,
+        360
+      ],
+      "id": "23023d7d-5bf9-4e91-b873-832d6727d67b",
+      "name": "Solicitar - Número movimiento",
+      "webhookId": "578d754e-0fdb-47f8-afff-c110e1b64f4d"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "39f128a2-fbb4-45da-acf8-b5b2ee45b813",
+              "leftValue": "={{ $('IA - Clasificar intención').item.json.text.trim().toLowerCase() }}",
+              "rightValue": "cliente",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        60,
+        460
+      ],
+      "id": "050c0637-8f2f-4624-8e5b-27843cec7156",
+      "name": "¿Es cliente?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7a14f632-20cf-4e2b-9c20-d8c1662ea2a3",
+              "leftValue": "={{ (($('Chat - Entrada').item.json.chatInput || '').toUpperCase().match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/) || [''])[0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        340,
+        460
+      ],
+      "id": "6d475ff1-e9e5-44e4-a8a6-c9b7c24ae6ee",
+      "name": "¿Cuenta de cliente válida?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "login"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "username",
+              "value": "crm"
+            },
+            {
+              "name": "password",
+              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        620,
+        460
+      ],
+      "id": "746f9f49-c54d-4781-b722-7f202b241b32",
+      "name": "CAF - Obtener JWT Cliente"
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "view"
+            },
+            {
+              "name": "object",
+              "value": "cliente"
+            },
+            {
+              "name": "cuenta",
+              "value": "={{ (($('Chat - Entrada').item.json.chatInput || '').toUpperCase().match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/) || [''])[0] }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Cliente').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        900,
+        460
+      ],
+      "id": "bc6400ca-cb29-4294-8073-177fb1952c32",
+      "name": "CAF - Consultar cliente"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "49b32b30-e7b9-4310-9b81-f8f129b3572b",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1180,
+        460
+      ],
+      "id": "f58c49f6-8050-4400-bef6-551aaa2cba11",
+      "name": "¿Cliente encontrado?"
+    },
+    {
+      "parameters": {
+        "message": "={{\n(() => {\n  const c = $json.cliente || {};\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const telefono = limpio(c.telefono);\n  const contacto = limpio(c.contacto);\n\n  const correo = [...new Set(\n    limpio(c.email)\n      .split(',')\n      .map(x => x.trim())\n      .filter(Boolean)\n  )].join(', ');\n\n  const faltantes = [];\n\n  if (!telefono) faltantes.push('Teléfono');\n  if (!contacto) faltantes.push('Contacto');\n  if (!correo) faltantes.push('Correo');\n\n  let respuesta =\n    \"Información consultada directamente en CAF Web:\\n\\n\" +\n    \"🔹 Cuenta: \" + limpio(c.cuenta) + \"\\n\" +\n    \"🔹 Cliente: \" + limpio(c.nombre_cliente) + \"\\n\" +\n    \"🔹 NIT: \" + limpio(c.nit) + \"\\n\" +\n    \"🔹 Dirección: \" + limpio(c.direccion) + \"\\n\" +\n    \"🔹 Ciudad: \" + limpio(c.ciudad) + \"\\n\" +\n    \"🔹 Teléfono: \" + (telefono || \"No registrado\") + \"\\n\" +\n    \"🔹 Contacto: \" + (contacto || \"No registrado\") + \"\\n\" +\n    \"🔹 Correo: \" + (correo || \"No registrado\");\n\n  if (faltantes.length > 0) {\n    respuesta +=\n      \"\\n\\n⚠️ Información pendiente de completar:\\n\" +\n      faltantes.map(campo => \"• \" + campo).join(\"\\n\");\n  } else {\n    respuesta +=\n      \"\\n\\n✅ El cliente tiene completos los datos principales de contacto en CAF Web.\";\n  }\n\n  return respuesta;\n})()\n}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1460,
+        380
+      ],
+      "id": "cbd2bc53-02d7-43a2-9cd9-8f3339a5d5d2",
+      "name": "Respuesta - Cliente",
+      "webhookId": "0594079e-f2ba-47ea-89df-9fb32b75edf3"
+    },
+    {
+      "parameters": {
+        "message": "No encontré el cliente solicitado en CAF Web. Verifica la cuenta e inténtalo nuevamente.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1460,
+        540
+      ],
+      "id": "eb1e5e49-7104-47a5-9e32-ad3a2b9b53c4",
+      "name": "Error - Cliente",
+      "webhookId": "01d203e8-cdc2-4995-bf55-6bf21fd00006"
+    },
+    {
+      "parameters": {
+        "message": "Claro. Para consultar el cliente directamente en CAF Web necesito la cuenta del cliente. Por ejemplo: AR-026.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        620,
+        620
+      ],
+      "id": "e526bca7-ee91-42b2-b9a0-44afb0239df7",
+      "name": "Solicitar - Cuenta cliente",
+      "webhookId": "b73ff98e-a7e4-40e1-8c45-5856ef18f3de"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "18c420b2-42b8-4d87-a7f2-afd355562101",
+              "leftValue": "={{ $('IA - Clasificar intención').item.json.text.trim().toLowerCase() }}",
+              "rightValue": "existencia",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        340,
+        700
+      ],
+      "id": "5e9f664e-1235-400b-bc83-fded3a984d3f",
+      "name": "¿Es existencia?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7c4925f5-cafe-4ce2-8b04-b1d28c28d0ea",
+              "leftValue": "={{ (($('Chat - Entrada').item.json.chatInput || '').toUpperCase().match(/\\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}\\b/) || [''])[0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        620,
+        700
+      ],
+      "id": "050fb655-f511-438a-b446-96f70b095608",
+      "name": "¿Código para existencia válido?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "login"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "username",
+              "value": "crm"
+            },
+            {
+              "name": "password",
+              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        900,
+        700
+      ],
+      "id": "9f0fe3bd-56c1-4f34-9e29-7c48cd8406f1",
+      "name": "CAF - Obtener JWT Existencia"
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "list"
+            },
+            {
+              "name": "object",
+              "value": "v_existencia"
+            },
+            {
+              "name": "psearch",
+              "value": "={{ (($('Chat - Entrada').item.json.chatInput || '').toUpperCase().match(/\\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}\\b/) || [''])[0] }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Existencia').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1180,
+        700
+      ],
+      "id": "152b4576-05a3-4717-b0fc-8d35e6cc6664",
+      "name": "CAF - Consultar existencia"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b7e6e894-5cdc-4013-ab6c-790a6badd527",
+              "leftValue": "={{ Array.isArray($json.v_existencia) && $json.v_existencia.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1460,
+        700
+      ],
+      "id": "71b96d4a-8914-4cbe-9515-09e39e55a5b0",
+      "name": "¿Existencia encontrada?"
+    },
+    {
+      "parameters": {
+        "message": "={{\n(() => {\n  const registros = Array.isArray($json.v_existencia)\n    ? $json.v_existencia\n    : [];\n\n  if (registros.length === 0) {\n    return \"No encontré información de existencias para ese producto en CAF Web.\";\n  }\n\n  const limpio = (v) => (v ?? '').toString().trim();\n  const codigo = limpio(registros[0].codpro);\n\n  let total = 0;\n\n  const detalle = registros.map(r => {\n    const bodega = limpio(r.bodega);\n    const existencia = Number(r.existencia || 0);\n\n    total += existencia;\n\n    return \"🔹 Bodega \" + bodega + \": \" +\n      existencia.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades\";\n  }).join(\"\\n\");\n\n  return (\n    \"Existencias consultadas directamente en CAF Web:\\n\\n\" +\n    \"🔹 Código: \" + codigo + \"\\n\\n\" +\n    detalle +\n    \"\\n\\n📦 Existencia total: \" +\n    total.toLocaleString(\"en-US\", {\n      minimumFractionDigits: 0,\n      maximumFractionDigits: 2\n    }) +\n    \" unidades\"\n  );\n})()\n}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1740,
+        620
+      ],
+      "id": "bba5cb06-64fc-4247-9212-de9950226934",
+      "name": "Respuesta - Existencia",
+      "webhookId": "28a921ff-c17b-4d98-8982-4b4c322658c0"
+    },
+    {
+      "parameters": {
+        "message": "No encontré información de existencias para el producto solicitado en CAF Web. Verifica el código e inténtalo nuevamente.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1740,
+        780
+      ],
+      "id": "0d5d4ad4-39f3-4840-b2b4-dc2d1adac3d4",
+      "name": "Error - Existencia",
+      "webhookId": "193941b0-733c-4082-9cfd-7dbd61b5f1a6"
+    },
+    {
+      "parameters": {
+        "message": "Claro. Para consultar existencias en CAF Web necesito el código del producto. Por ejemplo: 06SPI0142.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        900,
+        860
+      ],
+      "id": "6efc8e94-bb76-43bd-a6c2-27751e451e96",
+      "name": "Solicitar - Código existencia",
+      "webhookId": "ed9055ce-652c-491e-94f9-547759698ea4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat - Entrada": {
+      "main": [
+        [
+          {
+            "node": "IA - Clasificar intención",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek - Clasificador": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "IA - Clasificar intención",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IA - Clasificar intención": {
+      "main": [
+        [
+          {
+            "node": "¿Es producto?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es producto?": {
+      "main": [
+        [
+          {
+            "node": "¿Código de producto válido?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "¿Es movimiento?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Código de producto válido?": {
+      "main": [
+        [
+          {
+            "node": "CAF - Obtener JWT Producto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Solicitar - Código producto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Obtener JWT Producto": {
+      "main": [
+        [
+          {
+            "node": "CAF - Consultar producto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Consultar producto": {
+      "main": [
+        [
+          {
+            "node": "¿Producto encontrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Producto encontrado?": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Producto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error - Producto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es movimiento?": {
+      "main": [
+        [
+          {
+            "node": "¿Número de movimiento válido?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "¿Es cliente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Número de movimiento válido?": {
+      "main": [
+        [
+          {
+            "node": "CAF - Obtener JWT Movimiento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Solicitar - Número movimiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Obtener JWT Movimiento": {
+      "main": [
+        [
+          {
+            "node": "CAF - Consultar movimiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Consultar movimiento": {
+      "main": [
+        [
+          {
+            "node": "¿Movimiento encontrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Movimiento encontrado?": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Movimiento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error - Movimiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es cliente?": {
+      "main": [
+        [
+          {
+            "node": "¿Cuenta de cliente válida?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "¿Es existencia?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cuenta de cliente válida?": {
+      "main": [
+        [
+          {
+            "node": "CAF - Obtener JWT Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Solicitar - Cuenta cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Obtener JWT Cliente": {
+      "main": [
+        [
+          {
+            "node": "CAF - Consultar cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Consultar cliente": {
+      "main": [
+        [
+          {
+            "node": "¿Cliente encontrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cliente encontrado?": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error - Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es existencia?": {
+      "main": [
+        [
+          {
+            "node": "¿Código para existencia válido?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respuesta - General",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Código para existencia válido?": {
+      "main": [
+        [
+          {
+            "node": "CAF - Obtener JWT Existencia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Solicitar - Código existencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Obtener JWT Existencia": {
+      "main": [
+        [
+          {
+            "node": "CAF - Consultar existencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Consultar existencia": {
+      "main": [
+        [
+          {
+            "node": "¿Existencia encontrada?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Existencia encontrada?": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Existencia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error - Existencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dcd1ce74ac641920aeb2fa59433f9d61cb4082de8a5820790ec94a84cd2e6f77"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
