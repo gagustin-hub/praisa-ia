@@ -49,12 +49,16 @@
       "position": [
         620,
         180
-      ]
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Clasifica la intención del mensaje del usuario.\n\nResponde solamente con una de estas palabras:\nproducto\nmovimiento\ncliente\nexistencia\notro\n\nUsa:\n- producto: si pregunta por información general de un producto o código de producto.\n- movimiento: si pregunta por un movimiento, detalle de movimiento o número de movimiento.\n- cliente: si pregunta por un cliente, cuenta de cliente o información de cliente.\n- existencia: si pregunta por existencia, stock, inventario, disponibilidad o cuántas unidades hay de un producto.\n- otro: si no corresponde a ninguno.\n\nMensaje del usuario:\n{{ $('Chat - Entrada').item.json.chatInput }}",
+        "text": "=Clasifica la intención del mensaje del usuario.\n\nResponde solamente con una de estas palabras:\nproducto\nmovimiento\nhistorial_cliente\ncliente\nexistencia\notro\n\nUsa:\n- producto: si pregunta por información general de un producto o por un código de producto.\n- movimiento: si pregunta por un registro/detalle individual de movimiento y proporciona o solicita un número.\n- historial_cliente: si pregunta por el historial comercial, movimientos, documentos o actividad de una cuenta de cliente.\n- cliente: si pregunta por los datos generales de un cliente o por una cuenta de cliente.\n- existencia: si pregunta específicamente por existencia, stock, inventario, disponibilidad o cuántas unidades hay de un producto.\n- otro: si no corresponde a ninguno.\n\nImportante:\n- Si pregunta por \"movimientos del cliente\", \"historial del cliente\", \"actividad de la cuenta\" o algo equivalente, usa historial_cliente.\n- Si pregunta por un solo movimiento numerado, usa movimiento.\n\nMensaje del usuario:\n{{ $('Chat - Entrada').item.json.chatInput }}",
         "messages": {
           "messageValues": []
         },
@@ -155,7 +159,7 @@
     },
     {
       "parameters": {
-        "message": "No encontré información para el registro consultado en CAF Web. Verifica el número e inténtalo nuevamente.",
+        "message": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré información para el registro consultado en CAF Web. Verifica el número e inténtalo nuevamente.\"\n}}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
@@ -247,7 +251,11 @@
         -220
       ],
       "id": "38cb27b3-bf7c-4d56-b0a9-626c245907b9",
-      "name": "CAF - Consultar producto"
+      "name": "CAF - Consultar producto",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -285,7 +293,7 @@
     },
     {
       "parameters": {
-        "message": "={{\n(() => {\n  const p = $('CAF - Consultar producto').item.json.prod || {};\n  const registros = Array.isArray($json.v_existencia)\n    ? $json.v_existencia\n    : [];\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const codigo = limpio(p.codpro);\n  const producto = limpio(p.nombre_prod);\n  const categoria = limpio(p.categoria);\n  const fabricante = limpio(p.codigo_fabricante);\n  const unidad = limpio(p.umedida);\n\n  const precioNumerico = Number(p.precioa || 0);\n  const precio = precioNumerico > 0\n    ? \"Q\" + precioNumerico.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 2,\n        maximumFractionDigits: 2\n      })\n    : \"No registrado\";\n\n  let total = 0;\n\n  const detalleBodegas = registros.map(r => {\n    const bodega = limpio(r.bodega);\n    const existencia = Number(r.existencia || 0);\n\n    total += existencia;\n\n    return \"• Bodega \" + bodega + \": \" +\n      existencia.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades\";\n  }).join(\"\\n\");\n\n  let respuesta =\n    \"Información consultada directamente en CAF Web:\\n\\n\" +\n    \"🔹 Código: \" + codigo + \"\\n\" +\n    \"🔹 Producto: \" + producto + \"\\n\" +\n    \"🔹 Categoría: \" + categoria + \"\\n\" +\n    \"🔹 Código fabricante: \" + (fabricante || \"No registrado\") + \"\\n\" +\n    \"🔹 Unidad: \" + (unidad || \"No registrada\") + \"\\n\" +\n    \"💰 Precio A CAF: \" + precio;\n\n  if (registros.length > 0) {\n    respuesta +=\n      \"\\n\\n📦 Existencias por bodega:\\n\" +\n      detalleBodegas +\n      \"\\n\\n📦 Existencia total: \" +\n      total.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades\";\n  } else {\n    respuesta +=\n      \"\\n\\n📦 Existencia: No se encontraron registros de existencia para este producto.\";\n  }\n\n  return respuesta;\n})()\n}}",
+        "message": "={{\n(() => {\n  const p = $('CAF - Consultar producto').item.json.prod || {};\n  const registros = Array.isArray($json.v_existencia)\n    ? $json.v_existencia\n    : [];\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const codigo = limpio(p.codpro);\n  const producto = limpio(p.nombre_prod);\n  const categoria = limpio(p.categoria);\n  const fabricante = limpio(p.codigo_fabricante);\n  const unidad = limpio(p.umedida);\n\n  const precioNumerico = Number(p.precioa || 0);\n  const precio = precioNumerico > 0\n    ? \"Q\" + precioNumerico.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 2,\n        maximumFractionDigits: 2\n      })\n    : \"No registrado\";\n\n  let total = 0;\n\n  const detalleBodegas = registros.map(r => {\n    const bodega = limpio(r.bodega);\n    const existencia = Number(r.existencia || 0);\n\n    total += existencia;\n\n    return \"- 📦 Bodega \" + bodega + \": \" +\n      existencia.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades\";\n  }).join(\"\\n\");\n\n  let respuesta =\n    \"Información consultada directamente en CAF Web:\\n\\n\" +\n    \"**Datos del producto**\\n\" +\n    \"- Código: \" + codigo + \"\\n\" +\n    \"- Producto: \" + producto + \"\\n\" +\n    \"- Categoría: \" + categoria + \"\\n\" +\n    \"- Código fabricante: \" + (fabricante || \"No registrado\") + \"\\n\" +\n    \"- Unidad: \" + (unidad || \"No registrada\") + \"\\n\\n\" +\n    \"**Precio**\\n\" +\n    \"- 💰 Precio A CAF: \" + precio;\n\n  if ($json.error) {\n    respuesta +=\n      \"\\n\\n**Existencias**\\n\" +\n      \"- No pude consultar las existencias en CAF Web en este momento. Intenta nuevamente.\";\n  } else if (registros.length > 0) {\n    respuesta +=\n      \"\\n\\n**Existencias por bodega**\\n\" +\n      detalleBodegas +\n      \"\\n\\n**Existencia total: \" +\n      total.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades**\";\n  } else {\n    respuesta +=\n      \"\\n\\n**Existencia**\\n\" +\n      \"- No se encontraron registros de existencia para este producto.\";\n  }\n\n  return respuesta;\n})()\n}}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
@@ -300,7 +308,7 @@
     },
     {
       "parameters": {
-        "message": "No encontré el producto solicitado en CAF Web. Verifica el código e inténtalo nuevamente.",
+        "message": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré el producto solicitado en CAF Web. Verifica el código e inténtalo nuevamente.\"\n}}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
@@ -349,14 +357,14 @@
     },
     {
       "parameters": {
-        "message": "Hola, soy Praisa IA. Puedo ayudarte a consultar productos, movimientos, clientes y existencias directamente en CAF Web. También puedo orientarte con consultas técnicas y comerciales conforme vayamos incorporando más información al asistente. ¿Qué necesitas consultar?",
+        "message": "Hola, soy Praisa IA. Actualmente puedo consultar directamente en CAF Web: productos, Precio A, existencias por bodega, datos de clientes, detalles de movimientos e historial de movimientos por cuenta de cliente. También valido cuando falta un código, una cuenta o un número de movimiento. ¿Qué necesitas consultar?",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
         620,
-        1040
+        1120
       ],
       "id": "878597c5-5295-414d-8463-5d2f58f89f4e",
       "name": "Respuesta - General",
@@ -407,7 +415,11 @@
         -220
       ],
       "id": "4506673f-ebff-4fc9-a88b-0462fe96b64a",
-      "name": "CAF - Obtener JWT Producto"
+      "name": "CAF - Obtener JWT Producto",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -454,7 +466,11 @@
         180
       ],
       "id": "91f524b8-57b8-45ea-bac6-900baef1284d",
-      "name": "CAF - Obtener JWT Movimiento"
+      "name": "CAF - Obtener JWT Movimiento",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -580,7 +596,7 @@
       "typeVersion": 2.3,
       "position": [
         60,
-        460
+        540
       ],
       "id": "050c0637-8f2f-4624-8e5b-27843cec7156",
       "name": "¿Es cliente?"
@@ -613,7 +629,7 @@
       "typeVersion": 2.3,
       "position": [
         340,
-        460
+        540
       ],
       "id": "6d475ff1-e9e5-44e4-a8a6-c9b7c24ae6ee",
       "name": "¿Cuenta de cliente válida?"
@@ -660,10 +676,14 @@
       "typeVersion": 4.5,
       "position": [
         620,
-        460
+        540
       ],
       "id": "746f9f49-c54d-4781-b722-7f202b241b32",
-      "name": "CAF - Obtener JWT Cliente"
+      "name": "CAF - Obtener JWT Cliente",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -704,10 +724,14 @@
       "typeVersion": 4.5,
       "position": [
         900,
-        460
+        540
       ],
       "id": "bc6400ca-cb29-4294-8073-177fb1952c32",
-      "name": "CAF - Consultar cliente"
+      "name": "CAF - Consultar cliente",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -738,7 +762,7 @@
       "typeVersion": 2.3,
       "position": [
         1180,
-        460
+        540
       ],
       "id": "f58c49f6-8050-4400-bef6-551aaa2cba11",
       "name": "¿Cliente encontrado?"
@@ -752,7 +776,7 @@
       "typeVersion": 1.3,
       "position": [
         1460,
-        380
+        460
       ],
       "id": "cbd2bc53-02d7-43a2-9cd9-8f3339a5d5d2",
       "name": "Respuesta - Cliente",
@@ -760,14 +784,14 @@
     },
     {
       "parameters": {
-        "message": "No encontré el cliente solicitado en CAF Web. Verifica la cuenta e inténtalo nuevamente.",
+        "message": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré el cliente solicitado en CAF Web. Verifica la cuenta e inténtalo nuevamente.\"\n}}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
         1460,
-        540
+        620
       ],
       "id": "eb1e5e49-7104-47a5-9e32-ad3a2b9b53c4",
       "name": "Error - Cliente",
@@ -782,7 +806,7 @@
       "typeVersion": 1.3,
       "position": [
         620,
-        620
+        700
       ],
       "id": "e526bca7-ee91-42b2-b9a0-44afb0239df7",
       "name": "Solicitar - Cuenta cliente",
@@ -816,7 +840,7 @@
       "typeVersion": 2.3,
       "position": [
         340,
-        700
+        780
       ],
       "id": "5e9f664e-1235-400b-bc83-fded3a984d3f",
       "name": "¿Es existencia?"
@@ -849,7 +873,7 @@
       "typeVersion": 2.3,
       "position": [
         620,
-        700
+        780
       ],
       "id": "050fb655-f511-438a-b446-96f70b095608",
       "name": "¿Código para existencia válido?"
@@ -896,10 +920,14 @@
       "typeVersion": 4.5,
       "position": [
         900,
-        700
+        780
       ],
       "id": "9f0fe3bd-56c1-4f34-9e29-7c48cd8406f1",
-      "name": "CAF - Obtener JWT Existencia"
+      "name": "CAF - Obtener JWT Existencia",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -940,10 +968,14 @@
       "typeVersion": 4.5,
       "position": [
         1180,
-        700
+        780
       ],
       "id": "152b4576-05a3-4717-b0fc-8d35e6cc6664",
-      "name": "CAF - Consultar existencia"
+      "name": "CAF - Consultar existencia",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
     },
     {
       "parameters": {
@@ -974,7 +1006,7 @@
       "typeVersion": 2.3,
       "position": [
         1460,
-        700
+        780
       ],
       "id": "71b96d4a-8914-4cbe-9515-09e39e55a5b0",
       "name": "¿Existencia encontrada?"
@@ -988,7 +1020,7 @@
       "typeVersion": 1.3,
       "position": [
         1740,
-        620
+        700
       ],
       "id": "bba5cb06-64fc-4247-9212-de9950226934",
       "name": "Respuesta - Existencia",
@@ -996,14 +1028,14 @@
     },
     {
       "parameters": {
-        "message": "No encontré información de existencias para el producto solicitado en CAF Web. Verifica el código e inténtalo nuevamente.",
+        "message": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré información de existencias para el producto solicitado en CAF Web. Verifica el código e inténtalo nuevamente.\"\n}}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
         1740,
-        780
+        860
       ],
       "id": "0d5d4ad4-39f3-4840-b2b4-dc2d1adac3d4",
       "name": "Error - Existencia",
@@ -1018,7 +1050,7 @@
       "typeVersion": 1.3,
       "position": [
         900,
-        860
+        940
       ],
       "id": "6efc8e94-bb76-43bd-a6c2-27751e451e96",
       "name": "Solicitar - Código existencia",
@@ -1066,7 +1098,255 @@
         -220
       ],
       "id": "aeece326-94e8-47a0-a37a-94d048b7fbec",
-      "name": "CAF - Consultar existencia del producto"
+      "name": "CAF - Consultar existencia del producto",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3e1b7e3f-39e1-489a-a875-3a722d14f9db",
+              "leftValue": "={{ $('IA - Clasificar intención').item.json.text.trim().toLowerCase() }}",
+              "rightValue": "historial_cliente",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        60,
+        380
+      ],
+      "id": "460260ef-1fa6-4cc2-96a8-f3c069a04023",
+      "name": "¿Es historial cliente?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "16374f7d-3334-4f88-8ae3-d51c5b627dfb",
+              "leftValue": "={{ (($('Chat - Entrada').item.json.chatInput || '').toUpperCase().match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/) || [''])[0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        340,
+        300
+      ],
+      "id": "60207bf1-0f5c-40a0-8ac0-31c022952a10",
+      "name": "¿Cuenta para historial válida?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "login"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "username",
+              "value": "crm"
+            },
+            {
+              "name": "password",
+              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        620,
+        300
+      ],
+      "id": "1ee22aff-4ebe-45e1-a63b-5a6d37b274b7",
+      "name": "CAF - Obtener JWT Historial",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "list"
+            },
+            {
+              "name": "object",
+              "value": "movim"
+            },
+            {
+              "name": "x_cliente_cuenta",
+              "value": "={{ (($('Chat - Entrada').item.json.chatInput || '').toUpperCase().match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/) || [''])[0] }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Historial').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        900,
+        300
+      ],
+      "id": "3d307281-b0a9-492f-8ca2-5eb5f8f1c290",
+      "name": "CAF - Consultar historial cliente",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "733bb55c-6e52-4488-9a0f-4676eaad2fc8",
+              "leftValue": "={{ Array.isArray($json.movim) && $json.movim.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1180,
+        300
+      ],
+      "id": "bcb5d4d5-714e-4ac5-9b0d-b0c11aa163c3",
+      "name": "¿Historial encontrado?"
+    },
+    {
+      "parameters": {
+        "message": "={{\n(() => {\n  const registros = Array.isArray($json.movim) ? $json.movim : [];\n  const cuenta = (($('Chat - Entrada').item.json.chatInput || '')\n    .toUpperCase()\n    .match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/) || [''])[0];\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const valor = (r, campos) => {\n    for (const c of campos) {\n      const v = limpio(r[c]);\n      if (v) return v;\n    }\n    return \"\";\n  };\n\n  const dinero = (v) => {\n    const n = Number(v);\n    if (!Number.isFinite(n) || n === 0) return \"\";\n    return \"Q\" + n.toLocaleString(\"en-US\", {\n      minimumFractionDigits: 2,\n      maximumFractionDigits: 2\n    });\n  };\n\n  const mostrados = registros.slice(0, 10);\n\n  const detalle = mostrados.map((r, i) => {\n    const mov = valor(r, [\"movim\", \"movimiento\"]);\n    const fecha = valor(r, [\"fecha\", \"fecha_movim\"]);\n    const tipo = valor(r, [\"tipo\", \"tipomovim\", \"tipo_movim\", \"documento\", \"movimiento_tipo\"]);\n    const totalRaw = valor(r, [\"total\", \"monto\", \"importe\", \"calc_total\", \"total_movim\"]);\n    const total = dinero(totalRaw);\n\n    const partes = [];\n    if (mov) partes.push(\"Movimiento: \" + mov);\n    if (fecha) partes.push(\"Fecha: \" + fecha);\n    if (tipo) partes.push(\"Tipo: \" + tipo);\n    if (total) partes.push(\"Total: \" + total);\n\n    return (i + 1) + \". \" + (partes.length ? partes.join(\" | \") : \"Registro de movimiento\");\n  }).join(\"\\n\");\n\n  const totalRegistros = Number($json.totalRecordCount || registros.length);\n\n  let respuesta =\n    \"Historial de movimientos consultado directamente en CAF Web:\\n\\n\" +\n    \"🔹 Cuenta: \" + cuenta + \"\\n\" +\n    \"🔹 Registros reportados por CAF: \" + totalRegistros + \"\\n\\n\" +\n    detalle;\n\n  if (registros.length > 10) {\n    respuesta += \"\\n\\nMostrando los primeros 10 registros devueltos por CAF.\";\n  }\n\n  return respuesta;\n})()\n}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1460,
+        220
+      ],
+      "id": "e854a015-4270-44f0-996b-86ed6b78f117",
+      "name": "Respuesta - Historial cliente",
+      "webhookId": "21d1a54b-50f5-4476-be9a-1406477b7c1d"
+    },
+    {
+      "parameters": {
+        "message": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré movimientos para esa cuenta en la respuesta de CAF Web. Verifica la cuenta e inténtalo nuevamente.\"\n}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1460,
+        380
+      ],
+      "id": "83ece53f-de82-4ced-b521-8e1f001e2b3b",
+      "name": "Error - Historial cliente",
+      "webhookId": "4a8682c4-4fa6-4916-bee9-f3201ebcf932"
+    },
+    {
+      "parameters": {
+        "message": "Claro. Para consultar el historial de movimientos necesito la cuenta del cliente. Por ejemplo: OL-002.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        620,
+        380
+      ],
+      "id": "226a04b3-57dd-40d3-bdcf-d02800cbdfdb",
+      "name": "Solicitar - Cuenta historial",
+      "webhookId": "5d076330-d738-4fa8-aadb-20e8f7db381e"
     }
   ],
   "pinData": {},
@@ -1191,7 +1471,7 @@
         ],
         [
           {
-            "node": "¿Es cliente?",
+            "node": "¿Es historial cliente?",
             "type": "main",
             "index": 0
           }
@@ -1413,6 +1693,82 @@
         [
           {
             "node": "Respuesta - Producto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es historial cliente?": {
+      "main": [
+        [
+          {
+            "node": "¿Cuenta para historial válida?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "¿Es cliente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cuenta para historial válida?": {
+      "main": [
+        [
+          {
+            "node": "CAF - Obtener JWT Historial",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Solicitar - Cuenta historial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Obtener JWT Historial": {
+      "main": [
+        [
+          {
+            "node": "CAF - Consultar historial cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Consultar historial cliente": {
+      "main": [
+        [
+          {
+            "node": "¿Historial encontrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Historial encontrado?": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Historial cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error - Historial cliente",
             "type": "main",
             "index": 0
           }
