@@ -285,13 +285,13 @@
     },
     {
       "parameters": {
-        "message": "={{\n\"Información consultada directamente en CAF Web:\\n\\n\" +\n\"🔹 Código: \" + $json.prod.codpro.trim() + \"\\n\" +\n\"🔹 Producto: \" + $json.prod.nombre_prod.trim() + \"\\n\" +\n\"🔹 Categoría: \" + $json.prod.categoria.trim() + \"\\n\" +\n\"🔹 Código fabricante: \" + ($json.prod.codigo_fabricante || \"\").trim() + \"\\n\" +\n\"🔹 Unidad: \" + ($json.prod.umedida || \"\").trim()\n}}",
+        "message": "={{\n(() => {\n  const p = $('CAF - Consultar producto').item.json.prod || {};\n  const registros = Array.isArray($json.v_existencia)\n    ? $json.v_existencia\n    : [];\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const codigo = limpio(p.codpro);\n  const producto = limpio(p.nombre_prod);\n  const categoria = limpio(p.categoria);\n  const fabricante = limpio(p.codigo_fabricante);\n  const unidad = limpio(p.umedida);\n\n  const precioNumerico = Number(p.precioa || 0);\n  const precio = precioNumerico > 0\n    ? \"Q\" + precioNumerico.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 2,\n        maximumFractionDigits: 2\n      })\n    : \"No registrado\";\n\n  let total = 0;\n\n  const detalleBodegas = registros.map(r => {\n    const bodega = limpio(r.bodega);\n    const existencia = Number(r.existencia || 0);\n\n    total += existencia;\n\n    return \"• Bodega \" + bodega + \": \" +\n      existencia.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades\";\n  }).join(\"\\n\");\n\n  let respuesta =\n    \"Información consultada directamente en CAF Web:\\n\\n\" +\n    \"🔹 Código: \" + codigo + \"\\n\" +\n    \"🔹 Producto: \" + producto + \"\\n\" +\n    \"🔹 Categoría: \" + categoria + \"\\n\" +\n    \"🔹 Código fabricante: \" + (fabricante || \"No registrado\") + \"\\n\" +\n    \"🔹 Unidad: \" + (unidad || \"No registrada\") + \"\\n\" +\n    \"💰 Precio A CAF: \" + precio;\n\n  if (registros.length > 0) {\n    respuesta +=\n      \"\\n\\n📦 Existencias por bodega:\\n\" +\n      detalleBodegas +\n      \"\\n\\n📦 Existencia total: \" +\n      total.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades\";\n  } else {\n    respuesta +=\n      \"\\n\\n📦 Existencia: No se encontraron registros de existencia para este producto.\";\n  }\n\n  return respuesta;\n})()\n}}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        900,
+        1180,
         -300
       ],
       "id": "f2f9fa48-e7f6-4ec2-a680-828127ab751e",
@@ -307,7 +307,7 @@
       "typeVersion": 1.3,
       "position": [
         900,
-        -140
+        -60
       ],
       "id": "56dc4f75-e8bb-4472-a0d7-cf4c1f2f72b1",
       "name": "Error - Producto",
@@ -1023,6 +1023,50 @@
       "id": "6efc8e94-bb76-43bd-a6c2-27751e451e96",
       "name": "Solicitar - Código existencia",
       "webhookId": "ed9055ce-652c-491e-94f9-547759698ea4"
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "list"
+            },
+            {
+              "name": "object",
+              "value": "v_existencia"
+            },
+            {
+              "name": "psearch",
+              "value": "={{ (($('Chat - Entrada').item.json.chatInput || '').toUpperCase().match(/\\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}\\b/) || [''])[0] }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Producto').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        900,
+        -220
+      ],
+      "id": "aeece326-94e8-47a0-a37a-94d048b7fbec",
+      "name": "CAF - Consultar existencia del producto"
     }
   ],
   "pinData": {},
@@ -1122,7 +1166,7 @@
       "main": [
         [
           {
-            "node": "Respuesta - Producto",
+            "node": "CAF - Consultar existencia del producto",
             "type": "main",
             "index": 0
           }
@@ -1358,6 +1402,17 @@
         [
           {
             "node": "Error - Existencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Consultar existencia del producto": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Producto",
             "type": "main",
             "index": 0
           }
