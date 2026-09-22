@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - CAF Web v2 - Cotizaciones",
+  "name": "Praisa IA - CAF Web v3 - Cotizaciones",
   "nodes": [
     {
       "parameters": {
@@ -398,11 +398,11 @@
           "parameters": [
             {
               "name": "username",
-              "value": "crm"
+              "value": "={{ $('Configuración CAF').item.json.caf_usuario }}"
             },
             {
               "name": "password",
-              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+              "value": "={{ $('Configuración CAF').item.json.caf_password }}"
             }
           ]
         },
@@ -449,11 +449,11 @@
           "parameters": [
             {
               "name": "username",
-              "value": "crm"
+              "value": "={{ $('Configuración CAF').item.json.caf_usuario }}"
             },
             {
               "name": "password",
-              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+              "value": "={{ $('Configuración CAF').item.json.caf_password }}"
             }
           ]
         },
@@ -662,11 +662,11 @@
           "parameters": [
             {
               "name": "username",
-              "value": "crm"
+              "value": "={{ $('Configuración CAF').item.json.caf_usuario }}"
             },
             {
               "name": "password",
-              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+              "value": "={{ $('Configuración CAF').item.json.caf_password }}"
             }
           ]
         },
@@ -906,11 +906,11 @@
           "parameters": [
             {
               "name": "username",
-              "value": "crm"
+              "value": "={{ $('Configuración CAF').item.json.caf_usuario }}"
             },
             {
               "name": "password",
-              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+              "value": "={{ $('Configuración CAF').item.json.caf_password }}"
             }
           ]
         },
@@ -1198,11 +1198,11 @@
           "parameters": [
             {
               "name": "username",
-              "value": "crm"
+              "value": "={{ $('Configuración CAF').item.json.caf_usuario }}"
             },
             {
               "name": "password",
-              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+              "value": "={{ $('Configuración CAF').item.json.caf_password }}"
             }
           ]
         },
@@ -1521,11 +1521,11 @@
           "parameters": [
             {
               "name": "username",
-              "value": "crm"
+              "value": "={{ $('Configuración CAF').item.json.caf_usuario }}"
             },
             {
               "name": "password",
-              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+              "value": "={{ $('Configuración CAF').item.json.caf_password }}"
             }
           ]
         },
@@ -1737,6 +1737,36 @@
       "id": "c00bd3f0-ff5b-4058-b6c2-3341a2f6a052",
       "name": "Respuesta - Borrador cotización",
       "webhookId": "14769eaf-397f-41e8-ac57-b117a45ebbd2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4ac2e550-fc43-43d5-9a6f-689cbe2f4b48",
+              "name": "caf_usuario",
+              "value": "crm",
+              "type": "string"
+            },
+            {
+              "id": "73e06cd2-03ad-4e3e-958a-d1be36f20ceb",
+              "name": "caf_password",
+              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -8976,
+        1760
+      ],
+      "id": "fd7a8151-3155-46b3-96ad-4f9e8b5d4b41",
+      "name": "Configuración CAF"
     }
   ],
   "pinData": {},
@@ -1745,7 +1775,7 @@
       "main": [
         [
           {
-            "node": "Cotización - Gestionar borrador",
+            "node": "Configuración CAF",
             "type": "main",
             "index": 0
           }
@@ -2279,6 +2309,17 @@
         [
           {
             "node": "Respuesta - Borrador cotización",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Configuración CAF": {
+      "main": [
+        [
+          {
+            "node": "Cotización - Gestionar borrador",
             "type": "main",
             "index": 0
           }
