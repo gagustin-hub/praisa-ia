@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - CAF Web",
+  "name": "Praisa IA - CAF Web v2 - Cotizaciones",
   "nodes": [
     {
       "parameters": {
@@ -42,18 +42,18 @@
           }
         }
       },
-      "id": "b2c13713-e771-448d-9615-7a23be2c4651",
+      "id": "0256f876-43e7-4445-9012-0f36eae1ce2d",
       "name": "CAF - Consultar movimiento",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        620,
-        180
+        -7616,
+        2112
       ],
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -67,10 +67,10 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        -720,
-        0
+        -8976,
+        1984
       ],
-      "id": "cb9f148b-75aa-4124-a22a-8bf5d1309342",
+      "id": "f2130fde-af84-4111-a0a6-daec29511e02",
       "name": "IA - Clasificar intención"
     },
     {
@@ -80,10 +80,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        -720,
-        220
+        -8976,
+        2192
       ],
-      "id": "503408da-c5cd-401e-a2d4-5d2ed16adde9",
+      "id": "7c7c084b-8161-43d3-8e24-154068d08ea3",
       "name": "DeepSeek - Clasificador",
       "credentials": {
         "deepSeekApi": {
@@ -101,10 +101,10 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.5,
       "position": [
-        -950,
-        0
+        -9184,
+        1984
       ],
-      "id": "a0d21b30-8e1f-4434-9986-debd4b79b8c0",
+      "id": "9079c513-9b43-47df-ba94-79dce582f8d5",
       "name": "Chat - Entrada",
       "webhookId": "31f3a969-f3ac-47ee-abe1-bd759f44e0ba"
     },
@@ -116,10 +116,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1180,
-        100
+        -7056,
+        2080
       ],
-      "id": "d6965949-d46b-4363-a0c2-f203997e7b13",
+      "id": "097f03b9-05ed-49f2-b399-475b662c6fc6",
       "name": "Respuesta - Movimiento",
       "webhookId": "01c9a88a-58b4-4a28-8340-792735374841"
     },
@@ -151,10 +151,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        900,
-        180
+        -7344,
+        2144
       ],
-      "id": "4627b58f-50a4-4fc2-9065-e90c9643dbac",
+      "id": "a0a29a95-eeb7-4fd4-9fd7-cbaca6fb97d1",
       "name": "¿Movimiento encontrado?"
     },
     {
@@ -165,10 +165,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1180,
-        260
+        -7056,
+        2240
       ],
-      "id": "50d563ca-af7d-4ab4-919e-ab1cb75d9c07",
+      "id": "b956ee29-5b3d-4524-b81f-39be814b9492",
       "name": "Error - Movimiento",
       "webhookId": "109e7c10-14c9-4884-a69f-1ee7d1fed4c3"
     },
@@ -199,10 +199,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -470,
-        0
+        -8704,
+        1984
       ],
-      "id": "57459edf-7e75-46e3-802d-e1425632d237",
+      "id": "6198d481-da53-425d-803e-35ec1baa216c",
       "name": "¿Es producto?"
     },
     {
@@ -247,15 +247,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        340,
-        -220
+        -7904,
+        1760
       ],
-      "id": "38cb27b3-bf7c-4d56-b0a9-626c245907b9",
+      "id": "6210dae7-489f-4f68-a77a-81c0f7c4185a",
       "name": "CAF - Consultar producto",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -285,10 +285,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        620,
-        -220
+        -7616,
+        1760
       ],
-      "id": "a8947b0a-ffda-46bb-9571-24565a7487ce",
+      "id": "c24e284f-255b-46b5-86b5-7d70bdb209b0",
       "name": "¿Producto encontrado?"
     },
     {
@@ -299,10 +299,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1180,
-        -300
+        -7056,
+        1680
       ],
-      "id": "f2f9fa48-e7f6-4ec2-a680-828127ab751e",
+      "id": "cfefe64e-215c-4d0f-8c89-37523cb79622",
       "name": "Respuesta - Producto",
       "webhookId": "662274e3-65da-4193-8f85-fedb4a331ce6"
     },
@@ -314,10 +314,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        900,
-        -60
+        -7328,
+        1968
       ],
-      "id": "56dc4f75-e8bb-4472-a0d7-cf4c1f2f72b1",
+      "id": "e8d14845-ae99-4849-b6b2-7661d1ad0c2c",
       "name": "Error - Producto",
       "webhookId": "d9285ee2-9913-4155-9736-47513d1aac1c"
     },
@@ -349,24 +349,24 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -220,
-        180
+        -8464,
+        2160
       ],
-      "id": "5b6aba95-d5df-46d9-822d-071bc5ed7526",
+      "id": "88c86626-1045-4297-b6f6-73b3c4f48286",
       "name": "¿Es movimiento?"
     },
     {
       "parameters": {
-        "message": "Hola, soy Praisa IA. Actualmente puedo consultar directamente en CAF Web: productos, Precio A, existencias por bodega, datos de clientes, detalles de movimientos e historial de movimientos por cuenta de cliente. También valido cuando falta un código, una cuenta o un número de movimiento. ¿Qué necesitas consultar?",
+        "message": "Hola, soy Praisa IA. Actualmente puedo consultar directamente en CAF Web: productos, Precio A, existencias por bodega, datos de clientes, detalles de movimientos e historial de movimientos por cuenta de cliente. También puedo iniciar un borrador de cotización y recopilar la cuenta CAF, código de producto y cantidad para consultar los datos necesarios antes de la revisión técnica y comercial. ¿Qué necesitas consultar?",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        620,
-        1120
+        -7616,
+        3104
       ],
-      "id": "878597c5-5295-414d-8463-5d2f58f89f4e",
+      "id": "54cfb4b3-dc0e-44ed-8c4e-d81d4c208e91",
       "name": "Respuesta - General",
       "webhookId": "416e1af0-907f-4f67-8f89-84860ec607ca"
     },
@@ -411,15 +411,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        60,
-        -220
+        -8176,
+        1728
       ],
-      "id": "4506673f-ebff-4fc9-a88b-0462fe96b64a",
+      "id": "8f60d777-d7ca-4d91-8694-8ee58304ad65",
       "name": "CAF - Obtener JWT Producto",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -462,15 +462,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        340,
-        180
+        -7904,
+        2128
       ],
-      "id": "91f524b8-57b8-45ea-bac6-900baef1284d",
+      "id": "7b19ef7f-8f72-47a7-8c21-29681b4acdef",
       "name": "CAF - Obtener JWT Movimiento",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -499,10 +499,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -220,
-        -220
+        -8464,
+        1760
       ],
-      "id": "582ed657-bf5e-4895-b27f-db8e6ee7a5f1",
+      "id": "dcc0f38b-7ad6-4c00-b33c-ee3794f9eb99",
       "name": "¿Código de producto válido?"
     },
     {
@@ -532,10 +532,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        60,
-        180
+        -8176,
+        2160
       ],
-      "id": "45d8e41e-142e-441b-8137-39fb9416e06d",
+      "id": "4d03f9f7-e728-485e-9821-31e952a90401",
       "name": "¿Número de movimiento válido?"
     },
     {
@@ -546,10 +546,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        60,
-        -60
+        -8176,
+        1920
       ],
-      "id": "6458032e-1f06-477f-85a3-ed7a279cc8bb",
+      "id": "6a1a80ab-95c1-4eda-96b8-395544245ea9",
       "name": "Solicitar - Código producto",
       "webhookId": "2ad72181-c46f-4077-b057-a2200074a097"
     },
@@ -561,10 +561,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        340,
-        360
+        -7904,
+        2416
       ],
-      "id": "23023d7d-5bf9-4e91-b873-832d6727d67b",
+      "id": "2d80f6d2-fd9b-4a56-81bb-7c334622c3da",
       "name": "Solicitar - Número movimiento",
       "webhookId": "578d754e-0fdb-47f8-afff-c110e1b64f4d"
     },
@@ -595,10 +595,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        60,
-        540
+        -8176,
+        2528
       ],
-      "id": "050c0637-8f2f-4624-8e5b-27843cec7156",
+      "id": "4811fee0-1381-4a91-98e8-c19f4fd6499d",
       "name": "¿Es cliente?"
     },
     {
@@ -628,10 +628,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        340,
-        540
+        -7904,
+        2576
       ],
-      "id": "6d475ff1-e9e5-44e4-a8a6-c9b7c24ae6ee",
+      "id": "92fb1f39-dc39-44ec-9c3c-c91e3103dd7a",
       "name": "¿Cuenta de cliente válida?"
     },
     {
@@ -675,15 +675,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        620,
-        540
+        -7616,
+        2576
       ],
-      "id": "746f9f49-c54d-4781-b722-7f202b241b32",
+      "id": "6280edf1-9473-4d81-8f07-33e71f2e802d",
       "name": "CAF - Obtener JWT Cliente",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -723,15 +723,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        900,
-        540
+        -7344,
+        2528
       ],
-      "id": "bc6400ca-cb29-4294-8073-177fb1952c32",
+      "id": "6b630a35-c80a-4685-b19a-76de98e47084",
       "name": "CAF - Consultar cliente",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -761,10 +761,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1180,
-        540
+        -7056,
+        2528
       ],
-      "id": "f58c49f6-8050-4400-bef6-551aaa2cba11",
+      "id": "54de7347-90c2-4369-8a58-927d3d716c5e",
       "name": "¿Cliente encontrado?"
     },
     {
@@ -775,10 +775,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1460,
-        460
+        -6784,
+        2448
       ],
-      "id": "cbd2bc53-02d7-43a2-9cd9-8f3339a5d5d2",
+      "id": "da9eec72-78ab-4752-b772-ddf1a94097c7",
       "name": "Respuesta - Cliente",
       "webhookId": "0594079e-f2ba-47ea-89df-9fb32b75edf3"
     },
@@ -790,10 +790,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1460,
-        620
+        -6784,
+        2608
       ],
-      "id": "eb1e5e49-7104-47a5-9e32-ad3a2b9b53c4",
+      "id": "4ab2464d-0312-4129-9e7d-5f811192d4a2",
       "name": "Error - Cliente",
       "webhookId": "01d203e8-cdc2-4995-bf55-6bf21fd00006"
     },
@@ -805,10 +805,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        620,
-        700
+        -7616,
+        2736
       ],
-      "id": "e526bca7-ee91-42b2-b9a0-44afb0239df7",
+      "id": "f757abaa-a518-49b5-956e-08023d1ea818",
       "name": "Solicitar - Cuenta cliente",
       "webhookId": "b73ff98e-a7e4-40e1-8c45-5856ef18f3de"
     },
@@ -839,10 +839,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        340,
-        780
+        -7904,
+        2768
       ],
-      "id": "5e9f664e-1235-400b-bc83-fded3a984d3f",
+      "id": "6e1400c0-b720-42e1-8a34-7593e4abd509",
       "name": "¿Es existencia?"
     },
     {
@@ -872,10 +872,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        620,
-        780
+        -7616,
+        2896
       ],
-      "id": "050fb655-f511-438a-b446-96f70b095608",
+      "id": "6b2c9410-6a4e-45eb-8aec-412fb6d4f431",
       "name": "¿Código para existencia válido?"
     },
     {
@@ -919,15 +919,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        900,
-        780
+        -7344,
+        2768
       ],
-      "id": "9f0fe3bd-56c1-4f34-9e29-7c48cd8406f1",
+      "id": "4c514aab-d88a-43d9-92af-365876edbeb0",
       "name": "CAF - Obtener JWT Existencia",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -967,15 +967,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        1180,
-        780
+        -7056,
+        2768
       ],
-      "id": "152b4576-05a3-4717-b0fc-8d35e6cc6664",
+      "id": "91550bf5-3078-46ac-a9b1-66b9d24a90bb",
       "name": "CAF - Consultar existencia",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1005,10 +1005,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1460,
-        780
+        -6784,
+        2768
       ],
-      "id": "71b96d4a-8914-4cbe-9515-09e39e55a5b0",
+      "id": "5be16546-4fc4-425d-a8de-b7c44fd9e603",
       "name": "¿Existencia encontrada?"
     },
     {
@@ -1019,10 +1019,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1740,
-        700
+        -6496,
+        2688
       ],
-      "id": "bba5cb06-64fc-4247-9212-de9950226934",
+      "id": "3a2fa56f-ca0b-4b97-94f0-4d1218acc518",
       "name": "Respuesta - Existencia",
       "webhookId": "28a921ff-c17b-4d98-8982-4b4c322658c0"
     },
@@ -1034,10 +1034,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1740,
-        860
+        -6496,
+        2848
       ],
-      "id": "0d5d4ad4-39f3-4840-b2b4-dc2d1adac3d4",
+      "id": "e51ce09d-5a37-466d-905f-460ea7bac84f",
       "name": "Error - Existencia",
       "webhookId": "193941b0-733c-4082-9cfd-7dbd61b5f1a6"
     },
@@ -1049,10 +1049,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        900,
-        940
+        -7344,
+        2928
       ],
-      "id": "6efc8e94-bb76-43bd-a6c2-27751e451e96",
+      "id": "791a7d97-0c1d-4af9-b5c8-549b04d84376",
       "name": "Solicitar - Código existencia",
       "webhookId": "ed9055ce-652c-491e-94f9-547759698ea4"
     },
@@ -1094,15 +1094,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        900,
-        -220
+        -7344,
+        1760
       ],
-      "id": "aeece326-94e8-47a0-a37a-94d048b7fbec",
+      "id": "c922bb62-0251-49e9-abf6-f3ece5dde50c",
       "name": "CAF - Consultar existencia del producto",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1131,10 +1131,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        60,
-        380
+        -8176,
+        2368
       ],
-      "id": "460260ef-1fa6-4cc2-96a8-f3c069a04023",
+      "id": "0055cde8-ed80-4793-a0b5-d1a0c2a33d48",
       "name": "¿Es historial cliente?"
     },
     {
@@ -1164,10 +1164,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        340,
-        300
+        -7904,
+        2288
       ],
-      "id": "60207bf1-0f5c-40a0-8ac0-31c022952a10",
+      "id": "bb329c66-445c-478c-ba59-10c4657838d6",
       "name": "¿Cuenta para historial válida?"
     },
     {
@@ -1211,15 +1211,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        620,
-        300
+        -7616,
+        2272
       ],
-      "id": "1ee22aff-4ebe-45e1-a63b-5a6d37b274b7",
+      "id": "4f092fe8-dae7-4307-8117-eee285d8f2b2",
       "name": "CAF - Obtener JWT Historial",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1259,15 +1259,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        900,
-        300
+        -7344,
+        2288
       ],
-      "id": "3d307281-b0a9-492f-8ca2-5eb5f8f1c290",
+      "id": "c33d7a69-818f-4325-aca9-7c018cfd0a3f",
       "name": "CAF - Consultar historial cliente",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
-      "waitBetweenTries": 1000
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -1297,10 +1297,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1180,
-        300
+        -7056,
+        2384
       ],
-      "id": "bcb5d4d5-714e-4ac5-9b0d-b0c11aa163c3",
+      "id": "9a7678ad-3615-4734-a2e2-12bb17c93241",
       "name": "¿Historial encontrado?"
     },
     {
@@ -1311,10 +1311,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1460,
-        220
+        -6784,
+        2208
       ],
-      "id": "e854a015-4270-44f0-996b-86ed6b78f117",
+      "id": "e0db6847-0536-4b3a-999b-a1454228cf7e",
       "name": "Respuesta - Historial cliente",
       "webhookId": "21d1a54b-50f5-4476-be9a-1406477b7c1d"
     },
@@ -1326,10 +1326,10 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        1460,
-        380
+        -6784,
+        2368
       ],
-      "id": "83ece53f-de82-4ced-b521-8e1f001e2b3b",
+      "id": "ed27eeab-f9d8-4a8e-abe8-8274138d319f",
       "name": "Error - Historial cliente",
       "webhookId": "4a8682c4-4fa6-4916-bee9-f3201ebcf932"
     },
@@ -1341,12 +1341,402 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        620,
-        380
+        -7616,
+        2432
       ],
-      "id": "226a04b3-57dd-40d3-bdcf-d02800cbdfdb",
+      "id": "7298b955-f70a-4be1-88a2-661847d14f73",
       "name": "Solicitar - Cuenta historial",
       "webhookId": "5d076330-d738-4fa8-aadb-20e8f7db381e"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json || {};\nconst mensajeOriginal = (input.chatInput || '').toString();\nconst mensaje = mensajeOriginal.trim();\nconst sessionId = (input.sessionId || input.session_id || input.webhookId || 'sesion-default').toString();\n\nconst data = $getWorkflowStaticData('global');\nif (!data.cotizacionesPraisa) data.cotizacionesPraisa = {};\n\nlet estado = data.cotizacionesPraisa[sessionId] || {\n  active: false,\n  draft: {\n    cuenta_cliente: '',\n    codigo_producto: '',\n    cantidad: null,\n    direccion_entrega: ''\n  }\n};\n\nconst texto = mensaje.toLowerCase();\n\nconst iniciaCotizacion =\n  /\\b(cotiz(?:ar|acion|ación|aciones|aciónes)|presupuesto|proforma)\\b/i.test(mensaje) ||\n  /\\b(quiero|necesito|deseo|puedes|podrias|podrías)\\b.*\\b(oferta|cotiz)/i.test(mensaje);\n\nconst cancelar =\n  estado.active &&\n  /\\b(cancelar|cancela|cancelémosla|cancelemosla|salir|detener)\\b.*\\b(cotiz|solicitud)?/i.test(mensaje);\n\nconst esCotizacion = Boolean(estado.active || iniciaCotizacion);\n\nif (!esCotizacion) {\n  return [{\n    json: {\n      ...input,\n      esCotizacion: false,\n      cotizacionCancelada: false,\n      cotizacionLista: false,\n      sessionKeyCotizacion: sessionId\n    }\n  }];\n}\n\nif (cancelar) {\n  delete data.cotizacionesPraisa[sessionId];\n  return [{\n    json: {\n      ...input,\n      esCotizacion: true,\n      cotizacionCancelada: true,\n      cotizacionLista: false,\n      mensajeCotizacion: 'De acuerdo. Cancelé el borrador de cotización que estábamos preparando.',\n      sessionKeyCotizacion: sessionId\n    }\n  }];\n}\n\nestado.active = true;\nconst draft = estado.draft || {};\n\n// Cuenta CAF, por ejemplo AR-026.\nconst cuentaMatch = mensaje.toUpperCase().match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/);\nif (cuentaMatch) draft.cuenta_cliente = cuentaMatch[0];\n\n// Código de producto. Se excluye la cuenta CAF para que AR-026 no se tome como producto.\nconst candidatosCodigo = mensaje.toUpperCase().match(/\\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}\\b/g) || [];\nconst codigoProducto = candidatosCodigo.find(x => x !== draft.cuenta_cliente && !/^[A-Z]{1,5}-\\d{2,8}$/.test(x));\nif (codigoProducto) draft.codigo_producto = codigoProducto;\n\n// Cantidad: reconoce frases como \"cotizar 5\", \"cantidad 5\", \"5 unidades\".\nlet cantidad = null;\nconst patronesCantidad = [\n  /(?:quiero\\s+cotizar|necesito\\s+cotizar|cotizar|cantidad(?:\\s+de)?|cant(?:idad)?|necesito|quiero)\\s*:?\\s*(\\d+(?:[.,]\\d+)?)/i,\n  /\\b(\\d+(?:[.,]\\d+)?)\\s*(?:unidades?|uds?|piezas?)\\b/i\n];\nfor (const patron of patronesCantidad) {\n  const m = mensaje.match(patron);\n  if (m) {\n    cantidad = Number(m[1].replace(',', '.'));\n    break;\n  }\n}\nif (cantidad === null && estado.active && !draft.cantidad && /^\\s*\\d+(?:[.,]\\d+)?\\s*$/.test(mensaje)) {\n  cantidad = Number(mensaje.replace(',', '.'));\n}\nif (Number.isFinite(cantidad) && cantidad > 0) draft.cantidad = cantidad;\n\n// Dirección de entrega opcional.\nconst entrega = mensaje.match(/(?:direcci[oó]n\\s+de\\s+entrega|entrega)\\s*:\\s*(.+)$/i);\nif (entrega && entrega[1]) draft.direccion_entrega = entrega[1].trim();\n\nestado.draft = draft;\ndata.cotizacionesPraisa[sessionId] = estado;\n\nconst faltantes = [];\nif (!draft.cuenta_cliente) faltantes.push('cuenta CAF del cliente');\nif (!draft.codigo_producto) faltantes.push('código del producto');\nif (!draft.cantidad) faltantes.push('cantidad');\n\nconst cotizacionLista = faltantes.length === 0;\n\nlet mensajeCotizacion = '';\nif (!cotizacionLista) {\n  const siguiente = faltantes[0];\n  if (siguiente === 'cuenta CAF del cliente') {\n    mensajeCotizacion = 'Perfecto. Para preparar la cotización necesito primero la cuenta CAF del cliente. Por ejemplo: AR-026.';\n  } else if (siguiente === 'código del producto') {\n    mensajeCotizacion = 'Ya tengo la cuenta del cliente. Ahora indícame el código del producto que deseas cotizar. Por ejemplo: 06NI0007.';\n  } else {\n    mensajeCotizacion = 'Ya tengo el cliente y el producto. ¿Cuántas unidades deseas cotizar?';\n  }\n\n  const capturado = [];\n  if (draft.cuenta_cliente) capturado.push('Cuenta: ' + draft.cuenta_cliente);\n  if (draft.codigo_producto) capturado.push('Producto: ' + draft.codigo_producto);\n  if (draft.cantidad) capturado.push('Cantidad: ' + draft.cantidad);\n\n  if (capturado.length) {\n    mensajeCotizacion += '\\n\\nDatos que ya tengo:\\n' + capturado.map(x => '• ' + x).join('\\n');\n  }\n  mensajeCotizacion += '\\n\\nPuedes cancelar en cualquier momento escribiendo: cancelar cotización.';\n}\n\nreturn [{\n  json: {\n    ...input,\n    esCotizacion: true,\n    cotizacionCancelada: false,\n    cotizacionLista,\n    draft,\n    faltantes,\n    mensajeCotizacion,\n    sessionKeyCotizacion: sessionId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -8976,
+        1488
+      ],
+      "id": "d543b664-9655-49c2-a7ac-ec6cf3bd9bc2",
+      "name": "Cotización - Gestionar borrador"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "27ff9649-7986-4ee4-9974-22ea237d8e19",
+              "leftValue": "={{ $json.esCotizacion }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8704,
+        1488
+      ],
+      "id": "0f1a2b3a-08a8-421e-a39c-efb7aea4b6d6",
+      "name": "¿Es cotización?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b01db961-19ea-4fce-9fa5-bb01aceb93c9",
+              "leftValue": "={{ $json.cotizacionCancelada }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8448,
+        1344
+      ],
+      "id": "26f5e3e8-353e-4e09-9dc9-a2af25addde3",
+      "name": "¿Cotización cancelada?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7afe8b7a-18e2-4a7b-a882-ee8824ac5226",
+              "leftValue": "={{ $json.cotizacionLista }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8192,
+        1504
+      ],
+      "id": "3517be21-bc22-47d0-82a8-0a5a7f5594cf",
+      "name": "¿Datos cotización completos?"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.mensajeCotizacion }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        -8192,
+        1280
+      ],
+      "id": "050967e7-ac19-4373-aab1-84e6f3337679",
+      "name": "Respuesta - Cotización cancelada",
+      "webhookId": "9908a53a-b395-4620-9ea0-2277ecc10056"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.mensajeCotizacion }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        -7920,
+        1664
+      ],
+      "id": "7cc531a6-d656-471d-811d-00c102982450",
+      "name": "Solicitar - Datos cotización",
+      "webhookId": "d39524c0-a374-469f-a35f-5ef3c9f362e1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "login"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "username",
+              "value": "crm"
+            },
+            {
+              "name": "password",
+              "value": "REEMPLAZA_AQUI_TU_PASSWORD_CAF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -7920,
+        1440
+      ],
+      "id": "1a960ac8-cf08-47cc-9904-5274919a28ef",
+      "name": "CAF - Obtener JWT Cotización",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "view"
+            },
+            {
+              "name": "object",
+              "value": "cliente"
+            },
+            {
+              "name": "cuenta",
+              "value": "={{ $('Cotización - Gestionar borrador').item.json.draft.cuenta_cliente }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Cotización').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -7648,
+        1440
+      ],
+      "id": "1ae530b6-25e4-42f4-819f-411bed64c3aa",
+      "name": "CAF - Cotización consultar cliente",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "view"
+            },
+            {
+              "name": "object",
+              "value": "prod"
+            },
+            {
+              "name": "codpro",
+              "value": "={{ $('Cotización - Gestionar borrador').item.json.draft.codigo_producto }}"
+            },
+            {
+              "name": "empresa",
+              "value": "01"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Cotización').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -7376,
+        1440
+      ],
+      "id": "62bd72b5-ccb9-49d5-80f5-7a8bb8a963b6",
+      "name": "CAF - Cotización consultar producto",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "list"
+            },
+            {
+              "name": "object",
+              "value": "v_existencia"
+            },
+            {
+              "name": "psearch",
+              "value": "={{ $('Cotización - Gestionar borrador').item.json.draft.codigo_producto }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Cotización').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -7104,
+        1440
+      ],
+      "id": "1707782d-20b3-4438-9e48-19fe5b49d236",
+      "name": "CAF - Cotización consultar existencia",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const gestion = $('Cotización - Gestionar borrador').item.json;\nconst draft = gestion.draft || {};\nconst clienteResp = $('CAF - Cotización consultar cliente').item.json || {};\nconst productoResp = $('CAF - Cotización consultar producto').item.json || {};\nconst existenciaResp = $('CAF - Cotización consultar existencia').item.json || {};\n\nconst c = clienteResp.cliente || {};\nconst p = productoResp.prod || {};\nconst existencias = Array.isArray(existenciaResp.v_existencia) ? existenciaResp.v_existencia : [];\n\nconst limpio = v => (v ?? '').toString().trim();\nconst num = v => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\n\nconst clienteValido = Boolean(clienteResp.success && limpio(c.cuenta));\nconst productoValido = Boolean(productoResp.success && limpio(p.codpro));\n\nconst sessionId = gestion.sessionKeyCotizacion || 'sesion-default';\nconst data = $getWorkflowStaticData('global');\nif (!data.cotizacionesPraisa) data.cotizacionesPraisa = {};\n\nif (!clienteValido || !productoValido) {\n  const problemas = [];\n  if (!clienteValido) problemas.push('No pude validar la cuenta del cliente en CAF Web.');\n  if (!productoValido) problemas.push('No pude validar el producto en CAF Web.');\n\n  return [{\n    json: {\n      listoDocumento: false,\n      estado: 'ERROR_VALIDACION_CAF',\n      mensaje: problemas.join('\\n') + '\\n\\nEl borrador de cotización sigue guardado. Puedes corregir la cuenta o el código e intentarlo nuevamente.',\n      draft\n    }\n  }];\n}\n\nconst cantidad = num(draft.cantidad);\nconst precioUnitario = num(p.precioa);\nconst totalPreliminar = precioUnitario * cantidad;\n\nlet existenciaTotal = 0;\nfor (const r of existencias) existenciaTotal += num(r.existencia);\n\nlet tiempoEntrega = 'Por confirmar';\nif (existencias.length > 0 && existenciaTotal >= cantidad) {\n  tiempoEntrega = 'Inmediato, salvo previa venta';\n} else if (existencias.length > 0 && existenciaTotal < cantidad) {\n  tiempoEntrega = 'Existencia insuficiente; confirmar plazo de entrega';\n}\n\nconst correos = [...new Set(\n  limpio(c.email).split(',').map(x => x.trim()).filter(Boolean)\n)].join(', ');\n\nconst fecha = new Intl.DateTimeFormat('es-GT', {\n  day: '2-digit',\n  month: '2-digit',\n  year: 'numeric',\n  timeZone: 'America/Guatemala'\n}).format(new Date());\n\nconst datosDocumento = {\n  cotizacion: 'PENDIENTE',\n  fecha,\n  empresa: limpio(c.nombre_cliente),\n  cuenta_cliente: limpio(c.cuenta),\n  nit: limpio(c.nit),\n  atencion: limpio(c.contacto) || 'Por confirmar',\n  correo: correos || 'Por confirmar',\n  telefono: limpio(c.telefono) || 'Por confirmar',\n  direccion_cliente: limpio(c.direccion),\n  direccion_entrega: limpio(draft.direccion_entrega) || limpio(c.direccion) || 'Por confirmar',\n  condiciones_pago: limpio(c.terminos) || 'Por confirmar',\n  validez: '15 días',\n  moneda: 'GTQ',\n  iva_estado: 'PENDIENTE DE VALIDAR',\n  asesor: 'Por asignar',\n  telefono_asesor: '',\n  correo_asesor: '',\n  items: [{\n    item: 1,\n    cantidad,\n    codigo: limpio(p.codpro),\n    descripcion: limpio(p.nombre_prod),\n    unidad: limpio(p.umedida),\n    precio_unitario_preliminar: precioUnitario,\n    precio_total_preliminar: totalPreliminar,\n    existencia_total: existenciaTotal,\n    tiempo_entrega: tiempoEntrega\n  }],\n  total_preliminar: totalPreliminar,\n  estado: 'PENDIENTE_REVISION',\n  fuente_precio: 'Precio A CAF',\n  nota_control: 'BORRADOR INTERNO. No enviar al cliente sin revisión técnica y comercial.'\n};\n\ndata.cotizacionesPraisa[sessionId] = {\n  active: false,\n  lastCompleted: datosDocumento\n};\n\nconst dinero = v => 'Q' + num(v).toLocaleString('en-US', {\n  minimumFractionDigits: 2,\n  maximumFractionDigits: 2\n});\n\nconst mensaje =\n  '✅ Borrador de cotización preparado con datos consultados en CAF Web.\\n\\n' +\n  '**Cliente**\\n' +\n  '- Cuenta: ' + datosDocumento.cuenta_cliente + '\\n' +\n  '- Empresa: ' + datosDocumento.empresa + '\\n' +\n  '- Atención: ' + datosDocumento.atencion + '\\n' +\n  '- Correo: ' + datosDocumento.correo + '\\n' +\n  '- Teléfono: ' + datosDocumento.telefono + '\\n\\n' +\n  '**Producto**\\n' +\n  '- Código: ' + datosDocumento.items[0].codigo + '\\n' +\n  '- Descripción: ' + datosDocumento.items[0].descripcion + '\\n' +\n  '- Cantidad: ' + cantidad + '\\n' +\n  '- Precio A CAF: ' + dinero(precioUnitario) + '\\n' +\n  '- Total preliminar: ' + dinero(totalPreliminar) + '\\n' +\n  '- Existencia total: ' + existenciaTotal.toLocaleString('en-US', {maximumFractionDigits: 2}) + '\\n' +\n  '- Entrega: ' + tiempoEntrega + '\\n\\n' +\n  '⚠️ **Estado: PENDIENTE DE REVISIÓN**\\n' +\n  'Este cálculo es un borrador interno. Antes de generar o enviar la cotización formal hay que validar producto, código, existencia, precio, IVA, condiciones comerciales y tiempo de entrega.\\n\\n' +\n  'Los datos ya quedaron estructurados para conectarlos a la plantilla Word/PDF de Praisa.';\n\nreturn [{\n  json: {\n    listoDocumento: true,\n    estado: 'PENDIENTE_REVISION',\n    datosDocumento,\n    mensaje\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6832,
+        1440
+      ],
+      "id": "c43a107e-47e9-4c31-aadb-2676b582ca5a",
+      "name": "Cotización - Preparar datos Word PDF"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.mensaje }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        -6560,
+        1440
+      ],
+      "id": "c00bd3f0-ff5b-4058-b6c2-3341a2f6a052",
+      "name": "Respuesta - Borrador cotización",
+      "webhookId": "14769eaf-397f-41e8-ac57-b117a45ebbd2"
     }
   ],
   "pinData": {},
@@ -1355,7 +1745,7 @@
       "main": [
         [
           {
-            "node": "IA - Clasificar intención",
+            "node": "Cotización - Gestionar borrador",
             "type": "main",
             "index": 0
           }
@@ -1774,16 +2164,132 @@
           }
         ]
       ]
+    },
+    "Cotización - Gestionar borrador": {
+      "main": [
+        [
+          {
+            "node": "¿Es cotización?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es cotización?": {
+      "main": [
+        [
+          {
+            "node": "¿Cotización cancelada?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IA - Clasificar intención",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cotización cancelada?": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Cotización cancelada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "¿Datos cotización completos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Datos cotización completos?": {
+      "main": [
+        [
+          {
+            "node": "CAF - Obtener JWT Cotización",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Solicitar - Datos cotización",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Obtener JWT Cotización": {
+      "main": [
+        [
+          {
+            "node": "CAF - Cotización consultar cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Cotización consultar cliente": {
+      "main": [
+        [
+          {
+            "node": "CAF - Cotización consultar producto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Cotización consultar producto": {
+      "main": [
+        [
+          {
+            "node": "CAF - Cotización consultar existencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Cotización consultar existencia": {
+      "main": [
+        [
+          {
+            "node": "Cotización - Preparar datos Word PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cotización - Preparar datos Word PDF": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Borrador cotización",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
-  },
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "dcd1ce74ac641920aeb2fa59433f9d61cb4082de8a5820790ec94a84cd2e6f77"
   },
   "nodeGroups": [],
   "tags": []
