@@ -2030,175 +2030,175 @@
               "object": "text",
               "action": "replaceAll",
               "text": "{{fecha}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.fecha }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.fecha }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cotizacion}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.cotizacion }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cotizacion }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{referencia}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.referencia }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.referencia }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{empresa}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.empresa }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.empresa }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{atencion}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.atencion }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.atencion }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{correo}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.correo }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.correo }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{telefono}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.telefono }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.telefono }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.item }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.cant }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.descripcion }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.p_unit }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.p_total }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.entrega }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{moneda}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.moneda }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.moneda }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{total}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.total }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.total }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{condicion_precio}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.condicion_precio }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.condicion_precio }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{nota_impuestos}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.nota_impuestos }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.nota_impuestos }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{pago}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.pago }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.pago }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{validez}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.validez }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.validez }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{direccion_entrega}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.direccion_entrega }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.direccion_entrega }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{nota_entrega}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.nota_entrega }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.nota_entrega }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{asesor_nombre}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.asesor_nombre }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.asesor_nombre }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{asesor_cargo}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.asesor_cargo }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.asesor_cargo }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{asesor_telefono}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.asesor_telefono }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.asesor_telefono }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{asesor_email}}",
-              "replaceText": "={ $('Cotización - Preparar documento').item.json.campos.asesor_email }",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.asesor_email }}",
               "matchCase": true
             }
           ]
