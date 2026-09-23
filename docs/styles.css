@@ -384,3 +384,73 @@ html[data-theme="light"] .chat-card #n8n-chat .chat-message-from-bot .chat-messa
   content:"Validando producto y existencias en CAF";
   color:#f4f7fa!important;
 }
+
+
+/* ===== Selector de asesores Praisa ===== */
+.praisa-advisor-selector{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px;
+  padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.praisa-advisor-card{
+  min-width:0;
+  padding:10px 11px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:3px;
+  border:1px solid #385064;
+  border-radius:12px;
+  background:linear-gradient(145deg,#102331,#0d1d28);
+  color:#f8fbfd;
+  text-align:left;
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+.praisa-advisor-card:hover{
+  transform:translateY(-1px);
+  border-color:#ef3038;
+  background:linear-gradient(145deg,#172d3d,#102431);
+  box-shadow:0 7px 18px rgba(0,0,0,.18);
+}
+.praisa-advisor-card strong{
+  color:#fff!important;
+  font-size:.72rem;
+  line-height:1.25;
+}
+.praisa-advisor-card span{
+  color:#d9e1e7!important;
+  font-size:.59rem;
+}
+.praisa-advisor-card small{
+  color:#9fb1bf!important;
+  font-size:.53rem;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.praisa-advisor-other{
+  border-style:dashed;
+}
+html[data-theme="light"] .praisa-advisor-selector{
+  border-top-color:#d8e0e6;
+}
+html[data-theme="light"] .praisa-advisor-card{
+  background:#fff;
+  border-color:#ccd7df;
+  color:#182531;
+}
+html[data-theme="light"] .praisa-advisor-card strong{
+  color:#182531!important;
+}
+html[data-theme="light"] .praisa-advisor-card span{
+  color:#4f5f6c!important;
+}
+html[data-theme="light"] .praisa-advisor-card small{
+  color:#6f7f8b!important;
+}
+@media(max-width:680px){
+  .praisa-advisor-selector{grid-template-columns:1fr}
+}
