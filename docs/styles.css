@@ -91,11 +91,14 @@ html[data-theme="light"] .session-help{background:linear-gradient(135deg,rgba(21
 /* ===== Chat UX v2: burbujas, microanimaciones y escritura ===== */
 .chat-card #n8n-chat .chat-body{
   scroll-behavior:smooth!important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
 }
 .chat-card #n8n-chat .chat-messages-list{
   padding:18px 18px 20px!important;
 }
 .chat-card #n8n-chat .chat-message{
+  position:relative!important;
   width:fit-content!important;
   inline-size:fit-content!important;
   max-width:78%!important;
