@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Asistente Interno - Piloto v1.6.2 - Revisión comercial editable",
+  "name": "Praisa IA - Asistente Interno - Piloto v1.6.3 - Archivos en chat",
   "nodes": [
     {
       "parameters": {
@@ -2629,7 +2629,7 @@
             {
               "id": "praisa-output-20",
               "name": "output",
-              "value": "=✅ Cotización **{{ $('Cotización - Asignar consecutivo IA').item.json.numeroCotizacion }}** generada después de la revisión comercial.\n\n**Google Docs:** https://docs.google.com/document/d/{{ $('Google Drive - Copiar plantilla').item.json.id }}/edit\n**PDF:** https://drive.google.com/file/d/{{ $('Google Drive - Guardar PDF').item.json.id }}/view\n**Word:** https://drive.google.com/file/d/{{ $('Google Drive - Guardar Word').item.json.id }}/view\n\n📌 El número se asignó automáticamente con el consecutivo interno de Praisa IA.\n\n⚠️ Realiza una revisión final antes de enviarlo al cliente.",
+              "value": "=✅ Cotización **{{ $('Cotización - Asignar consecutivo IA').item.json.numeroCotizacion }}** generada correctamente después de la revisión comercial.\n\n**Archivos de la cotización**\n\n[📄 Abrir PDF](https://drive.google.com/file/d/{{ $('Google Drive - Guardar PDF').item.json.id }}/view)\n\n[📝 Abrir Word](https://drive.google.com/file/d/{{ $('Google Drive - Guardar Word').item.json.id }}/view)\n\n[📎 Abrir Google Docs](https://docs.google.com/document/d/{{ $('Google Drive - Copiar plantilla').item.json.id }}/edit)\n\nLos archivos quedaron guardados en Google Drive y conservan el acceso interno configurado.\n\n📌 El número se asignó automáticamente con el consecutivo interno de Praisa IA.\n\n⚠️ Realiza una revisión final antes de enviarlo al cliente.",
               "type": "string"
             }
           ]
@@ -5268,6 +5268,6 @@
   "nodeGroups": [],
   "tags": [],
   "meta": {
-    "praisaVersion": "1.6.2"
+    "praisaVersion": "1.6.3"
   }
 }
