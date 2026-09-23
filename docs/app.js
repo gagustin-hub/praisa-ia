@@ -236,6 +236,177 @@ function sendPromptNow(prompt) {
   }, 90);
 }
 
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+let voiceRecognition = null;
+let voiceListening = false;
+let voiceFinalText = '';
+let voiceBaseText = '';
+let voiceHadError = false;
+
+function setChatInputValue(value) {
+  const input = chatInput();
+  if (!input) return false;
+
+  const proto = Object.getPrototypeOf(input);
+  const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+  if (setter) setter.call(input, value);
+  else input.value = value;
+
+  input.dispatchEvent(new Event('input', { bubbles:true }));
+  input.dispatchEvent(new Event('change', { bubbles:true }));
+  return true;
+}
+
+function updateVoiceButtonState() {
+  const button = document.querySelector('#n8n-chat .praisa-voice-button');
+  const root = document.getElementById('n8n-chat');
+  if (!button || !root) return;
+
+  button.classList.toggle('is-listening', voiceListening);
+  button.setAttribute('aria-pressed', voiceListening ? 'true' : 'false');
+  button.setAttribute('aria-label', voiceListening ? 'Detener dictado' : 'Hablar con Praisa IA');
+  button.title = voiceListening ? 'Detener dictado' : 'Hablar con Praisa IA';
+  root.classList.toggle('praisa-voice-listening', voiceListening);
+}
+
+function finishVoiceState() {
+  voiceListening = false;
+  updateVoiceButtonState();
+}
+
+function startVoiceDictation() {
+  if (!SpeechRecognitionAPI) {
+    helperText.textContent = 'El dictado por voz no está disponible en este navegador. Prueba con Chrome o Edge.';
+    return;
+  }
+
+  if (voiceListening && voiceRecognition) {
+    voiceRecognition.stop();
+    return;
+  }
+
+  const input = chatInput();
+  if (!input) {
+    helperText.textContent = 'El chat todavía está cargando.';
+    return;
+  }
+
+  voiceFinalText = '';
+  voiceBaseText = (input.value || '').trim();
+  voiceHadError = false;
+
+  const recognition = new SpeechRecognitionAPI();
+  voiceRecognition = recognition;
+  recognition.lang = 'es-GT';
+  recognition.interimResults = true;
+  recognition.continuous = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    voiceListening = true;
+    updateVoiceButtonState();
+    helperText.textContent = '🎙️ Escuchando… habla con naturalidad. Al terminar, enviaré el mensaje automáticamente.';
+  };
+
+  recognition.onresult = (event) => {
+    let interim = '';
+    let finalChunk = '';
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = (event.results[i][0]?.transcript || '').trim();
+      if (!transcript) continue;
+      if (event.results[i].isFinal) finalChunk += (finalChunk ? ' ' : '') + transcript;
+      else interim += (interim ? ' ' : '') + transcript;
+    }
+
+    if (finalChunk) {
+      voiceFinalText = [voiceFinalText, finalChunk].filter(Boolean).join(' ').trim();
+    }
+
+    const spoken = [voiceFinalText, interim].filter(Boolean).join(' ').trim();
+    const combined = [voiceBaseText, spoken].filter(Boolean).join(voiceBaseText && spoken ? ' ' : '').trim();
+    if (combined) setChatInputValue(combined);
+  };
+
+  recognition.onerror = (event) => {
+    voiceHadError = true;
+    const code = event.error || '';
+
+    if (code === 'not-allowed' || code === 'service-not-allowed') {
+      helperText.textContent = 'No tengo permiso para usar el micrófono. Habilítalo en el navegador y vuelve a intentarlo.';
+    } else if (code === 'no-speech') {
+      helperText.textContent = 'No escuché ninguna frase. Pulsa el micrófono e inténtalo de nuevo.';
+    } else {
+      helperText.textContent = 'No pude completar el dictado. Puedes intentarlo nuevamente.';
+    }
+  };
+
+  recognition.onend = () => {
+    const finalMessage = [voiceBaseText, voiceFinalText]
+      .filter(Boolean)
+      .join(voiceBaseText && voiceFinalText ? ' ' : '')
+      .trim();
+
+    finishVoiceState();
+    voiceRecognition = null;
+
+    if (!voiceHadError && voiceFinalText && finalMessage) {
+      helperText.textContent = 'Voz reconocida. Enviando a Praisa IA…';
+      setTimeout(() => sendPromptNow(finalMessage), 180);
+    } else if (!voiceHadError) {
+      helperText.textContent = 'Pulsa el micrófono para volver a hablar.';
+    }
+  };
+
+  try {
+    recognition.start();
+  } catch (error) {
+    console.error(error);
+    finishVoiceState();
+    helperText.textContent = 'No pude iniciar el micrófono. Inténtalo nuevamente.';
+  }
+}
+
+function ensureVoiceButton() {
+  const root = document.getElementById('n8n-chat');
+  const input = chatInput();
+  if (!root || !input) return;
+
+  if (root.querySelector('.praisa-voice-button')) {
+    updateVoiceButtonState();
+    return;
+  }
+
+  const composer = input.closest('.chat-inputs') || input.parentElement;
+  if (!composer) return;
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'praisa-voice-button';
+  button.innerHTML = '<span aria-hidden="true">🎙️</span>';
+  button.setAttribute('aria-label', 'Hablar con Praisa IA');
+  button.setAttribute('aria-pressed', 'false');
+  button.title = 'Hablar con Praisa IA';
+
+  if (!SpeechRecognitionAPI) {
+    button.classList.add('is-unsupported');
+    button.title = 'Dictado no disponible en este navegador';
+  }
+
+  button.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    startVoiceDictation();
+  });
+
+  const sendButton =
+    composer.querySelector('.chat-input-send-button') ||
+    composer.querySelector('button[type="submit"]');
+
+  if (sendButton && sendButton.parentElement === composer) composer.insertBefore(button, sendButton);
+  else composer.appendChild(button);
+}
+
 function enhanceAdvisorSelector(message) {
   if (!message || message.dataset.praisaAdvisorSelector === 'true') return;
 
@@ -441,6 +612,7 @@ function observeChatContext() {
       updateSessionContext(text);
     }
     enhanceMessages();
+    ensureVoiceButton();
   };
 
   const observer = new MutationObserver(read);
@@ -481,7 +653,7 @@ function startChat(username, password) {
         subtitle: 'Asistente virtual interno',
         footer: '',
         getStarted: 'Nueva conversación',
-        inputPlaceholder: 'Escribe tu mensaje aquí...'
+        inputPlaceholder: 'Escribe o habla con Praisa IA...'
       }
     },
     enableStreaming: false
@@ -493,7 +665,7 @@ function startChat(username, password) {
   setStatus('online', 'Sesión interna', 'Praisa IA conectado');
   passInput.value = '';
   setTimeout(() => {
-    helperText.textContent = 'Puedes escribir en lenguaje natural. Praisa IA entiende el contexto de la sesión.';
+    helperText.textContent = 'Puedes escribir o usar el micrófono. Praisa IA entiende el contexto de la sesión.';
     observeChatContext();
   }, 600);
 }
