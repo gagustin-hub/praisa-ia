@@ -4,18 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex,nofollow" />
+  <meta name="theme-color" content="#0d141d" />
   <title>Praisa IA Interno</title>
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+
   <div id="access-gate" class="access-gate">
     <form id="access-form" class="access-card" autocomplete="off">
+      <div class="access-glow" aria-hidden="true"></div>
       <img src="logo.svg" alt="Praisa" class="access-logo" />
-      <p class="eyebrow">ACCESO INTERNO</p>
+      <div class="access-lock"><span>●</span> Acceso interno</div>
       <h1>Praisa IA Interno</h1>
-      <p class="access-copy">Ingrese las credenciales internas asignadas para usar el asistente. No se guardan en esta página.</p>
+      <p class="access-copy">Ingresa con las credenciales internas asignadas para acceder al piloto privado del asistente.</p>
 
       <label>
         Usuario
@@ -26,7 +31,7 @@
         <input id="access-pass" name="password" type="password" autocomplete="current-password" required />
       </label>
 
-      <button type="submit" class="primary-button">Entrar al asistente</button>
+      <button type="submit" class="primary-button">Entrar al asistente <span>→</span></button>
       <p id="access-error" class="access-error" aria-live="polite"></p>
       <p class="access-note">Uso exclusivo para pruebas internas de Praisa.</p>
     </form>
@@ -36,11 +41,18 @@
     <div class="brand">
       <img src="logo.svg" alt="Praisa - Proveedores y Asesores Industriales, S.A." class="brand-logo" />
       <div class="brand-divider" aria-hidden="true"></div>
-      <div>
-        <p class="eyebrow">ASISTENTE VIRTUAL INTERNO</p>
-        <h1>Praisa IA Interno</h1>
-        <p class="brand-subtitle">CAF · Base técnica · Clientes · Cotizaciones · Procesos internos</p>
+      <div class="brand-copy">
+        <h1>Praisa <span>IA Interno</span></h1>
+        <p>Tu asistente inteligente de trabajo</p>
       </div>
+    </div>
+
+    <div class="top-slogan">IMPULSAMOS<br>LA INDUSTRIA<br>JUNTOS <i></i></div>
+
+    <div class="top-search" aria-hidden="true">
+      <span>⌕</span>
+      <span>Buscar en Praisa IA...</span>
+      <kbd>Ctrl + K</kbd>
     </div>
 
     <div class="topbar-actions">
@@ -55,77 +67,165 @@
     </div>
   </header>
 
-  <main class="app-shell">
-    <aside class="left-panel">
-      <nav class="nav-card" aria-label="Funciones internas">
-        <button class="nav-item active" type="button"><span class="nav-icon">✦</span><span><strong>Asistente</strong><small>Praisa IA Interno</small></span></button>
-        <button class="nav-item quick-prompt" type="button" data-prompt="Quiero consultar información de un producto en CAF."><span class="nav-icon">⌕</span><span><strong>Consultar CAF</strong><small>Producto, precio y stock</small></span></button>
-        <button class="nav-item quick-prompt" type="button" data-prompt="Necesito buscar un producto por descripción técnica."><span class="nav-icon">◫</span><span><strong>Base técnica</strong><small>Catálogos y selección</small></span></button>
-        <button class="nav-item quick-prompt" type="button" data-prompt="Quiero consultar un cliente en CAF."><span class="nav-icon">◎</span><span><strong>Clientes</strong><small>Datos e historial</small></span></button>
-        <button class="nav-item quick-prompt" type="button" data-prompt="Quiero preparar una cotización."><span class="nav-icon">▤</span><span><strong>Cotizaciones</strong><small>Borrador y documentos</small></span></button>
+  <main class="workspace">
+    <aside class="sidebar">
+      <nav class="side-nav" aria-label="Funciones internas">
+        <button class="side-link active" type="button" data-section="chat">
+          <span class="side-icon">▢</span>
+          <span><strong>Chat IA</strong><small>Asistente Praisa IA</small></span>
+          <b>›</b>
+        </button>
+        <button class="side-link quick-prompt" type="button" data-prompt="Quiero consultar información de un producto en CAF.">
+          <span class="side-icon">▤</span>
+          <span><strong>Consultar CAF</strong><small>Existencias y precios</small></span>
+          <b>›</b>
+        </button>
+        <button class="side-link quick-prompt" type="button" data-prompt="Necesito buscar información en la base técnica.">
+          <span class="side-icon">▥</span>
+          <span><strong>Base técnica</strong><small>Documentación y soporte</small></span>
+          <b>›</b>
+        </button>
+        <button class="side-link quick-prompt" type="button" data-prompt="Quiero consultar un cliente en CAF.">
+          <span class="side-icon">♙</span>
+          <span><strong>Clientes</strong><small>Información e historial</small></span>
+          <b>›</b>
+        </button>
+        <button class="side-link quick-prompt" type="button" data-prompt="Quiero preparar una cotización.">
+          <span class="side-icon">▧</span>
+          <span><strong>Cotizaciones</strong><small>Crear y gestionar</small></span>
+          <b>›</b>
+        </button>
+        <button class="side-link quick-prompt" type="button" data-prompt="Quiero revisar una aprobación técnica de la sesión actual.">
+          <span class="side-icon">✓</span>
+          <span><strong>Aprobaciones</strong><small>Flujos y validaciones</small></span>
+          <span class="nav-badge">Piloto</span>
+        </button>
+        <button class="side-link quick-prompt" type="button" data-prompt="Ayúdame a preparar un reporte interno con la información disponible.">
+          <span class="side-icon">▥</span>
+          <span><strong>Reportes</strong><small>Análisis interno</small></span>
+          <b>›</b>
+        </button>
       </nav>
 
+      <div class="side-divider"></div>
+
+      <button class="side-link compact" type="button">
+        <span class="side-icon">⚙</span>
+        <span><strong>Configuración</strong><small>Preferencias</small></span>
+      </button>
+
       <section class="industry-card">
-        <p class="eyebrow">PILOTO INTERNO</p>
-        <h2>Probar, medir y mejorar.</h2>
-        <p>Esta versión sirve para validar el valor real del asistente antes de una implementación definitiva.</p>
-        <div class="industry-lines" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="industry-light"></div>
+        <span class="industry-kicker">PRAISA</span>
+        <h2>La industria cuenta con nosotros.</h2>
+        <p>Soluciones industriales con respaldo técnico y comercial.</p>
+        <i></i>
       </section>
     </aside>
 
-    <section class="chat-column">
-      <div class="chat-heading">
-        <div>
-          <span class="live-badge"><i></i> Entorno interno</span>
-          <h2>¿Qué necesitas hacer?</h2>
-          <p>Consulta información, relaciona datos y ejecuta tareas del piloto interno de Praisa.</p>
+    <section class="main-column">
+      <section class="hero-card">
+        <div class="hero-grid"></div>
+        <div class="hero-redline hero-redline-a"></div>
+        <div class="hero-redline hero-redline-b"></div>
+        <div class="hero-copy">
+          <p>ASISTENTE INTERNO</p>
+          <h2>Praisa <span>IA</span> Interno</h2>
+          <h3>Conocimiento. Productividad. Resultados.</h3>
         </div>
-      </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-machine"></div>
+          <div class="hero-wordmark">Praisa</div>
+          <small>“Misma industria.<br>Nuevas posibilidades.”</small>
+        </div>
+        <div class="hero-actions">
+          <button class="hero-action quick-prompt" data-prompt="Quiero consultar información de un producto en CAF.">⌕ Consultar CAF</button>
+          <button class="hero-action quick-prompt" data-prompt="Quiero preparar una cotización.">▣ Crear cotización</button>
+          <button class="hero-action quick-prompt" data-prompt="Quiero consultar un cliente en CAF.">♙ Buscar cliente</button>
+          <button class="hero-action quick-prompt" data-prompt="Necesito buscar información en la base técnica.">▥ Base técnica</button>
+          <button class="hero-action quick-prompt" data-prompt="Ayúdame a preparar un reporte interno con la información disponible.">▥ Generar reporte</button>
+        </div>
+      </section>
 
-      <div class="quick-actions">
-        <button class="action-chip quick-prompt" type="button" data-prompt="Información del producto 16DEL0120">Producto</button>
-        <button class="action-chip quick-prompt" type="button" data-prompt="Quiero revisar existencias de un producto.">Existencias</button>
-        <button class="action-chip quick-prompt" type="button" data-prompt="Quiero consultar un cliente.">Cliente</button>
-        <button class="action-chip quick-prompt" type="button" data-prompt="Quiero preparar una cotización.">Cotización</button>
-      </div>
+      <section class="chat-shell">
+        <div class="chat-shell-head">
+          <div class="assistant-id">
+            <div class="assistant-avatar">P</div>
+            <div>
+              <div class="assistant-name">Praisa IA <span>INTERNO</span></div>
+              <div class="assistant-state"><i></i> Conectado <b>·</b> Listo para ayudarte</div>
+            </div>
+          </div>
+          <div class="session-meta">
+            <span>▣ <span id="current-date">Sesión interna</span></span>
+            <span>◷ <span id="current-time">--:--</span></span>
+            <span>•••</span>
+          </div>
+        </div>
 
-      <div class="chat-card">
-        <div id="n8n-chat" aria-label="Chat con Praisa IA Interno"></div>
-      </div>
+        <div class="chat-card">
+          <div id="n8n-chat" aria-label="Chat con Praisa IA Interno"></div>
+        </div>
 
-      <p class="helper-text" id="helper-text">El asistente mantiene el contexto de la conversación dentro de la sesión actual.</p>
+        <div class="suggestions">
+          <span>Sugerencias:</span>
+          <button class="quick-prompt" data-prompt="Quiero consultar otro código de producto.">Consultar otro código</button>
+          <button class="quick-prompt" data-prompt="Quiero crear una cotización.">Crear cotización</button>
+          <button class="quick-prompt" data-prompt="Necesito revisar información técnica del producto actual.">Ficha técnica</button>
+          <button class="quick-prompt" data-prompt="Quiero consultar el historial de un cliente.">Ver historial</button>
+        </div>
+
+        <p class="helper-text" id="helper-text">Puedes escribir en lenguaje natural. Praisa IA entiende el contexto de la sesión.</p>
+      </section>
     </section>
 
-    <aside class="right-panel">
-      <section class="info-card">
-        <div class="info-card-head"><span class="info-icon">●</span><h3>Estado del piloto</h3></div>
-        <strong class="online-text">Pruebas internas</strong>
-        <p>Las respuestas se validarán antes de considerar una implementación definitiva.</p>
+    <aside class="right-rail">
+      <section class="rail-card status-card">
+        <div class="rail-title">
+          <div><span class="pulse-dot"></span><h3>Estado del asistente</h3></div>
+          <div class="brain-orbit">◉</div>
+        </div>
+        <div class="status-copy">
+          <strong>En línea</strong>
+          <span>Piloto interno de Praisa</span>
+        </div>
+        <div class="mini-status-grid">
+          <div><strong>n8n</strong><span>Orquestación</span></div>
+          <div><strong>CAF</strong><span>Consulta</span></div>
+          <div><strong>RAG</strong><span>Base técnica</span></div>
+        </div>
       </section>
 
-      <section class="info-card">
-        <div class="info-card-head"><span class="info-icon">✓</span><h3>Capacidades actuales</h3></div>
-        <ul class="feature-list">
-          <li>Productos, Precio A y existencias</li>
-          <li>Clientes e historial CAF</li>
-          <li>Búsqueda técnica asistida</li>
-          <li>Control de aprobación técnica</li>
-          <li>Cotizaciones y documentos</li>
-          <li>Contexto conversacional básico</li>
-        </ul>
+      <section class="rail-card">
+        <div class="section-title"><span>ϟ</span><h3>Acciones rápidas</h3></div>
+        <div class="action-grid">
+          <button class="rail-action quick-prompt" data-prompt="Quiero consultar información de un producto en CAF."><b>◇</b><span><strong>Consultar CAF</strong><small>Existencias y precios</small></span></button>
+          <button class="rail-action quick-prompt" data-prompt="Quiero preparar una cotización."><b>▤</b><span><strong>Crear cotización</strong><small>Nueva cotización</small></span></button>
+          <button class="rail-action quick-prompt" data-prompt="Quiero consultar un cliente en CAF."><b>♙</b><span><strong>Buscar cliente</strong><small>Datos e historial</small></span></button>
+          <button class="rail-action quick-prompt" data-prompt="Necesito buscar información en la base técnica."><b>▥</b><span><strong>Base técnica</strong><small>Manuales y fichas</small></span></button>
+        </div>
       </section>
 
-      <section class="info-card accent-card">
-        <p class="eyebrow">SEGURIDAD</p>
-        <h3>Uso restringido</h3>
-        <p>La interfaz no almacena las credenciales. CAF continúa operando en modo de consulta dentro del piloto.</p>
+      <section class="rail-card activity-card">
+        <div class="section-title"><span>◷</span><h3>Actividad del piloto</h3></div>
+        <div class="activity-item"><i class="green"></i><div><strong>Consulta de producto</strong><span>CAF · código, precio y existencia</span></div></div>
+        <div class="activity-item"><i class="amber"></i><div><strong>Cotización</strong><span>Borrador y documentos</span></div></div>
+        <div class="activity-item"><i class="blue"></i><div><strong>Cliente</strong><span>Datos e historial comercial</span></div></div>
+        <div class="activity-item"><i class="red"></i><div><strong>Base técnica</strong><span>Catálogos y validación</span></div></div>
+      </section>
+
+      <section class="rail-card pilot-card">
+        <span>PILOTO</span>
+        <strong>Uso interno</strong>
+        <p>Estamos validando precisión, utilidad y estabilidad antes de una implementación definitiva.</p>
       </section>
     </aside>
   </main>
 
-  <footer>
-    <span>© 2026 Praisa. Uso interno.</span>
-    <span>Piloto de asistente virtual.</span>
+  <footer class="footer">
+    <span>Praisa IA Interno · Piloto</span>
+    <span>Uso exclusivo interno</span>
+    <span>Praisa · 2026</span>
   </footer>
 
   <script type="module" src="app.js"></script>
