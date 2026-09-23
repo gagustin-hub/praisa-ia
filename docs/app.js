@@ -12,6 +12,8 @@ const statusDot = document.getElementById('status-dot');
 const statusTitle = document.getElementById('status-title');
 const statusText = document.getElementById('status-text');
 const helperText = document.getElementById('helper-text');
+const currentDate = document.getElementById('current-date');
+const currentTime = document.getElementById('current-time');
 
 let chatStarted = false;
 
@@ -22,9 +24,30 @@ function setStatus(kind, title, text) {
   statusText.textContent = text;
 }
 
+function updateClock() {
+  const now = new Date();
+  if (currentDate) {
+    currentDate.textContent = new Intl.DateTimeFormat('es-GT', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }).format(now);
+  }
+  if (currentTime) {
+    currentTime.textContent = new Intl.DateTimeFormat('es-GT', {
+      hour: 'numeric',
+      minute: '2-digit'
+    }).format(now);
+  }
+}
+updateClock();
+setInterval(updateClock, 30000);
+
 function putPromptInChat(prompt) {
   const root = document.getElementById('n8n-chat');
   const input = root.querySelector('textarea, input[type="text"]');
+
   if (!input) {
     helperText.textContent = 'El chat todavía está cargando.';
     return;
@@ -35,13 +58,16 @@ function putPromptInChat(prompt) {
   const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
   if (setter) setter.call(input, prompt);
   else input.value = prompt;
+
   input.dispatchEvent(new Event('input', { bubbles: true }));
   input.dispatchEvent(new Event('change', { bubbles: true }));
-  helperText.textContent = 'Mensaje preparado. Puede editarlo antes de enviarlo.';
+  helperText.textContent = 'Mensaje preparado. Puedes editarlo antes de enviarlo.';
 }
 
 document.querySelectorAll('.quick-prompt').forEach((button) => {
   button.addEventListener('click', () => {
+    document.querySelectorAll('.side-link').forEach((item) => item.classList.remove('active'));
+    if (button.classList.contains('side-link')) button.classList.add('active');
     const prompt = button.dataset.prompt || '';
     if (prompt) putPromptInChat(prompt);
   });
@@ -49,6 +75,7 @@ document.querySelectorAll('.quick-prompt').forEach((button) => {
 
 function startChat(username, password) {
   if (chatStarted) return;
+
   const token = btoa(unescape(encodeURIComponent(username + ':' + password)));
 
   createChat({
@@ -71,7 +98,7 @@ function startChat(username, password) {
     showWelcomeScreen: false,
     defaultLanguage: 'en',
     initialMessages: [
-      'Hola. Soy Praisa IA Interno. ¿Qué necesitas consultar o hacer?'
+      'Hola, soy Praisa IA. Tu asistente interno.\n\nPuedo ayudarte a consultar CAF, productos, existencias, clientes, documentación técnica y cotizaciones.\n\n¿Qué necesitas hacer?'
     ],
     i18n: {
       en: {
@@ -79,7 +106,7 @@ function startChat(username, password) {
         subtitle: 'Asistente virtual interno',
         footer: '',
         getStarted: 'Nueva conversación',
-        inputPlaceholder: 'Escribe lo que necesitas...'
+        inputPlaceholder: 'Escribe tu mensaje aquí...'
       }
     },
     enableStreaming: false
@@ -88,8 +115,11 @@ function startChat(username, password) {
   chatStarted = true;
   gate.hidden = true;
   logoutButton.hidden = false;
-  setStatus('online', 'Sesión interna', 'Asistente listo para pruebas');
+  setStatus('online', 'Sesión interna', 'Praisa IA conectado');
   passInput.value = '';
+  setTimeout(() => {
+    helperText.textContent = 'Puedes escribir en lenguaje natural. Praisa IA entiende el contexto de la sesión.';
+  }, 600);
 }
 
 form.addEventListener('submit', (event) => {
@@ -98,17 +128,18 @@ form.addEventListener('submit', (event) => {
   const password = passInput.value;
 
   if (!username || !password) {
-    errorBox.textContent = 'Ingrese usuario y contraseña.';
+    errorBox.textContent = 'Ingresa usuario y contraseña.';
     return;
   }
 
   errorBox.textContent = '';
+
   try {
     startChat(username, password);
   } catch (error) {
     console.error(error);
     errorBox.textContent = 'No fue posible iniciar el chat.';
-    setStatus('error', 'Error de acceso', 'Revise la configuración interna');
+    setStatus('error', 'Error de acceso', 'Revisa la configuración interna');
   }
 });
 
