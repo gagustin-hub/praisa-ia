@@ -1001,3 +1001,30 @@ html[data-theme="light"] #n8n-chat .chat-inputs textarea{
   .chat-card{height:58vh}
   #n8n-chat{min-height:58vh}
 }
+
+
+/* FIX definitivo: n8n alinea los mensajes al fondo por margin-top:auto */
+#n8n-chat .chat-layout{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+}
+#n8n-chat .chat-body{
+  flex:1 1 auto!important;
+  display:block!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  background:var(--chat--body--background)!important;
+}
+#n8n-chat .chat-messages-list{
+  display:block!important;
+  margin:0!important;
+  padding:18px!important;
+}
+#n8n-chat .chat-messages-list > *:first-child{
+  margin-top:0!important;
+}
+#n8n-chat .chat-footer{
+  margin-top:0!important;
+  flex:0 0 auto!important;
+}
