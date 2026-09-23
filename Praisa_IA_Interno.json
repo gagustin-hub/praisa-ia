@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Asistente Interno - Piloto v1.4 - Contexto de cotización",
+  "name": "Praisa IA - Asistente Interno - Piloto v1.5 - Clientes por nombre",
   "nodes": [
     {
       "parameters": {
@@ -58,7 +58,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Clasifica la intención del mensaje del usuario.\n\nResponde solamente con una de estas palabras:\nproducto\nmovimiento\nhistorial_cliente\ncliente\nexistencia\notro\n\nUsa:\n- producto: si pregunta por información general de un producto o por un código de producto.\n- movimiento: si pregunta por un registro/detalle individual de movimiento y proporciona o solicita un número.\n- historial_cliente: si pregunta por el historial comercial, movimientos, documentos o actividad de una cuenta de cliente.\n- cliente: si pregunta por los datos generales de un cliente o por una cuenta de cliente.\n- existencia: si pregunta específicamente por existencia, stock, inventario, disponibilidad o cuántas unidades hay de un producto.\n- otro: si no corresponde a ninguno.\n\nImportante adicional:\n- Si el mensaje contiene una orden de cotización como \"cotiza\", \"cotízame\", \"cotizar\", \"crear cotización\" o equivalente, responde otro. Ese flujo se maneja antes y no debe tratarse como consulta de producto.\n\nImportante:\n- Si pregunta por \"movimientos del cliente\", \"historial del cliente\", \"actividad de la cuenta\" o algo equivalente, usa historial_cliente.\n- Si pregunta por un solo movimiento numerado, usa movimiento.\n\nMensaje del usuario:\n{{ $('Chat - Entrada').item.json.chatInput }}",
+        "text": "=Clasifica la intención del mensaje del usuario.\n\nResponde solamente con una de estas palabras:\nproducto\nmovimiento\nhistorial_cliente\ncliente\nexistencia\notro\n\nUsa:\n- producto: si pregunta por información general de un producto, un código de producto o describe claramente un equipo/material industrial.\n- movimiento: si pregunta por un registro/detalle individual de movimiento y proporciona o solicita un número.\n- historial_cliente: si pregunta por el historial comercial, movimientos, documentos o actividad de una cuenta de cliente.\n- cliente: si pregunta por los datos generales de un cliente, por una cuenta CAF o escribe el nombre de una empresa/cliente para localizarlo.\n- existencia: si pregunta específicamente por existencia, stock, inventario, disponibilidad o cuántas unidades hay de un producto.\n- otro: si no corresponde a ninguno.\n\nREGLAS IMPORTANTES:\n- Si el mensaje contiene una orden de cotización como \"cotiza\", \"cotízame\", \"cotizar\", \"crear cotización\" o equivalente, responde otro. Ese flujo se maneja antes.\n- Un nombre de empresa o cliente sin características técnicas debe clasificarse como cliente, NO como producto.\n- Ejemplos de cliente: \"Ingenio Magdalena\", \"Pantaleón\", \"Alimentos Rayo de Luz\", \"Cervecería Centro Americana\".\n- Ejemplos de producto: \"válvula de bola 2 pulgadas\", \"manómetro 0-100 PSI\", \"18DEL0005\".\n- Si pregunta por \"movimientos del cliente\", \"historial del cliente\", \"actividad de la cuenta\" o equivalente, usa historial_cliente.\n- Si pregunta por un solo movimiento numerado, usa movimiento.\n\nMensaje del usuario:\n{{ $('Chat - Entrada').item.json.chatInput }}",
         "messages": {
           "messageValues": []
         },
@@ -934,7 +934,7 @@
             {
               "id": "praisa-output-10",
               "name": "output",
-              "value": "¿Cuál es la cuenta CAF del cliente?",
+              "value": "Escribe la **cuenta CAF** o el **nombre del cliente** que deseas consultar.",
               "type": "string"
             }
           ]
@@ -1550,7 +1550,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $('Configuración CAF').item.json || {};\nconst mensajeOriginal = (input.chatInput || '').toString();\nconst mensaje = mensajeOriginal.trim();\nconst sessionId = (input.sessionId || input.session_id || input.webhookId || 'sesion-default').toString();\n\n// Estado persistente leído desde la Data Table de n8n.\nlet estado = null;\ntry {\n  if ($json && $json.state_json) estado = JSON.parse($json.state_json);\n} catch (e) {}\n\nif (!estado || typeof estado !== 'object') {\n  estado = {\n    active: false,\n    phase: 'base',\n    pendingField: '',\n    draft: {\n      cuenta_cliente: '',\n      codigo_producto: '',\n      cantidad: null,\n      direccion_entrega: '',\n      contacto: '',\n      correo: '',\n      telefono: ''\n    },\n    commercialApproved: false\n  };\n}\n\nif (!estado.draft || typeof estado.draft !== 'object') estado.draft = {};\nlet draft = estado.draft;\n\nconst salida = (extra = {}) => ({\n  ...input,\n  ...extra,\n  draft,\n  sessionKeyCotizacion: sessionId,\n  persist_session_id: sessionId,\n  persist_state_json: JSON.stringify(estado)\n});\n\nconst limpiar = v => (v ?? '').toString().trim();\nconst emailValido = v => {\n  const m = limpiar(v).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i);\n  return m ? m[0] : '';\n};\nconst telefonoValido = v => {\n  const m = limpiar(v).match(/\\+?\\d[\\d\\s().-]{6,}\\d/);\n  return m ? m[0].trim() : '';\n};\n\n// -----------------------------------------------------------------------------\n// APROBACIÓN TÉCNICA PERSISTENTE\n// -----------------------------------------------------------------------------\nconst aprobacionTecnica = mensaje.match(/\\b(?:aprobar|apruebo|aprobado|validar|validado)\\s+t[eé]cnicamente\\s+([A-Z0-9-]{5,})(?:\\s+por\\s+(.+))?$/i);\n\nif (aprobacionTecnica) {\n  const codigo = limpiar(aprobacionTecnica[1]).toUpperCase();\n  const responsable = limpiar(aprobacionTecnica[2]);\n\n  const ctx = estado.technicalContext;\n  const candidatos = Array.isArray(ctx?.candidatos) ? ctx.candidatos : [];\n  const candidato = candidatos.find(c => limpiar(c.codigo).toUpperCase() === codigo);\n\n  if (!ctx || !ctx.active || !candidato) {\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: true,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        mensajeCotizacion:\n          'No encontré ese código dentro del último cruce técnico de esta sesión. Realiza primero la búsqueda técnica del producto y luego registra la aprobación.'\n      })\n    }];\n  }\n\n  if (!responsable) {\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: true,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        mensajeCotizacion:\n          'Para dejar trazabilidad necesito el responsable técnico. Usa: **Aprobar técnicamente ' + codigo + ' por Nombre del responsable técnico**.'\n      })\n    }];\n  }\n\n  ctx.approved = true;\n  ctx.approvedCode = codigo;\n  ctx.approvedBy = responsable;\n  ctx.approvedAt = new Date().toISOString();\n  estado.technicalContext = ctx;\n\n  return [{\n    json: salida({\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: true,\n      cotizacionCancelada: false,\n      cotizacionLista: false,\n      mensajeCotizacion:\n        '✅ **Validación técnica registrada.**\\n\\n' +\n        '- Código CAF: **' + codigo + '**\\n' +\n        '- Responsable: **' + responsable + '**\\n' +\n        '- Estado técnico previo: **' + limpiar(ctx.servicio_validado || 'PENDIENTE') + '**\\n\\n' +\n        'La validación manual libera este código para continuar con la cotización. Indícame el cliente y la cantidad cuando quieras continuar.'\n    })\n  }];\n}\n\nconst solicitaGenerarDocumento =\n  /\\b(aprobar|apruebo|aprobado|generar|genera|crear|crea|preparar|prepara|revisar|revisa)\\b.*\\b(cotizaci[oó]n|documento|pdf|word)\\b/i.test(mensaje) ||\n  /\\b(pdf|word)\\b.*\\b(cotizaci[oó]n|documento)\\b/i.test(mensaje);\n\n// Si el usuario inicia explícitamente una cotización nueva con cliente, producto y cantidad,\n// reinicia cualquier estado conversacional pendiente de una prueba anterior en la misma sesión.\nconst iniciaNuevaCotizacion =\n  /\\b(cot[ií]z[a-záéíóúñ]*|presupuesto|proforma)\\b/i.test(mensaje);\nconst cuentaNueva = (mensaje.toUpperCase().match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/) || [null])[0];\nconst codigosNuevos = mensaje.toUpperCase().match(/\\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}\\b/g) || [];\nconst codigoNuevo = codigosNuevos.find(x => x !== cuentaNueva && !/^[A-Z]{1,5}-\\d{2,8}$/.test(x));\nconst cantidadNuevaMatch =\n  mensaje.match(/(?:quiero\\s+cotizar|necesito\\s+cotizar|cotizar|cantidad(?:\\s+de)?|cant(?:idad)?|necesito|quiero)\\s*:?\\s*(\\d+(?:[.,]\\d+)?)/i) ||\n  mensaje.match(/\\b(\\d+(?:[.,]\\d+)?)\\s*(?:unidades?|uds?|piezas?)\\b/i);\n\nif (\n  iniciaNuevaCotizacion &&\n  cuentaNueva &&\n  codigoNuevo &&\n  cantidadNuevaMatch\n) {\n  estado = {\n    active: false,\n    phase: 'base',\n    pendingField: '',\n    draft: {\n      cuenta_cliente: '',\n      codigo_producto: '',\n      cantidad: null,\n      direccion_entrega: '',\n      contacto: '',\n      correo: '',\n      telefono: ''\n    },\n    commercialApproved: false,\n    lastCompleted: null,\n    technicalContext: estado.technicalContext || null,\n    lastProduct: estado.lastProduct || null\n  };\n  draft = estado.draft;\n}\n\n// -----------------------------------------------------------------------------\n// REVISIÓN COMERCIAL PERSISTENTE\n// -----------------------------------------------------------------------------\nif (estado.phase === 'revision' && estado.pendingField && estado.lastCompleted) {\n  const d = estado.lastCompleted;\n  const item = Array.isArray(d.items) && d.items.length ? d.items[0] : {};\n  const campo = estado.pendingField;\n  let valido = true;\n  let mensajeError = '';\n\n  if (campo === 'pago') {\n    if (/^(usar\\s+(caf|actual)|si|sí|correcto|esta bien|está bien|dejalo asi|déjalo así|igual|mantener)$/i.test(mensaje)) {\n      if (limpiar(d.condiciones_pago) && limpiar(d.condiciones_pago).toLowerCase() !== 'por confirmar') {\n        // Conserva lo obtenido de CAF.\n      } else {\n        valido = false;\n        mensajeError = 'CAF no tiene una condición de pago confirmada. ¿Cuál será la condición de pago?';\n      }\n    } else if (mensaje.length >= 3) {\n      d.condiciones_pago = mensaje;\n    } else {\n      valido = false;\n      mensajeError = '¿Cuál será la condición de pago?';\n    }\n  } else if (campo === 'entrega') {\n    if (/^(usar\\s+(caf|actual)|si|sí|correcto|esta bien|está bien|dejalo asi|déjalo así|igual|mantener)$/i.test(mensaje)) {\n      const actual = limpiar(item.tiempo_entrega);\n      if (actual && !/confirmar/i.test(actual)) {\n        // Conserva el plazo actual.\n      } else {\n        valido = false;\n        mensajeError = 'El plazo actual todavía requiere confirmación. ¿Cuál será el plazo de entrega?';\n      }\n    } else if (mensaje.length >= 3) {\n      item.tiempo_entrega = mensaje;\n    } else {\n      valido = false;\n      mensajeError = 'Indícame el plazo de entrega final.';\n    }\n  } else if (campo === 'asesor_nombre') {\n    if (mensaje.length >= 3) d.asesor = mensaje;\n    else {\n      valido = false;\n      mensajeError = 'Indícame el nombre del asesor responsable.';\n    }\n  } else if (campo === 'asesor_telefono') {\n    const tel = telefonoValido(mensaje);\n    if (tel) d.telefono_asesor = tel;\n    else {\n      valido = false;\n      mensajeError = 'Ese teléfono no parece válido. Revísalo y vuelve a enviarlo.';\n    }\n  } else if (campo === 'asesor_email') {\n    const email = emailValido(mensaje);\n    if (email) d.correo_asesor = email;\n    else {\n      valido = false;\n      mensajeError = 'Ese correo no parece válido. Revísalo y vuelve a enviarlo.';\n    }\n  }\n\n  if (Array.isArray(d.items) && d.items.length) d.items[0] = item;\n  estado.lastCompleted = d;\n\n  if (!valido) {\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: true,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        mensajeCotizacion: mensajeError\n      })\n    }];\n  }\n\n  const orden = ['pago', 'entrega', 'asesor_nombre', 'asesor_telefono', 'asesor_email'];\n  const idx = orden.indexOf(campo);\n  const siguiente = idx >= 0 && idx < orden.length - 1 ? orden[idx + 1] : '';\n\n  if (siguiente) {\n    estado.pendingField = siguiente;\n\n    let pregunta = '';\n    if (siguiente === 'pago') {\n      const actual = limpiar(d.condiciones_pago) || 'Por confirmar';\n      pregunta =\n        `**Condiciones de pago actuales:** ${actual}\\n\\n` +\n        '¿Las dejamos así o cuál será la condición final?';\n    } else if (siguiente === 'entrega') {\n      const actual = limpiar(item.tiempo_entrega) || 'Por confirmar';\n      pregunta =\n        '✅ Condiciones de pago registradas.\\n\\n' +\n        `**Entrega actual:** ${actual}\\n\\n` +\n        '¿La dejamos así o cuál será el plazo final?';\n    } else if (siguiente === 'asesor_nombre') {\n      pregunta = '✅ Plazo de entrega registrado.\\n\\n¿Cuál es el **nombre del asesor** responsable de esta cotización?';\n    } else if (siguiente === 'asesor_telefono') {\n      pregunta = 'Perfecto. Ahora indícame el **teléfono directo del asesor**.';\n    } else if (siguiente === 'asesor_email') {\n      pregunta = 'Gracias. Ahora indícame el **correo del asesor**.';\n    }\n\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: true,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        mensajeCotizacion: pregunta\n      })\n    }];\n  }\n\n  // Final de revisión comercial.\n  d.estado = 'APROBADA_PARA_GENERAR';\n  d.nota_control = 'REVISIÓN COMERCIAL COMPLETADA. Revisión final antes de envío al cliente.';\n  estado.lastCompleted = d;\n  estado.phase = 'aprobada';\n  estado.pendingField = '';\n  estado.commercialApproved = true;\n\n  const resumen =\n    '✅ **Revisión comercial completada.**\\n\\n' +\n    '- Cotización: **se asignará automáticamente al generar el documento**\\n' +\n    \n    `- Pago: ${limpiar(d.condiciones_pago)}\\n` +\n    `- Entrega: ${limpiar(d.items?.[0]?.tiempo_entrega)}\\n` +\n    `- Asesor: ${limpiar(d.asesor)}\\n` +\n    `- Teléfono asesor: ${limpiar(d.telefono_asesor)}\\n` +\n    `- Correo asesor: ${limpiar(d.correo_asesor)}\\n\\n` +\n    'Si todo está correcto, escribe **Generar cotización** para crear Google Docs, PDF y Word.';\n\n  return [{\n    json: salida({\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: true,\n      cotizacionCancelada: false,\n      cotizacionLista: false,\n      datosDocumento: d,\n      mensajeCotizacion: resumen\n    })\n  }];\n}\n\n// Si el usuario pide generar/aprobar y ya existe un borrador, primero pasa por revisión comercial.\nif (solicitaGenerarDocumento) {\n  if (estado.lastCompleted && typeof estado.lastCompleted === 'object') {\n    if (estado.commercialApproved === true && estado.phase === 'aprobada') {\n      return [{\n        json: salida({\n          esCotizacion: true,\n          generarDocumento: true,\n          respuestaDirectaRevision: false,\n          cotizacionCancelada: false,\n          cotizacionLista: true,\n          datosDocumento: estado.lastCompleted,\n          mensajeCotizacion: ''\n        })\n      }];\n    }\n\n    estado.phase = 'revision';\n    estado.pendingField = 'pago';\n    estado.commercialApproved = false;\n\n    const d = estado.lastCompleted;\n    const item = Array.isArray(d.items) && d.items.length ? d.items[0] : {};\n    d.iva_estado = 'Precio A CAF = precio final de venta al cliente; no agregar IVA adicional.';\n    estado.lastCompleted = d;\n\n    const valorPrecio = Number(item.precio_unitario_preliminar || 0);\n    const precioSeguro = Number.isFinite(valorPrecio) ? valorPrecio : 0;\n    const partesPrecio = precioSeguro.toFixed(2).split('.');\n    partesPrecio[0] = partesPrecio[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n    const precio = partesPrecio.join('.');\n    const actual = limpiar(d.condiciones_pago) || 'Por confirmar';\n\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: true,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        datosDocumento: d,\n        mensajeCotizacion:\n          '🔎 **Revisión comercial**\\n\\n' +\n          `Precio unitario: **Q${precio}**\\n` +\n          `Condiciones de pago actuales: **${actual}**\\n\\n` +\n          '¿Las dejamos así o cuál será la condición final?'\n      })\n    }];\n  }\n\n  return [{\n    json: salida({\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: true,\n      cotizacionCancelada: false,\n      cotizacionLista: false,\n      faltantes: ['borrador de cotización'],\n      mensajeCotizacion:\n        'Aún no tengo un borrador listo. Dime qué producto, cantidad y cliente deseas cotizar.'\n    })\n  }];\n}\n\nconst iniciaCotizacion =\n  /\\b(cot[ií]z[a-záéíóúñ]*|presupuesto|proforma)\\b/i.test(mensaje) ||\n  /\\b(quiero|necesito|deseo|puedes|podrias|podrías)\\b.*\\b(oferta|cot[ií]z)/i.test(mensaje);\n\nconst cancelar =\n  estado.active &&\n  /\\b(cancelar|cancela|cancelémosla|cancelemosla|salir|detener)\\b.*\\b(cotiz|solicitud)?/i.test(mensaje);\n\nconst esCotizacion = Boolean(estado.active || iniciaCotizacion);\n\nif (!esCotizacion) {\n  return [{ json: salida({\n    esCotizacion: false,\n    generarDocumento: false,\n    respuestaDirectaRevision: false,\n    cotizacionCancelada: false,\n    cotizacionLista: false\n  }) }];\n}\n\nif (cancelar) {\n  estado.active = false;\n  estado.phase = 'base';\n  estado.pendingField = '';\n  estado.commercialApproved = false;\n  estado.lastCompleted = null;\n  estado.draft = {\n    cuenta_cliente: '',\n    codigo_producto: '',\n    cantidad: null,\n    direccion_entrega: '',\n    contacto: '',\n    correo: '',\n    telefono: ''\n  };\n\n  return [{\n    json: {\n      ...input,\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: false,\n      cotizacionCancelada: true,\n      cotizacionLista: false,\n      draft: estado.draft,\n      mensajeCotizacion: 'De acuerdo. Cancelé el borrador de cotización que estábamos preparando.',\n      sessionKeyCotizacion: sessionId,\n      persist_session_id: sessionId,\n      persist_state_json: JSON.stringify(estado)\n    }\n  }];\n}\n\nestado.active = true;\n\n// Si estamos completando contacto, el mensaje actual responde al campo pendiente.\nif (estado.phase === 'contacto' && estado.pendingField) {\n  const campo = estado.pendingField;\n\n  if (campo === 'contacto') {\n    let valor = mensaje\n      .replace(/^\\s*a\\s+nombre\\s+de\\s+/i, '')\n      .replace(/^\\s*nombre\\s*:\\s*/i, '')\n      .trim();\n    if (valor) draft.contacto = valor;\n  } else if (campo === 'correo') {\n    const email = emailValido(mensaje);\n    if (email) draft.correo = email;\n  } else if (campo === 'telefono') {\n    const tel = telefonoValido(mensaje);\n    if (tel) draft.telefono = tel;\n  }\n\n  const faltantesContacto = [];\n  if (!draft.contacto) faltantesContacto.push('contacto');\n  if (!draft.correo) faltantesContacto.push('correo');\n  if (!draft.telefono) faltantesContacto.push('telefono');\n\n  estado.draft = draft;\n\n  if (faltantesContacto.length > 0) {\n    estado.pendingField = faltantesContacto[0];\n\n    let mensajeCotizacion = '';\n    if (estado.pendingField === 'contacto') {\n      mensajeCotizacion = '¿A nombre de quién debe dirigirse la cotización?';\n    } else if (estado.pendingField === 'correo') {\n      if (campo === 'contacto') {\n        mensajeCotizacion = 'Perfecto. Ahora indícame el correo del contacto.';\n      } else {\n        mensajeCotizacion = 'Ese correo no parece válido. Revísalo y vuelve a enviarlo.';\n      }\n    } else {\n      mensajeCotizacion = 'Gracias. Por último, indícame el teléfono del contacto.';\n    }\n\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: false,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        faltantes: faltantesContacto,\n        mensajeCotizacion\n      })\n    }];\n  }\n\n  estado.phase = 'base';\n  estado.pendingField = '';\n  estado.draft = draft;\n\n  return [{\n    json: salida({\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: false,\n      cotizacionCancelada: false,\n      cotizacionLista: true,\n      faltantes: [],\n      mensajeCotizacion: ''\n    })\n  }];\n}\n\n// Cuenta CAF, por ejemplo AR-026.\nconst cuentaMatch = mensaje.toUpperCase().match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/);\nif (cuentaMatch) draft.cuenta_cliente = cuentaMatch[0];\n\n// Código de producto, excluyendo la cuenta CAF.\nconst candidatosCodigo = mensaje.toUpperCase().match(/\\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}\\b/g) || [];\nconst codigoProducto = candidatosCodigo.find(x => x !== draft.cuenta_cliente && !/^[A-Z]{1,5}-\\d{2,8}$/.test(x));\nif (codigoProducto) draft.codigo_producto = codigoProducto;\n\n// Si el usuario inicia una cotización después de consultar un producto,\n// reutiliza ese contexto en vez de volver a pedir el código.\nif (iniciaCotizacion && !draft.codigo_producto) {\n  const aprobado = limpiar(estado.technicalContext?.approvedCode).toUpperCase();\n  const reciente = limpiar(estado.lastProduct?.codigo).toUpperCase();\n  if (aprobado) draft.codigo_producto = aprobado;\n  else if (reciente) draft.codigo_producto = reciente;\n}\n\n// Cantidad.\nlet cantidad = null;\nconst patronesCantidad = [\n  /(?:quiero\\s+cotizar|necesito\\s+cotizar|cotizar|cantidad(?:\\s+de)?|cant(?:idad)?|necesito|quiero)\\s*:?\\s*(\\d+(?:[.,]\\d+)?)/i,\n  /\\b(\\d+(?:[.,]\\d+)?)\\s*(?:unidades?|uds?|piezas?)\\b/i\n];\nfor (const patron of patronesCantidad) {\n  const m = mensaje.match(patron);\n  if (m) {\n    cantidad = Number(m[1].replace(',', '.'));\n    break;\n  }\n}\nif (cantidad === null && estado.active && !draft.cantidad && /^\\s*\\d+(?:[.,]\\d+)?\\s*$/.test(mensaje)) {\n  cantidad = Number(mensaje.replace(',', '.'));\n}\nif (Number.isFinite(cantidad) && cantidad > 0) draft.cantidad = cantidad;\n\n// Dirección de entrega opcional.\nconst entrega = mensaje.match(/(?:direcci[oó]n\\s+de\\s+entrega|entrega)\\s*:\\s*(.+)$/i);\nif (entrega && entrega[1]) draft.direccion_entrega = entrega[1].trim();\n\n// -----------------------------------------------------------------------------\n// CONTROL TÉCNICO ANTES DEL BORRADOR\n// Aplica únicamente cuando el código proviene del último cruce técnico de la sesión.\n// -----------------------------------------------------------------------------\nconst ctxTecnico = estado.technicalContext;\nconst candidatosTecnicos = Array.isArray(ctxTecnico?.candidatos) ? ctxTecnico.candidatos : [];\nconst codigoDraft = limpiar(draft.codigo_producto).toUpperCase();\nconst vieneDeCruceTecnico = Boolean(\n  codigoDraft &&\n  candidatosTecnicos.some(c => limpiar(c.codigo).toUpperCase() === codigoDraft)\n);\n\nif (\n  vieneDeCruceTecnico &&\n  (!ctxTecnico.approved || limpiar(ctxTecnico.approvedCode).toUpperCase() !== codigoDraft)\n) {\n  estado.draft = draft;\n\n  return [{\n    json: salida({\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: true,\n      cotizacionCancelada: false,\n      cotizacionLista: false,\n      faltantes: ['validación técnica'],\n      mensajeCotizacion:\n        '⚠️ **Cotización detenida por control técnico.**\\n\\n' +\n        'El código **' + codigoDraft + '** proviene de una búsqueda técnica y todavía no tiene una aprobación técnica registrada en esta sesión.\\n\\n' +\n        'Un responsable técnico debe confirmar con: **Aprobar técnicamente ' + codigoDraft + ' por Nombre del responsable técnico**.\\n\\n' +\n        'Después de esa aprobación podremos continuar con el borrador de cotización.'\n    })\n  }];\n}\n\nestado.draft = draft;\n\nconst faltantes = [];\nif (!draft.cuenta_cliente) faltantes.push('cuenta CAF del cliente');\nif (!draft.codigo_producto) faltantes.push('código del producto');\nif (!draft.cantidad) faltantes.push('cantidad');\n\nconst cotizacionLista = faltantes.length === 0;\n\nlet mensajeCotizacion = '';\nif (!cotizacionLista) {\n  const siguiente = faltantes[0];\n  if (siguiente === 'cuenta CAF del cliente') {\n    mensajeCotizacion = draft.codigo_producto\n      ? 'Claro. Tomaré el código **' + draft.codigo_producto + '** que ya tenemos en contexto. ¿Para qué cliente deseas preparar la cotización?'\n      : 'Claro. ¿Para qué cliente deseas preparar la cotización?';\n  } else if (siguiente === 'código del producto') {\n    mensajeCotizacion = 'Perfecto. ¿Qué código de producto deseas cotizar?';\n  } else {\n    mensajeCotizacion = 'Perfecto. ¿Cuántas unidades deseas cotizar?';\n  }\n}\n\nreturn [{\n  json: salida({\n    esCotizacion: true,\n    generarDocumento: false,\n    respuestaDirectaRevision: false,\n    cotizacionCancelada: false,\n    cotizacionLista,\n    faltantes,\n    mensajeCotizacion\n  })\n}];"
+        "jsCode": "const input = $('Configuración CAF').item.json || {};\nconst mensajeOriginal = (input.chatInput || '').toString();\nconst mensaje = mensajeOriginal.trim();\nconst sessionId = (input.sessionId || input.session_id || input.webhookId || 'sesion-default').toString();\nlet cotizacionEstabaActiva = false;\n\n// Estado persistente leído desde la Data Table de n8n.\nlet estado = null;\ntry {\n  if ($json && $json.state_json) estado = JSON.parse($json.state_json);\n} catch (e) {}\n\nif (!estado || typeof estado !== 'object') {\n  estado = {\n    active: false,\n    phase: 'base',\n    pendingField: '',\n    draft: {\n      cuenta_cliente: '',\n      codigo_producto: '',\n      cantidad: null,\n      direccion_entrega: '',\n      contacto: '',\n      correo: '',\n      telefono: ''\n    },\n    commercialApproved: false\n  };\n}\n\ncotizacionEstabaActiva = Boolean(estado.active);\nif (!estado.draft || typeof estado.draft !== 'object') estado.draft = {};\nlet draft = estado.draft;\n\nconst salida = (extra = {}) => ({\n  ...input,\n  ...extra,\n  draft,\n  sessionKeyCotizacion: sessionId,\n  persist_session_id: sessionId,\n  persist_state_json: JSON.stringify(estado)\n});\n\nconst limpiar = v => (v ?? '').toString().trim();\nconst emailValido = v => {\n  const m = limpiar(v).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i);\n  return m ? m[0] : '';\n};\nconst telefonoValido = v => {\n  const m = limpiar(v).match(/\\+?\\d[\\d\\s().-]{6,}\\d/);\n  return m ? m[0].trim() : '';\n};\n\nlet resolverClientePorNombre = false;\nlet clienteBusqueda = '';\n\n// -----------------------------------------------------------------------------\n// APROBACIÓN TÉCNICA PERSISTENTE\n// -----------------------------------------------------------------------------\nconst aprobacionTecnica = mensaje.match(/\\b(?:aprobar|apruebo|aprobado|validar|validado)\\s+t[eé]cnicamente\\s+([A-Z0-9-]{5,})(?:\\s+por\\s+(.+))?$/i);\n\nif (aprobacionTecnica) {\n  const codigo = limpiar(aprobacionTecnica[1]).toUpperCase();\n  const responsable = limpiar(aprobacionTecnica[2]);\n\n  const ctx = estado.technicalContext;\n  const candidatos = Array.isArray(ctx?.candidatos) ? ctx.candidatos : [];\n  const candidato = candidatos.find(c => limpiar(c.codigo).toUpperCase() === codigo);\n\n  if (!ctx || !ctx.active || !candidato) {\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: true,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        mensajeCotizacion:\n          'No encontré ese código dentro del último cruce técnico de esta sesión. Realiza primero la búsqueda técnica del producto y luego registra la aprobación.'\n      })\n    }];\n  }\n\n  if (!responsable) {\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: true,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        mensajeCotizacion:\n          'Para dejar trazabilidad necesito el responsable técnico. Usa: **Aprobar técnicamente ' + codigo + ' por Nombre del responsable técnico**.'\n      })\n    }];\n  }\n\n  ctx.approved = true;\n  ctx.approvedCode = codigo;\n  ctx.approvedBy = responsable;\n  ctx.approvedAt = new Date().toISOString();\n  estado.technicalContext = ctx;\n\n  return [{\n    json: salida({\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: true,\n      cotizacionCancelada: false,\n      cotizacionLista: false,\n      mensajeCotizacion:\n        '✅ **Validación técnica registrada.**\\n\\n' +\n        '- Código CAF: **' + codigo + '**\\n' +\n        '- Responsable: **' + responsable + '**\\n' +\n        '- Estado técnico previo: **' + limpiar(ctx.servicio_validado || 'PENDIENTE') + '**\\n\\n' +\n        'La validación manual libera este código para continuar con la cotización. Indícame el cliente y la cantidad cuando quieras continuar.'\n    })\n  }];\n}\n\nconst solicitaGenerarDocumento =\n  /\\b(aprobar|apruebo|aprobado|generar|genera|crear|crea|preparar|prepara|revisar|revisa)\\b.*\\b(cotizaci[oó]n|documento|pdf|word)\\b/i.test(mensaje) ||\n  /\\b(pdf|word)\\b.*\\b(cotizaci[oó]n|documento)\\b/i.test(mensaje);\n\n// Si el usuario inicia explícitamente una cotización nueva con cliente, producto y cantidad,\n// reinicia cualquier estado conversacional pendiente de una prueba anterior en la misma sesión.\nconst iniciaNuevaCotizacion =\n  /\\b(cot[ií]z[a-záéíóúñ]*|presupuesto|proforma)\\b/i.test(mensaje);\nconst cuentaNueva = (mensaje.toUpperCase().match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/) || [null])[0];\nconst codigosNuevos = mensaje.toUpperCase().match(/\\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}\\b/g) || [];\nconst codigoNuevo = codigosNuevos.find(x => x !== cuentaNueva && !/^[A-Z]{1,5}-\\d{2,8}$/.test(x));\nconst cantidadNuevaMatch =\n  mensaje.match(/(?:quiero\\s+cotizar|necesito\\s+cotizar|cotizar|cantidad(?:\\s+de)?|cant(?:idad)?|necesito|quiero)\\s*:?\\s*(\\d+(?:[.,]\\d+)?)/i) ||\n  mensaje.match(/\\b(\\d+(?:[.,]\\d+)?)\\s*(?:unidades?|uds?|piezas?)\\b/i);\n\nif (\n  iniciaNuevaCotizacion &&\n  cuentaNueva &&\n  codigoNuevo &&\n  cantidadNuevaMatch\n) {\n  estado = {\n    active: false,\n    phase: 'base',\n    pendingField: '',\n    draft: {\n      cuenta_cliente: '',\n      codigo_producto: '',\n      cantidad: null,\n      direccion_entrega: '',\n      contacto: '',\n      correo: '',\n      telefono: ''\n    },\n    commercialApproved: false,\n    lastCompleted: null,\n    technicalContext: estado.technicalContext || null,\n    lastProduct: estado.lastProduct || null\n  };\n  draft = estado.draft;\n}\n\n// -----------------------------------------------------------------------------\n// REVISIÓN COMERCIAL PERSISTENTE\n// -----------------------------------------------------------------------------\nif (estado.phase === 'revision' && estado.pendingField && estado.lastCompleted) {\n  const d = estado.lastCompleted;\n  const item = Array.isArray(d.items) && d.items.length ? d.items[0] : {};\n  const campo = estado.pendingField;\n  let valido = true;\n  let mensajeError = '';\n\n  if (campo === 'pago') {\n    if (/^(usar\\s+(caf|actual)|si|sí|correcto|esta bien|está bien|dejalo asi|déjalo así|igual|mantener)$/i.test(mensaje)) {\n      if (limpiar(d.condiciones_pago) && limpiar(d.condiciones_pago).toLowerCase() !== 'por confirmar') {\n        // Conserva lo obtenido de CAF.\n      } else {\n        valido = false;\n        mensajeError = 'CAF no tiene una condición de pago confirmada. ¿Cuál será la condición de pago?';\n      }\n    } else if (mensaje.length >= 3) {\n      d.condiciones_pago = mensaje;\n    } else {\n      valido = false;\n      mensajeError = '¿Cuál será la condición de pago?';\n    }\n  } else if (campo === 'entrega') {\n    if (/^(usar\\s+(caf|actual)|si|sí|correcto|esta bien|está bien|dejalo asi|déjalo así|igual|mantener)$/i.test(mensaje)) {\n      const actual = limpiar(item.tiempo_entrega);\n      if (actual && !/confirmar/i.test(actual)) {\n        // Conserva el plazo actual.\n      } else {\n        valido = false;\n        mensajeError = 'El plazo actual todavía requiere confirmación. ¿Cuál será el plazo de entrega?';\n      }\n    } else if (mensaje.length >= 3) {\n      item.tiempo_entrega = mensaje;\n    } else {\n      valido = false;\n      mensajeError = 'Indícame el plazo de entrega final.';\n    }\n  } else if (campo === 'asesor_nombre') {\n    if (mensaje.length >= 3) d.asesor = mensaje;\n    else {\n      valido = false;\n      mensajeError = 'Indícame el nombre del asesor responsable.';\n    }\n  } else if (campo === 'asesor_telefono') {\n    const tel = telefonoValido(mensaje);\n    if (tel) d.telefono_asesor = tel;\n    else {\n      valido = false;\n      mensajeError = 'Ese teléfono no parece válido. Revísalo y vuelve a enviarlo.';\n    }\n  } else if (campo === 'asesor_email') {\n    const email = emailValido(mensaje);\n    if (email) d.correo_asesor = email;\n    else {\n      valido = false;\n      mensajeError = 'Ese correo no parece válido. Revísalo y vuelve a enviarlo.';\n    }\n  }\n\n  if (Array.isArray(d.items) && d.items.length) d.items[0] = item;\n  estado.lastCompleted = d;\n\n  if (!valido) {\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: true,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        mensajeCotizacion: mensajeError\n      })\n    }];\n  }\n\n  const orden = ['pago', 'entrega', 'asesor_nombre', 'asesor_telefono', 'asesor_email'];\n  const idx = orden.indexOf(campo);\n  const siguiente = idx >= 0 && idx < orden.length - 1 ? orden[idx + 1] : '';\n\n  if (siguiente) {\n    estado.pendingField = siguiente;\n\n    let pregunta = '';\n    if (siguiente === 'pago') {\n      const actual = limpiar(d.condiciones_pago) || 'Por confirmar';\n      pregunta =\n        `**Condiciones de pago actuales:** ${actual}\\n\\n` +\n        '¿Las dejamos así o cuál será la condición final?';\n    } else if (siguiente === 'entrega') {\n      const actual = limpiar(item.tiempo_entrega) || 'Por confirmar';\n      pregunta =\n        '✅ Condiciones de pago registradas.\\n\\n' +\n        `**Entrega actual:** ${actual}\\n\\n` +\n        '¿La dejamos así o cuál será el plazo final?';\n    } else if (siguiente === 'asesor_nombre') {\n      pregunta = '✅ Plazo de entrega registrado.\\n\\n¿Cuál es el **nombre del asesor** responsable de esta cotización?';\n    } else if (siguiente === 'asesor_telefono') {\n      pregunta = 'Perfecto. Ahora indícame el **teléfono directo del asesor**.';\n    } else if (siguiente === 'asesor_email') {\n      pregunta = 'Gracias. Ahora indícame el **correo del asesor**.';\n    }\n\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: true,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        mensajeCotizacion: pregunta\n      })\n    }];\n  }\n\n  // Final de revisión comercial.\n  d.estado = 'APROBADA_PARA_GENERAR';\n  d.nota_control = 'REVISIÓN COMERCIAL COMPLETADA. Revisión final antes de envío al cliente.';\n  estado.lastCompleted = d;\n  estado.phase = 'aprobada';\n  estado.pendingField = '';\n  estado.commercialApproved = true;\n\n  const resumen =\n    '✅ **Revisión comercial completada.**\\n\\n' +\n    '- Cotización: **se asignará automáticamente al generar el documento**\\n' +\n    \n    `- Pago: ${limpiar(d.condiciones_pago)}\\n` +\n    `- Entrega: ${limpiar(d.items?.[0]?.tiempo_entrega)}\\n` +\n    `- Asesor: ${limpiar(d.asesor)}\\n` +\n    `- Teléfono asesor: ${limpiar(d.telefono_asesor)}\\n` +\n    `- Correo asesor: ${limpiar(d.correo_asesor)}\\n\\n` +\n    'Si todo está correcto, escribe **Generar cotización** para crear Google Docs, PDF y Word.';\n\n  return [{\n    json: salida({\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: true,\n      cotizacionCancelada: false,\n      cotizacionLista: false,\n      datosDocumento: d,\n      mensajeCotizacion: resumen\n    })\n  }];\n}\n\n// Si el usuario pide generar/aprobar y ya existe un borrador, primero pasa por revisión comercial.\nif (solicitaGenerarDocumento) {\n  if (estado.lastCompleted && typeof estado.lastCompleted === 'object') {\n    if (estado.commercialApproved === true && estado.phase === 'aprobada') {\n      return [{\n        json: salida({\n          esCotizacion: true,\n          generarDocumento: true,\n          respuestaDirectaRevision: false,\n          cotizacionCancelada: false,\n          cotizacionLista: true,\n          datosDocumento: estado.lastCompleted,\n          mensajeCotizacion: ''\n        })\n      }];\n    }\n\n    estado.phase = 'revision';\n    estado.pendingField = 'pago';\n    estado.commercialApproved = false;\n\n    const d = estado.lastCompleted;\n    const item = Array.isArray(d.items) && d.items.length ? d.items[0] : {};\n    d.iva_estado = 'Precio A CAF = precio final de venta al cliente; no agregar IVA adicional.';\n    estado.lastCompleted = d;\n\n    const valorPrecio = Number(item.precio_unitario_preliminar || 0);\n    const precioSeguro = Number.isFinite(valorPrecio) ? valorPrecio : 0;\n    const partesPrecio = precioSeguro.toFixed(2).split('.');\n    partesPrecio[0] = partesPrecio[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n    const precio = partesPrecio.join('.');\n    const actual = limpiar(d.condiciones_pago) || 'Por confirmar';\n\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: true,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        datosDocumento: d,\n        mensajeCotizacion:\n          '🔎 **Revisión comercial**\\n\\n' +\n          `Precio unitario: **Q${precio}**\\n` +\n          `Condiciones de pago actuales: **${actual}**\\n\\n` +\n          '¿Las dejamos así o cuál será la condición final?'\n      })\n    }];\n  }\n\n  return [{\n    json: salida({\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: true,\n      cotizacionCancelada: false,\n      cotizacionLista: false,\n      faltantes: ['borrador de cotización'],\n      mensajeCotizacion:\n        'Aún no tengo un borrador listo. Dime qué producto, cantidad y cliente deseas cotizar.'\n    })\n  }];\n}\n\nconst iniciaCotizacion =\n  /\\b(cot[ií]z[a-záéíóúñ]*|presupuesto|proforma)\\b/i.test(mensaje) ||\n  /\\b(quiero|necesito|deseo|puedes|podrias|podrías)\\b.*\\b(oferta|cot[ií]z)/i.test(mensaje);\n\nconst cancelar =\n  estado.active &&\n  /\\b(cancelar|cancela|cancelémosla|cancelemosla|salir|detener)\\b.*\\b(cotiz|solicitud)?/i.test(mensaje);\n\nconst esCotizacion = Boolean(estado.active || iniciaCotizacion);\n\nif (!esCotizacion) {\n  return [{ json: salida({\n    esCotizacion: false,\n    generarDocumento: false,\n    respuestaDirectaRevision: false,\n    cotizacionCancelada: false,\n    cotizacionLista: false\n  }) }];\n}\n\nif (cancelar) {\n  estado.active = false;\n  estado.phase = 'base';\n  estado.pendingField = '';\n  estado.commercialApproved = false;\n  estado.lastCompleted = null;\n  estado.draft = {\n    cuenta_cliente: '',\n    codigo_producto: '',\n    cantidad: null,\n    direccion_entrega: '',\n    contacto: '',\n    correo: '',\n    telefono: ''\n  };\n\n  return [{\n    json: {\n      ...input,\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: false,\n      cotizacionCancelada: true,\n      cotizacionLista: false,\n      draft: estado.draft,\n      mensajeCotizacion: 'De acuerdo. Cancelé el borrador de cotización que estábamos preparando.',\n      sessionKeyCotizacion: sessionId,\n      persist_session_id: sessionId,\n      persist_state_json: JSON.stringify(estado)\n    }\n  }];\n}\n\nestado.active = true;\n\n// Si estamos completando contacto, el mensaje actual responde al campo pendiente.\nif (estado.phase === 'contacto' && estado.pendingField) {\n  const campo = estado.pendingField;\n\n  if (campo === 'contacto') {\n    let valor = mensaje\n      .replace(/^\\s*a\\s+nombre\\s+de\\s+/i, '')\n      .replace(/^\\s*nombre\\s*:\\s*/i, '')\n      .trim();\n    if (valor) draft.contacto = valor;\n  } else if (campo === 'correo') {\n    const email = emailValido(mensaje);\n    if (email) draft.correo = email;\n  } else if (campo === 'telefono') {\n    const tel = telefonoValido(mensaje);\n    if (tel) draft.telefono = tel;\n  }\n\n  const faltantesContacto = [];\n  if (!draft.contacto) faltantesContacto.push('contacto');\n  if (!draft.correo) faltantesContacto.push('correo');\n  if (!draft.telefono) faltantesContacto.push('telefono');\n\n  estado.draft = draft;\n\n  if (faltantesContacto.length > 0) {\n    estado.pendingField = faltantesContacto[0];\n\n    let mensajeCotizacion = '';\n    if (estado.pendingField === 'contacto') {\n      mensajeCotizacion = '¿A nombre de quién debe dirigirse la cotización?';\n    } else if (estado.pendingField === 'correo') {\n      if (campo === 'contacto') {\n        mensajeCotizacion = 'Perfecto. Ahora indícame el correo del contacto.';\n      } else {\n        mensajeCotizacion = 'Ese correo no parece válido. Revísalo y vuelve a enviarlo.';\n      }\n    } else {\n      mensajeCotizacion = 'Gracias. Por último, indícame el teléfono del contacto.';\n    }\n\n    return [{\n      json: salida({\n        esCotizacion: true,\n        generarDocumento: false,\n        respuestaDirectaRevision: false,\n        cotizacionCancelada: false,\n        cotizacionLista: false,\n        faltantes: faltantesContacto,\n        mensajeCotizacion\n      })\n    }];\n  }\n\n  estado.phase = 'base';\n  estado.pendingField = '';\n  estado.draft = draft;\n\n  return [{\n    json: salida({\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: false,\n      cotizacionCancelada: false,\n      cotizacionLista: true,\n      faltantes: [],\n      mensajeCotizacion: ''\n    })\n  }];\n}\n\n// Cuenta CAF, por ejemplo AR-026.\nconst cuentaMatch = mensaje.toUpperCase().match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/);\nif (cuentaMatch) {\n  draft.cuenta_cliente = cuentaMatch[0];\n}\n\n// Si ya estamos preparando una cotización y acabamos de pedir cliente,\n// acepta también el nombre comercial en vez de exigir la cuenta CAF.\nif (\n  cotizacionEstabaActiva &&\n  estado.pendingField === 'cuenta_cliente' &&\n  !draft.cuenta_cliente &&\n  !cuentaMatch\n) {\n  const normalizaNombre = v => limpiar(v)\n    .normalize('NFD').replace(/[\\u0300-\\u036f]/g,'')\n    .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();\n\n  const textoCliente = mensaje\n    .replace(/^\\s*(?:para|cliente|es|seria|sería|el cliente es|la empresa es)\\s+/i,'')\n    .trim();\n\n  const ultimo = estado.lastClient || {};\n  const ultimoNombre = normalizaNombre(ultimo.nombre || ultimo.nombre_cliente);\n  const textoNormal = normalizaNombre(textoCliente);\n\n  if (\n    ultimo.cuenta &&\n    ultimoNombre &&\n    textoNormal &&\n    (textoNormal.includes(ultimoNombre) || ultimoNombre.includes(textoNormal))\n  ) {\n    draft.cuenta_cliente = limpiar(ultimo.cuenta).toUpperCase();\n  } else if (textoCliente.length >= 3) {\n    resolverClientePorNombre = true;\n    clienteBusqueda = textoCliente;\n  }\n}\n\n// Código de producto, excluyendo la cuenta CAF.\nconst candidatosCodigo = mensaje.toUpperCase().match(/\\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\\d)[A-Z0-9-]{5,}\\b/g) || [];\nconst codigoProducto = candidatosCodigo.find(x => x !== draft.cuenta_cliente && !/^[A-Z]{1,5}-\\d{2,8}$/.test(x));\nif (codigoProducto) draft.codigo_producto = codigoProducto;\n\n// Si el usuario inicia una cotización después de consultar un producto,\n// reutiliza ese contexto en vez de volver a pedir el código.\nif (iniciaCotizacion && !draft.codigo_producto) {\n  const aprobado = limpiar(estado.technicalContext?.approvedCode).toUpperCase();\n  const reciente = limpiar(estado.lastProduct?.codigo).toUpperCase();\n  if (aprobado) draft.codigo_producto = aprobado;\n  else if (reciente) draft.codigo_producto = reciente;\n}\n\n// Cantidad.\nlet cantidad = null;\nconst patronesCantidad = [\n  /(?:quiero\\s+cotizar|necesito\\s+cotizar|cotizar|cantidad(?:\\s+de)?|cant(?:idad)?|necesito|quiero)\\s*:?\\s*(\\d+(?:[.,]\\d+)?)/i,\n  /\\b(\\d+(?:[.,]\\d+)?)\\s*(?:unidades?|uds?|piezas?)\\b/i\n];\nfor (const patron of patronesCantidad) {\n  const m = mensaje.match(patron);\n  if (m) {\n    cantidad = Number(m[1].replace(',', '.'));\n    break;\n  }\n}\nif (cantidad === null && estado.active && !draft.cantidad && /^\\s*\\d+(?:[.,]\\d+)?\\s*$/.test(mensaje)) {\n  cantidad = Number(mensaje.replace(',', '.'));\n}\nif (Number.isFinite(cantidad) && cantidad > 0) draft.cantidad = cantidad;\n\n// Dirección de entrega opcional.\nconst entrega = mensaje.match(/(?:direcci[oó]n\\s+de\\s+entrega|entrega)\\s*:\\s*(.+)$/i);\nif (entrega && entrega[1]) draft.direccion_entrega = entrega[1].trim();\n\n// -----------------------------------------------------------------------------\n// CONTROL TÉCNICO ANTES DEL BORRADOR\n// Aplica únicamente cuando el código proviene del último cruce técnico de la sesión.\n// -----------------------------------------------------------------------------\nconst ctxTecnico = estado.technicalContext;\nconst candidatosTecnicos = Array.isArray(ctxTecnico?.candidatos) ? ctxTecnico.candidatos : [];\nconst codigoDraft = limpiar(draft.codigo_producto).toUpperCase();\nconst vieneDeCruceTecnico = Boolean(\n  codigoDraft &&\n  candidatosTecnicos.some(c => limpiar(c.codigo).toUpperCase() === codigoDraft)\n);\n\nif (\n  vieneDeCruceTecnico &&\n  (!ctxTecnico.approved || limpiar(ctxTecnico.approvedCode).toUpperCase() !== codigoDraft)\n) {\n  estado.draft = draft;\n\n  return [{\n    json: salida({\n      esCotizacion: true,\n      generarDocumento: false,\n      respuestaDirectaRevision: true,\n      cotizacionCancelada: false,\n      cotizacionLista: false,\n      faltantes: ['validación técnica'],\n      mensajeCotizacion:\n        '⚠️ **Cotización detenida por control técnico.**\\n\\n' +\n        'El código **' + codigoDraft + '** proviene de una búsqueda técnica y todavía no tiene una aprobación técnica registrada en esta sesión.\\n\\n' +\n        'Un responsable técnico debe confirmar con: **Aprobar técnicamente ' + codigoDraft + ' por Nombre del responsable técnico**.\\n\\n' +\n        'Después de esa aprobación podremos continuar con el borrador de cotización.'\n    })\n  }];\n}\n\nestado.draft = draft;\n\nconst faltantes = [];\nif (!draft.cuenta_cliente) faltantes.push('cuenta CAF del cliente');\nif (!draft.codigo_producto) faltantes.push('código del producto');\nif (!draft.cantidad) faltantes.push('cantidad');\n\nconst cotizacionLista = faltantes.length === 0;\n\nlet mensajeCotizacion = '';\nif (!cotizacionLista) {\n  const siguiente = faltantes[0];\n\n  if (siguiente === 'cuenta CAF del cliente') {\n    estado.pendingField = 'cuenta_cliente';\n    mensajeCotizacion = draft.codigo_producto\n      ? 'Claro. Tomaré el código **' + draft.codigo_producto + '** que ya tenemos en contexto. ¿Para qué cliente deseas preparar la cotización? Puedes escribir el nombre o la cuenta CAF.'\n      : 'Claro. ¿Para qué cliente deseas preparar la cotización? Puedes escribir el nombre o la cuenta CAF.';\n  } else if (siguiente === 'código del producto') {\n    estado.pendingField = 'codigo_producto';\n    mensajeCotizacion = 'Perfecto. ¿Qué código de producto deseas cotizar?';\n  } else {\n    estado.pendingField = 'cantidad';\n    mensajeCotizacion = 'Perfecto. ¿Cuántas unidades deseas cotizar?';\n  }\n} else {\n  estado.pendingField = '';\n}\n\nestado.draft = draft;\n\nreturn [{\n  json: salida({\n    esCotizacion: true,\n    generarDocumento: false,\n    respuestaDirectaRevision: false,\n    cotizacionCancelada: false,\n    cotizacionLista,\n    faltantes,\n    resolverClientePorNombre,\n    clienteBusqueda,\n    mensajeCotizacion\n  })\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -3321,7 +3321,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const raw = (($('Chat - Entrada').item.json.chatInput || '') + '').toLowerCase();\nconst normal = raw.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n\nconst stop = new Set([\n  'necesito','quiero','deseo','busco','buscar','buscando','consultar','consulta','informacion','info',\n  'producto','productos','descripcion','tecnica','tecnico','por','favor','un','una','el','la','los','las',\n  'de','del','para','que','me','puedes','podrias','cotizar','cotizacion'\n]);\n\nconst tokens = normal\n  .replace(/[^a-z0-9\"'.\\/-]+/g,' ')\n  .split(/\\s+/)\n  .filter(Boolean)\n  .filter(t => !stop.has(t));\n\nconst tieneDatoTecnico =\n  /\\b\\d+(?:[.,]\\d+)?\\s*(?:psi|bar|°?c|c|pulgadas?|in|mm)\\b/i.test(raw) ||\n  /\\b(npt|bsp|flange|flanged|roscada|roscado|socket|soldable|vapor|agua|aire|inoxidable|carbon|acero|ptfe|rptfe|delval|forbes|parker|ashcroft)\\b/i.test(normal);\n\nreturn [{json:{\n  descripcionSuficiente: tokens.length >= 2 || (tokens.length >= 1 && tieneDatoTecnico),\n  terminosUtiles: tokens\n}}];"
+        "jsCode": "const raw = (($('Chat - Entrada').item.json.chatInput || '') + '').toLowerCase();\nconst normal = raw.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n\nconst stop = new Set([\n  'necesito','quiero','deseo','busco','buscar','buscando','consultar','consulta','informacion','info',\n  'producto','productos','descripcion','tecnica','tecnico','por','favor','un','una','el','la','los','las',\n  'de','del','para','que','me','puedes','podrias','cotizar','cotizacion'\n]);\n\nconst tokens = normal\n  .replace(/[^a-z0-9\"'.\\/-]+/g,' ')\n  .split(/\\s+/)\n  .filter(Boolean)\n  .filter(t => !stop.has(t));\n\nconst tieneDatoTecnico =\n  /\\b\\d+(?:[.,]\\d+)?\\s*(?:psi|bar|°?c|c|pulgadas?|in|mm|v|vac|vdc)\\b/i.test(raw) ||\n  /\\b(npt|bsp|flange|flanged|roscada|roscado|socket|soldable|vapor|agua|aire|inoxidable|carbon|acero|ptfe|rptfe|delval|forbes|parker|ashcroft)\\b/i.test(normal);\n\nconst tieneTipoProducto =\n  /\\b(valvula|válvula|manometro|manómetro|actuador|trampa|solenoide|sensor|transmisor|termometro|termómetro|aislamiento|fibra|empaque|kit|reparacion|reparación|regulador|filtro|bomba|medidor|switch|controlador)\\b/i.test(raw);\n\nreturn [{json:{\n  descripcionSuficiente: tokens.length >= 1 && (tieneDatoTecnico || tieneTipoProducto),\n  terminosUtiles: tokens\n}}];"
       },
       "id": "9f56be20-e44d-4c8b-b2f2-a3ce899f0c17",
       "name": "Producto - Validar descripción",
@@ -3440,6 +3440,633 @@
         1840
       ],
       "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const raw = (($('Chat - Entrada').item.json.chatInput || '') + '').trim();\nconst sinAcentos = s => s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');\nconst normal = sinAcentos(raw).toLowerCase().replace(/\\s+/g,' ').trim();\n\nconst generico =\n  /^(quiero|necesito|deseo|quisiera|puedes|podrias)?\\s*(informacion|datos|consultar|consulta|buscar|busqueda)?\\s*(de|del|sobre)?\\s*(un|una|el|la)?\\s*cliente\\s*$/i.test(normal) ||\n  /^(cliente|informacion de cliente|datos de cliente)$/i.test(normal);\n\nlet termino = raw\n  .replace(/^\\s*(?:quiero|necesito|deseo|quisiera)?\\s*(?:informaci[oó]n|datos|consultar|consulta|buscar|b[uú]squeda)?\\s*(?:de|del|sobre)?\\s*(?:un|una|el|la)?\\s*cliente\\s*(?:llamado|nombre)?\\s*[:\\-]?\\s*/i,'')\n  .replace(/^\\s*(?:para|sobre|de)\\s+/i,'')\n  .trim();\n\nif (generico || termino.length < 3) termino = '';\n\nreturn [{json:{\n  buscarPorNombre: Boolean(termino),\n  terminoCliente: termino\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5600,
+        4800
+      ],
+      "id": "8c3c5ce7-a736-4f01-b8fc-31186d06a9d1",
+      "name": "Cliente - Preparar búsqueda por nombre"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1f6c4c51-547e-4e26-b0df-bc119d560520",
+              "leftValue": "={{ $('Cliente - Preparar búsqueda por nombre').item.json.buscarPorNombre }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -5280,
+        4800
+      ],
+      "id": "7bbb09a0-b06a-48f6-a776-9ddfa028e59a",
+      "name": "¿Buscar cliente por nombre?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "login"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "username",
+              "value": "={{ $('Configuración CAF').item.json.caf_usuario }}"
+            },
+            {
+              "name": "password",
+              "value": "={{ $('Configuración CAF').item.json.caf_password }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -4960,
+        4800
+      ],
+      "id": "10ef72a4-064d-44ca-8469-306f2fd9caaf",
+      "name": "CAF - Obtener JWT Buscar cliente"
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "list"
+            },
+            {
+              "name": "object",
+              "value": "cliente"
+            },
+            {
+              "name": "psearch",
+              "value": "={{ $('Cliente - Preparar búsqueda por nombre').item.json.terminoCliente }}"
+            },
+            {
+              "name": "recperpage",
+              "value": "50"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Buscar cliente').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -4640,
+        4800
+      ],
+      "id": "c2dd593b-0ea1-4bdf-a024-f15cf10bf838",
+      "name": "CAF - Buscar cliente por nombre"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const resp = $input.first().json || {};\nconst query = ($('Cliente - Preparar búsqueda por nombre').item.json.terminoCliente || '').toString().trim();\nconst normaliza = v => (v ?? '').toString().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();\nconst limpio = v => (v ?? '').toString().trim();\n\nlet registros = [];\nfor (const key of ['cliente','clientes','data','rows','records']) {\n  if (Array.isArray(resp[key])) { registros = resp[key]; break; }\n}\nif (!registros.length) {\n  const arr = Object.values(resp).find(v => Array.isArray(v));\n  if (arr) registros = arr;\n}\n\nconst q = normaliza(query);\nconst qTokens = q.split(' ').filter(t => t.length > 1);\n\nconst score = r => {\n  const nombre = normaliza(r.nombre_cliente || r.cliente || r.nombre);\n  const cuenta = normaliza(r.cuenta || r.codigo || r.codcliente);\n  if (!nombre && !cuenta) return 0;\n  if (cuenta === q) return 120;\n  if (nombre === q) return 110;\n  let s = 0;\n  if (nombre.startsWith(q)) s = Math.max(s, 95);\n  if (nombre.includes(q)) s = Math.max(s, 88);\n  const hits = qTokens.filter(t => nombre.includes(t)).length;\n  if (qTokens.length && hits === qTokens.length) s = Math.max(s, 78 + Math.min(10,qTokens.length));\n  else if (hits) s = Math.max(s, Math.round(55 * hits / qTokens.length));\n  return s;\n};\n\nconst candidatos = registros\n  .map(r => ({r,score:score(r)}))\n  .filter(x => x.score >= 45)\n  .sort((a,b)=>b.score-a.score)\n  .slice(0,8);\n\nconst top = candidatos[0];\nconst second = candidatos[1];\nconst seleccionUnica = Boolean(\n  top &&\n  top.score >= 78 &&\n  (!second || top.score >= second.score + 8 || normaliza(top.r.nombre_cliente) === q)\n);\n\nconst elegido = seleccionUnica ? top.r : null;\nconst lista = candidatos.slice(0,5).map(x => ({\n  cuenta: limpio(x.r.cuenta || x.r.codigo || x.r.codcliente),\n  nombre_cliente: limpio(x.r.nombre_cliente || x.r.cliente || x.r.nombre),\n  nit: limpio(x.r.nit),\n  ciudad: limpio(x.r.ciudad),\n  direccion: limpio(x.r.direccion),\n  telefono: limpio(x.r.telefono),\n  contacto: limpio(x.r.contacto),\n  email: limpio(x.r.email),\n  score: x.score\n}));\n\nreturn [{json:{\n  consulta: query,\n  encontrado: Boolean(top),\n  seleccionado: seleccionUnica,\n  cliente: elegido ? {\n    cuenta: limpio(elegido.cuenta || elegido.codigo || elegido.codcliente),\n    nombre_cliente: limpio(elegido.nombre_cliente || elegido.cliente || elegido.nombre),\n    nit: limpio(elegido.nit),\n    ciudad: limpio(elegido.ciudad),\n    direccion: limpio(elegido.direccion),\n    telefono: limpio(elegido.telefono),\n    contacto: limpio(elegido.contacto),\n    email: limpio(elegido.email)\n  } : null,\n  candidatos: lista\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4320,
+        4800
+      ],
+      "id": "47f5b5ad-6105-4f30-b9d5-e41accb8dc67",
+      "name": "Cliente - Resolver búsqueda por nombre"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ffba9300-bb50-4765-b756-893941aab8f8",
+              "leftValue": "={{ $('Cliente - Resolver búsqueda por nombre').item.json.seleccionado }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4000,
+        4800
+      ],
+      "id": "5b80c560-375b-4a59-849a-7fca8617e83a",
+      "name": "¿Cliente por nombre identificado?"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $('Cliente - Resolver búsqueda por nombre').item.json || {};\nconst c = r.cliente || {};\nconst limpio = v => (v ?? '').toString().trim();\n\nlet estado = {};\ntry {\n  const row = $('Memoria - Leer sesión').first().json || {};\n  if (row.state_json) estado = JSON.parse(row.state_json);\n} catch(e) {}\nif (!estado || typeof estado !== 'object') estado = {};\n\nestado.lastClient = {\n  cuenta: limpio(c.cuenta),\n  nombre: limpio(c.nombre_cliente),\n  nit: limpio(c.nit),\n  ciudad: limpio(c.ciudad),\n  updatedAt: new Date().toISOString()\n};\n\nconst faltantes=[];\nif(!limpio(c.telefono)) faltantes.push('Teléfono');\nif(!limpio(c.contacto)) faltantes.push('Contacto');\nif(!limpio(c.email)) faltantes.push('Correo');\n\nlet mensaje =\n  'Información consultada directamente en CAF Web:\\n\\n' +\n  '🔹 Cuenta: ' + (limpio(c.cuenta) || 'No registrada') + '\\n' +\n  '🔹 Cliente: ' + (limpio(c.nombre_cliente) || 'No registrado') + '\\n' +\n  '🔹 NIT: ' + (limpio(c.nit) || 'No registrado') + '\\n' +\n  '🔹 Dirección: ' + (limpio(c.direccion) || 'No registrada') + '\\n' +\n  '🔹 Ciudad: ' + (limpio(c.ciudad) || 'No registrada') + '\\n' +\n  '🔹 Teléfono: ' + (limpio(c.telefono) || 'No registrado') + '\\n' +\n  '🔹 Contacto: ' + (limpio(c.contacto) || 'No registrado') + '\\n' +\n  '🔹 Correo: ' + (limpio(c.email) || 'No registrado');\n\nif(faltantes.length){\n  mensaje += '\\n\\n⚠️ Información pendiente de completar:\\n' + faltantes.map(x=>'• '+x).join('\\n');\n}\n\nreturn [{json:{\n  output: mensaje,\n  persist_session_id: ($('Configuración CAF').item.json.sessionId || 'sesion-default').toString(),\n  persist_state_json: JSON.stringify(estado)\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3680,
+        4700
+      ],
+      "id": "98fb3af4-4d04-4c5d-8332-acb73ad66699",
+      "name": "Cliente - Preparar respuesta por nombre"
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Praisa_Cotizaciones_Sesion",
+          "mode": "name"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Cliente - Preparar respuesta por nombre').item.json.persist_session_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $('Cliente - Preparar respuesta por nombre').item.json.persist_session_id }}",
+            "state_json": "={{ $('Cliente - Preparar respuesta por nombre').item.json.persist_state_json }}"
+          },
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "state_json",
+              "displayName": "state_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -3360,
+        4700
+      ],
+      "id": "cc88c2fa-f4db-4f28-8d6c-617813c931a4",
+      "name": "Memoria - Guardar cliente reciente"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c23ab2c1-c945-44df-a484-596f12e78973",
+              "name": "output",
+              "value": "={{ $('Cliente - Preparar respuesta por nombre').item.json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3040,
+        4700
+      ],
+      "id": "12b3bebf-dd4b-4d7d-929a-905643338268",
+      "name": "Respuesta - Cliente por nombre"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8404c88-fce6-4a01-8d57-80545e74bccc",
+              "name": "output",
+              "value": "={{ (() => {\n  const r = $('Cliente - Resolver búsqueda por nombre').item.json || {};\n  const lista = Array.isArray(r.candidatos) ? r.candidatos : [];\n  if (!lista.length) {\n    return 'No encontré clientes en CAF que coincidan con **' + (r.consulta || 'esa búsqueda') + '**. Prueba con otra parte del nombre o escribe la cuenta CAF.';\n  }\n  return 'Encontré varias coincidencias en CAF. Indícame la **cuenta** correcta:\\n\\n' +\n    lista.map((c,i) => (i+1) + '. **' + (c.nombre_cliente || 'Cliente') + '** — Cuenta: **' + (c.cuenta || 'sin cuenta') + '**' + (c.ciudad ? ' — ' + c.ciudad : '')).join('\\n');\n})() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3680,
+        4920
+      ],
+      "id": "44ac7c39-39a0-4d64-9578-e439412de55b",
+      "name": "Respuesta - Coincidencias cliente"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e9223bc3-f355-432e-adbf-e445684d00cc",
+              "leftValue": "={{ $('Cotización - Gestionar borrador').item.json.resolverClientePorNombre }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -8480,
+        1600
+      ],
+      "id": "69d86868-cd37-43d7-a619-f60f50bedec4",
+      "name": "¿Resolver cliente por nombre cotización?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "login"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/x-www-form-urlencoded"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "username",
+              "value": "={{ $('Configuración CAF').item.json.caf_usuario }}"
+            },
+            {
+              "name": "password",
+              "value": "={{ $('Configuración CAF').item.json.caf_password }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -8160,
+        1760
+      ],
+      "id": "838048a4-060e-443d-95f6-44bbb5be03cc",
+      "name": "CAF - Obtener JWT Cliente cotización por nombre"
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "list"
+            },
+            {
+              "name": "object",
+              "value": "cliente"
+            },
+            {
+              "name": "psearch",
+              "value": "={{ $('Cotización - Gestionar borrador').item.json.clienteBusqueda }}"
+            },
+            {
+              "name": "recperpage",
+              "value": "50"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Cliente cotización por nombre').item.json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -7840,
+        1760
+      ],
+      "id": "41df6e7a-3f42-43db-84fd-373b683070bf",
+      "name": "CAF - Buscar cliente cotización por nombre"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const resp = $input.first().json || {};\nconst query = ($('Cotización - Gestionar borrador').item.json.clienteBusqueda || '').toString().trim();\nconst normaliza = v => (v ?? '').toString().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();\nconst limpio = v => (v ?? '').toString().trim();\n\nlet registros = [];\nfor (const key of ['cliente','clientes','data','rows','records']) {\n  if (Array.isArray(resp[key])) { registros = resp[key]; break; }\n}\nif (!registros.length) {\n  const arr = Object.values(resp).find(v => Array.isArray(v));\n  if (arr) registros = arr;\n}\n\nconst q = normaliza(query);\nconst qTokens = q.split(' ').filter(t => t.length > 1);\n\nconst score = r => {\n  const nombre = normaliza(r.nombre_cliente || r.cliente || r.nombre);\n  const cuenta = normaliza(r.cuenta || r.codigo || r.codcliente);\n  if (!nombre && !cuenta) return 0;\n  if (cuenta === q) return 120;\n  if (nombre === q) return 110;\n  let s = 0;\n  if (nombre.startsWith(q)) s = Math.max(s, 95);\n  if (nombre.includes(q)) s = Math.max(s, 88);\n  const hits = qTokens.filter(t => nombre.includes(t)).length;\n  if (qTokens.length && hits === qTokens.length) s = Math.max(s, 78 + Math.min(10,qTokens.length));\n  else if (hits) s = Math.max(s, Math.round(55 * hits / qTokens.length));\n  return s;\n};\n\nconst candidatos = registros\n  .map(r => ({r,score:score(r)}))\n  .filter(x => x.score >= 45)\n  .sort((a,b)=>b.score-a.score)\n  .slice(0,8);\n\nconst top = candidatos[0];\nconst second = candidatos[1];\nconst seleccionUnica = Boolean(\n  top &&\n  top.score >= 78 &&\n  (!second || top.score >= second.score + 8 || normaliza(top.r.nombre_cliente) === q)\n);\n\nconst elegido = seleccionUnica ? top.r : null;\nconst lista = candidatos.slice(0,5).map(x => ({\n  cuenta: limpio(x.r.cuenta || x.r.codigo || x.r.codcliente),\n  nombre_cliente: limpio(x.r.nombre_cliente || x.r.cliente || x.r.nombre),\n  nit: limpio(x.r.nit),\n  ciudad: limpio(x.r.ciudad),\n  direccion: limpio(x.r.direccion),\n  telefono: limpio(x.r.telefono),\n  contacto: limpio(x.r.contacto),\n  email: limpio(x.r.email),\n  score: x.score\n}));\n\nreturn [{json:{\n  consulta: query,\n  encontrado: Boolean(top),\n  seleccionado: seleccionUnica,\n  cliente: elegido ? {\n    cuenta: limpio(elegido.cuenta || elegido.codigo || elegido.codcliente),\n    nombre_cliente: limpio(elegido.nombre_cliente || elegido.cliente || elegido.nombre),\n    nit: limpio(elegido.nit),\n    ciudad: limpio(elegido.ciudad),\n    direccion: limpio(elegido.direccion),\n    telefono: limpio(elegido.telefono),\n    contacto: limpio(elegido.contacto),\n    email: limpio(elegido.email)\n  } : null,\n  candidatos: lista\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7520,
+        1760
+      ],
+      "id": "ad1dfc51-a1d5-46df-874c-831bbbf61179",
+      "name": "Cotización - Resolver cliente por nombre"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ad80e306-cf99-4289-89e4-5e30ab537cba",
+              "leftValue": "={{ $('Cotización - Resolver cliente por nombre').item.json.seleccionado }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -7200,
+        1760
+      ],
+      "id": "57926213-d8e2-4420-8292-a117547da22c",
+      "name": "¿Cliente cotización por nombre identificado?"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $('Cotización - Resolver cliente por nombre').item.json || {};\nconst c = r.cliente || {};\nconst base = $('Cotización - Gestionar borrador').item.json || {};\nlet estado = {};\ntry { estado = JSON.parse(base.persist_state_json || '{}'); } catch(e) {}\nif (!estado || typeof estado !== 'object') estado = {};\nif (!estado.draft || typeof estado.draft !== 'object') estado.draft = {};\nconst limpio=v=>(v??'').toString().trim();\n\nestado.draft.cuenta_cliente = limpio(c.cuenta).toUpperCase();\nestado.lastClient = {\n  cuenta: limpio(c.cuenta).toUpperCase(),\n  nombre: limpio(c.nombre_cliente),\n  nit: limpio(c.nit),\n  ciudad: limpio(c.ciudad),\n  updatedAt: new Date().toISOString()\n};\n\nconst faltantes=[];\nif(!estado.draft.codigo_producto) faltantes.push('código del producto');\nif(!estado.draft.cantidad) faltantes.push('cantidad');\n\nif(faltantes[0]==='código del producto') estado.pendingField='codigo_producto';\nelse if(faltantes[0]==='cantidad') estado.pendingField='cantidad';\nelse estado.pendingField='';\n\nlet mensaje =\n  'Encontré **' + (limpio(c.nombre_cliente) || 'el cliente') + '** en CAF' +\n  (limpio(c.cuenta) ? ' (cuenta **' + limpio(c.cuenta).toUpperCase() + '**)' : '') + '. La usaré para esta cotización.';\n\nif(faltantes[0]==='código del producto') mensaje += '\\n\\n¿Qué código de producto deseas cotizar?';\nelse if(faltantes[0]==='cantidad') mensaje += '\\n\\n¿Cuántas unidades deseas cotizar?';\nelse mensaje += '\\n\\nYa tengo cliente, producto y cantidad. Escribe **continuar cotización** para validar los datos en CAF.';\n\nreturn [{json:{\n  output: mensaje,\n  persist_session_id: base.persist_session_id,\n  persist_state_json: JSON.stringify(estado)\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6880,
+        1680
+      ],
+      "id": "5da183da-7052-429f-8759-7444d99ae41c",
+      "name": "Cotización - Aplicar cliente por nombre"
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Praisa_Cotizaciones_Sesion",
+          "mode": "name"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Cotización - Aplicar cliente por nombre').item.json.persist_session_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "session_id": "={{ $('Cotización - Aplicar cliente por nombre').item.json.persist_session_id }}",
+            "state_json": "={{ $('Cotización - Aplicar cliente por nombre').item.json.persist_state_json }}"
+          },
+          "schema": [
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "state_json",
+              "displayName": "state_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -6560,
+        1680
+      ],
+      "id": "0a23ea0a-e7dc-4199-87d0-cb370908c970",
+      "name": "Memoria - Guardar cliente cotización por nombre"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "90937cd0-adad-420b-a664-d399882a7e75",
+              "name": "output",
+              "value": "={{ $('Cotización - Aplicar cliente por nombre').item.json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6240,
+        1680
+      ],
+      "id": "ea844ff8-faf2-4a83-8e77-22d2fe0a13ea",
+      "name": "Respuesta - Cliente cotización por nombre"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8f58f9e0-b03a-4a96-af5a-c1bbf16d04f8",
+              "name": "output",
+              "value": "={{ (() => {\n  const r = $('Cotización - Resolver cliente por nombre').item.json || {};\n  const lista = Array.isArray(r.candidatos) ? r.candidatos : [];\n  if (!lista.length) {\n    return 'No encontré en CAF un cliente que coincida con **' + (r.consulta || 'ese nombre') + '**. Escribe otra parte del nombre o la cuenta CAF.';\n  }\n  return 'Encontré varias coincidencias para **' + (r.consulta || 'el cliente') + '**. Indícame la cuenta correcta:\\n\\n' +\n    lista.map((c,i) => (i+1) + '. **' + (c.nombre_cliente || 'Cliente') + '** — Cuenta: **' + (c.cuenta || 'sin cuenta') + '**' + (c.ciudad ? ' — ' + c.ciudad : '')).join('\\n');\n})() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6880,
+        1920
+      ],
+      "id": "d0e9ff72-3413-46ce-8c65-04b7f93bbcd5",
+      "name": "Respuesta - Coincidencias cliente cotización"
     }
   ],
   "pinData": {},
@@ -3668,7 +4295,7 @@
         ],
         [
           {
-            "node": "Solicitar - Cuenta cliente",
+            "node": "Cliente - Preparar búsqueda por nombre",
             "type": "main",
             "index": 0
           }
@@ -4035,7 +4662,7 @@
       "main": [
         [
           {
-            "node": "¿Respuesta revisión comercial?",
+            "node": "¿Resolver cliente por nombre cotización?",
             "type": "main",
             "index": 0
           }
@@ -4432,6 +5059,199 @@
         [
           {
             "node": "Respuesta - Producto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cliente - Preparar búsqueda por nombre": {
+      "main": [
+        [
+          {
+            "node": "¿Buscar cliente por nombre?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Buscar cliente por nombre?": {
+      "main": [
+        [
+          {
+            "node": "CAF - Obtener JWT Buscar cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Solicitar - Cuenta cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Obtener JWT Buscar cliente": {
+      "main": [
+        [
+          {
+            "node": "CAF - Buscar cliente por nombre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Buscar cliente por nombre": {
+      "main": [
+        [
+          {
+            "node": "Cliente - Resolver búsqueda por nombre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cliente - Resolver búsqueda por nombre": {
+      "main": [
+        [
+          {
+            "node": "¿Cliente por nombre identificado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cliente por nombre identificado?": {
+      "main": [
+        [
+          {
+            "node": "Cliente - Preparar respuesta por nombre",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respuesta - Coincidencias cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cliente - Preparar respuesta por nombre": {
+      "main": [
+        [
+          {
+            "node": "Memoria - Guardar cliente reciente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria - Guardar cliente reciente": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Cliente por nombre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Resolver cliente por nombre cotización?": {
+      "main": [
+        [
+          {
+            "node": "CAF - Obtener JWT Cliente cotización por nombre",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "¿Respuesta revisión comercial?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Obtener JWT Cliente cotización por nombre": {
+      "main": [
+        [
+          {
+            "node": "CAF - Buscar cliente cotización por nombre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Buscar cliente cotización por nombre": {
+      "main": [
+        [
+          {
+            "node": "Cotización - Resolver cliente por nombre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cotización - Resolver cliente por nombre": {
+      "main": [
+        [
+          {
+            "node": "¿Cliente cotización por nombre identificado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Cliente cotización por nombre identificado?": {
+      "main": [
+        [
+          {
+            "node": "Cotización - Aplicar cliente por nombre",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respuesta - Coincidencias cliente cotización",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cotización - Aplicar cliente por nombre": {
+      "main": [
+        [
+          {
+            "node": "Memoria - Guardar cliente cotización por nombre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria - Guardar cliente cotización por nombre": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Cliente cotización por nombre",
             "type": "main",
             "index": 0
           }
