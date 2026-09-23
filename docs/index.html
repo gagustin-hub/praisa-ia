@@ -198,13 +198,26 @@
         </div>
       </section>
 
-      <section class="rail-card">
-        <div class="section-title"><span>ϟ</span><h3>Acciones rápidas</h3></div>
-        <div class="action-grid">
-          <button class="rail-action quick-prompt" data-prompt="Quiero consultar información de un producto en CAF."><b>◇</b><span><strong>Consultar CAF</strong><small>Existencias y precios</small></span></button>
-          <button class="rail-action quick-prompt" data-prompt="Quiero preparar una cotización."><b>▤</b><span><strong>Crear cotización</strong><small>Nueva cotización</small></span></button>
-          <button class="rail-action quick-prompt" data-prompt="Quiero consultar un cliente en CAF."><b>♙</b><span><strong>Buscar cliente</strong><small>Datos e historial</small></span></button>
-          <button class="rail-action quick-prompt" data-prompt="Necesito buscar información en la base técnica."><b>▥</b><span><strong>Base técnica</strong><small>Manuales y fichas</small></span></button>
+      <section class="rail-card context-card">
+        <div class="section-title"><span>◎</span><h3>Contexto de la sesión</h3></div>
+        <p class="context-intro">Praisa IA irá mostrando aquí lo que está utilizando en la conversación actual.</p>
+        <div class="context-list">
+          <div class="context-item">
+            <span class="context-icon product">◇</span>
+            <div><small>Producto actual</small><strong id="context-product">Sin seleccionar</strong></div>
+          </div>
+          <div class="context-item">
+            <span class="context-icon client">♙</span>
+            <div><small>Cliente actual</small><strong id="context-client">Sin seleccionar</strong></div>
+          </div>
+          <div class="context-item">
+            <span class="context-icon quote">▤</span>
+            <div><small>Cotización</small><strong id="context-quote">Sin iniciar</strong></div>
+          </div>
+          <div class="context-item">
+            <span class="context-icon approval">✓</span>
+            <div><small>Validación técnica</small><strong id="context-tech">Sin requerir</strong></div>
+          </div>
         </div>
       </section>
 
@@ -216,10 +229,12 @@
         <div class="activity-item"><i class="red"></i><div><strong>Base técnica</strong><span>Catálogos y validación</span></div></div>
       </section>
 
-      <section class="rail-card pilot-card">
-        <span>PILOTO</span>
-        <strong>Uso interno</strong>
-        <p>Estamos validando precisión, utilidad y estabilidad antes de una implementación definitiva.</p>
+      <section class="rail-card integrations-card">
+        <div class="section-title"><span>↔</span><h3>Fuentes conectadas</h3></div>
+        <div class="integration-row"><span class="integration-dot online"></span><div><strong>CAF Web</strong><small>Productos, clientes, precio y existencias</small></div><b>Consulta</b></div>
+        <div class="integration-row"><span class="integration-dot online"></span><div><strong>Base técnica</strong><small>Catálogos y documentación RAG</small></div><b>Activa</b></div>
+        <div class="integration-row"><span class="integration-dot online"></span><div><strong>Google Drive</strong><small>Plantillas y documentos de cotización</small></div><b>Activa</b></div>
+        <div class="integration-row"><span class="integration-dot pending"></span><div><strong>HubSpot</strong><small>Seguimiento comercial</small></div><b>Próxima fase</b></div>
       </section>
     </aside>
   </main>
