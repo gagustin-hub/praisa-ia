@@ -2019,7 +2019,7 @@
       "name": "Google Drive - Copiar plantilla",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": null,
+          "id": "U7uRzeh2qoJS1cD0",
           "name": "Google Drive account"
         }
       }
@@ -2221,7 +2221,7 @@
       "name": "Google Docs - Completar cotización",
       "credentials": {
         "googleDocsOAuth2Api": {
-          "id": null,
+          "id": "ph8RvVa2KbuyVagD",
           "name": "Google Docs account"
         }
       }
@@ -2255,7 +2255,7 @@
       "name": "Google Drive - Exportar PDF",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": null,
+          "id": "U7uRzeh2qoJS1cD0",
           "name": "Google Drive account"
         }
       }
@@ -2289,7 +2289,7 @@
       "name": "Google Drive - Exportar Word",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": null,
+          "id": "U7uRzeh2qoJS1cD0",
           "name": "Google Drive account"
         }
       }
@@ -2325,7 +2325,7 @@
       "name": "Google Drive - Guardar PDF",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": null,
+          "id": "U7uRzeh2qoJS1cD0",
           "name": "Google Drive account"
         }
       }
@@ -2361,7 +2361,7 @@
       "name": "Google Drive - Guardar Word",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": null,
+          "id": "U7uRzeh2qoJS1cD0",
           "name": "Google Drive account"
         }
       }
