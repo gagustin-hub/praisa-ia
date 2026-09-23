@@ -2,6 +2,7 @@ import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bun
 
 const WEBHOOK_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/8f4d8f21-7b6a-4f47-9d2e-166000000167/chat';
 const PREF_KEY = 'praisa-ia-preferences-v1';
+const UI_BUILD = 'v19-mic-debug';
 
 const gate = document.getElementById('access-gate');
 const form = document.getElementById('access-form');
@@ -774,7 +775,7 @@ function startChat(username, password) {
   setStatus('online', 'Sesión interna', 'Praisa IA conectado');
   passInput.value = '';
   setTimeout(() => {
-    helperText.textContent = 'Puedes escribir o usar el micrófono 🎙️. La primera vez, permite el acceso cuando Chrome lo solicite.';
+    helperText.textContent = 'Praisa IA ' + UI_BUILD + ' · Puedes escribir o usar el micrófono 🎙️. La primera vez, permite el acceso cuando Chrome lo solicite.';
     observeChatContext();
   }, 600);
 }
