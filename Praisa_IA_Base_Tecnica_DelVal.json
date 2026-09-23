@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Base Técnica DelVal - Piloto RAG v1.2",
+  "name": "Praisa IA - Base Técnica DelVal - Piloto RAG v1.3",
   "nodes": [
     {
       "parameters": {},
@@ -61,10 +61,10 @@
         "mode": "insert",
         "memoryKey": {
           "__rl": true,
-          "value": "praisa_delval_piloto",
-          "mode": "list",
-          "cachedResultName": "praisa_delval_piloto"
-        }
+          "value": "praisa_delval_piloto_v13",
+          "mode": "id"
+        },
+        "clearStore": false
       },
       "id": "f07f02c7-671f-48f9-a707-b48b8a78d980",
       "name": "Base Técnica - Indexar DelVal",
@@ -143,7 +143,7 @@
         "hasOutputParser": false,
         "needsFallback": false,
         "options": {
-          "systemMessage": "Eres el asistente técnico de prueba de Praisa para documentación DelVal.\n\nREGLAS OBLIGATORIAS:\n1. Para preguntas técnicas sobre productos DelVal, usa SIEMPRE la herramienta base_tecnica_delval antes de responder.\n2. Haz búsquedas separadas cuando el usuario pida selección o validación:\n   A) identidad/configuración exacta del producto: tipo, serie, diámetro y conexión;\n   B) condiciones de servicio: presión, temperatura, fluido, material del cuerpo, material del asiento y límites.\n3. Para válvulas de bola roscadas, busca explícitamente Series 64 y 64-IS antes de concluir que no hay información.\n4. Si una recuperación devuelve otra familia de producto (por ejemplo mariposa cuando se pidió bola), vuelve a buscar con términos más específicos.\n5. Responde únicamente con información respaldada por los documentos recuperados.\n6. Distingue entre:\n   - coincidencia de producto/configuración;\n   - aptitud técnica para la aplicación.\n   Una coincidencia de serie NO equivale a aprobación de servicio.\n7. Si la documentación confirma la configuración pero no confirma el fluido o el punto presión-temperatura, indica que existe una opción candidata pero requiere validación técnica.\n8. No declares que un producto es apto para una aplicación solo porque se parece por nombre o descripción.\n9. Si falta un dato crítico, pregunta únicamente por los datos faltantes.\n10. Si la documentación no respalda una conclusión, dilo claramente: \"No encontré respaldo suficiente en la documentación DelVal cargada.\"\n11. Cuando sea posible, menciona la serie/modelo y la fuente técnica recuperada.\n12. Todavía NO consultes precio, existencia ni generes cotizaciones. Este workflow solo valida la búsqueda técnica.\n13. No inventes equivalencias ni compatibilidades.\n\nObjetivo del piloto: comprobar si la Base Técnica puede identificar primero el producto correcto y luego evaluar si la documentación respalda la aplicación antes de cruzarla con CAF."
+          "systemMessage": "Eres el asistente técnico de prueba de Praisa para documentación DelVal.\n\nREGLAS OBLIGATORIAS:\n1. Para preguntas técnicas sobre productos DelVal, usa SIEMPRE la herramienta base_tecnica_delval antes de responder.\n2. Para selección o validación realiza búsquedas separadas:\n   A) identidad/configuración exacta: tipo de válvula, serie, diámetro y conexión;\n   B) condiciones de servicio: presión, temperatura, fluido, cuerpo, asiento y límites.\n3. Para válvulas de bola roscadas, busca explícitamente:\n   - \"Series 64 three-piece floating ball valve screwed end\"\n   - \"Series 64-IS three-piece floating ball valve screwed end\"\n   antes de concluir que la familia no está documentada.\n4. Si la recuperación devuelve una familia distinta (por ejemplo mariposa), vuelve a buscar por la serie exacta solicitada.\n5. Responde únicamente con información respaldada por documentos recuperados.\n6. Distingue claramente:\n   - COINCIDENCIA DE CONFIGURACIÓN: existe una familia/serie que coincide en tipo, diámetro o conexión.\n   - APTITUD DE SERVICIO: la documentación respalda presión, temperatura, fluido y materiales.\n   La primera NO implica la segunda.\n7. Si encuentras Serie 64/64-IS pero no una tabla o dato suficiente para el punto 150 PSI / 160 °C o para vapor, debes decir que es un candidato de configuración pendiente de validación de servicio; no debes descartarlo como inexistente.\n8. Si falta respaldo para declarar aptitud, dilo claramente.\n9. Si falta un dato crítico, pregunta solo por lo que falta.\n10. Menciona serie/modelo y fuente técnica recuperada cuando sea posible.\n11. Todavía NO consultes CAF, precio, existencia ni generes cotizaciones.\n12. No inventes equivalencias ni compatibilidades.\n\nObjetivo: identificar correctamente la familia técnica y después separar esa identificación de la validación de la aplicación."
         }
       },
       "id": "0a06f6dd-7fb9-48fa-b1ef-ad95b8d42aba",
@@ -162,10 +162,10 @@
         "toolDescription": "Busca información técnica exclusivamente en la documentación DelVal indexada desde Google Drive Praisa. Prioriza coincidencias exactas de familia/serie antes de condiciones de servicio. Para válvulas de bola roscadas consulta especialmente Series 64 y 64-IS, y contrasta después presión, temperatura, material del cuerpo, asiento, fluido y límites. Si no hay respaldo explícito para una aplicación, no la apruebes.",
         "memoryKey": {
           "__rl": true,
-          "mode": "list",
-          "value": "praisa_delval_piloto"
+          "value": "praisa_delval_piloto_v13",
+          "mode": "id"
         },
-        "topK": 15,
+        "topK": 20,
         "includeDocumentMetadata": true
       },
       "id": "e7d941f8-941d-4df3-97de-a230f128789a",
@@ -198,7 +198,7 @@
     },
     {
       "parameters": {
-        "content": "### 1. Indexación\nEjecuta **Indexar catálogos DelVal** una vez para cargar 4 documentos piloto desde Google Drive Praisa.\n\nDocumentos piloto:\n- IOM Series 64 Floating Ball Valve\n- IOM Series 64-IS Class 400\n- Homologación válvulas mariposa/bola DelVal\n- Guía de selección de materiales de asientos\n\nSe reemplazó el PDF Serie 64 anterior porque su texto era poco legible para RAG.",
+        "content": "### 1. Indexación v1.3\nEjecuta **Indexar catálogos DelVal** una vez.\n\nEste piloto usa una **memoria vectorial nueva y exclusiva (`praisa_delval_piloto_v13`)** para evitar mezclar fragmentos de pruebas anteriores.\n\nDocumentos:\n- IOM Series 64 Floating Ball Valve\n- IOM Series 64-IS Class 400\n- Homologación DelVal\n- Guía de selección de materiales de asientos",
         "height": 288,
         "width": 672,
         "color": 7
