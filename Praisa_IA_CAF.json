@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - CAF Web - v2.5 - Consecutivo IA automático",
+  "name": "Praisa IA - CAF Web - v2.5.1 - Layout ordenado",
   "nodes": [
     {
       "parameters": {
@@ -47,8 +47,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7616,
-        2112
+        -5920,
+        3440
       ],
       "retryOnFail": true,
       "maxTries": 2,
@@ -67,8 +67,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        -8976,
-        1984
+        -7520,
+        2080
       ],
       "id": "f2130fde-af84-4111-a0a6-daec29511e02",
       "name": "IA - Clasificar intención"
@@ -80,8 +80,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        -8976,
-        2192
+        -7520,
+        2880
       ],
       "id": "7c7c084b-8161-43d3-8e24-154068d08ea3",
       "name": "DeepSeek - Clasificador",
@@ -101,8 +101,8 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.5,
       "position": [
-        -9184,
-        1984
+        -10400,
+        1600
       ],
       "id": "9079c513-9b43-47df-ba94-79dce582f8d5",
       "name": "Chat - Entrada",
@@ -116,8 +116,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -7056,
-        2080
+        -5280,
+        3360
       ],
       "id": "097f03b9-05ed-49f2-b399-475b662c6fc6",
       "name": "Respuesta - Movimiento",
@@ -151,8 +151,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -7344,
-        2144
+        -5600,
+        3440
       ],
       "id": "a0a29a95-eeb7-4fd4-9fd7-cbaca6fb97d1",
       "name": "¿Movimiento encontrado?"
@@ -165,8 +165,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -7056,
-        2240
+        -5280,
+        3600
       ],
       "id": "b956ee29-5b3d-4524-b81f-39be814b9492",
       "name": "Error - Movimiento",
@@ -199,8 +199,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8704,
-        1984
+        -7200,
+        2080
       ],
       "id": "6198d481-da53-425d-803e-35ec1baa216c",
       "name": "¿Es producto?"
@@ -247,8 +247,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7904,
-        1760
+        -6240,
+        1920
       ],
       "id": "6210dae7-489f-4f68-a77a-81c0f7c4185a",
       "name": "CAF - Consultar producto",
@@ -285,8 +285,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -7616,
-        1760
+        -5920,
+        1920
       ],
       "id": "c24e284f-255b-46b5-86b5-7d70bdb209b0",
       "name": "¿Producto encontrado?"
@@ -299,8 +299,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -7056,
-        1680
+        -5280,
+        1840
       ],
       "id": "cfefe64e-215c-4d0f-8c89-37523cb79622",
       "name": "Respuesta - Producto",
@@ -314,8 +314,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -7328,
-        1968
+        -5600,
+        2080
       ],
       "id": "e8d14845-ae99-4849-b6b2-7661d1ad0c2c",
       "name": "Error - Producto",
@@ -349,8 +349,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8464,
-        2160
+        -6880,
+        3520
       ],
       "id": "88c86626-1045-4297-b6f6-73b3c4f48286",
       "name": "¿Es movimiento?"
@@ -363,8 +363,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -7616,
-        3104
+        -5600,
+        5680
       ],
       "id": "54cfb4b3-dc0e-44ed-8c4e-d81d4c208e91",
       "name": "Respuesta - General",
@@ -411,8 +411,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -8176,
-        1728
+        -6560,
+        1920
       ],
       "id": "8f60d777-d7ca-4d91-8694-8ee58304ad65",
       "name": "CAF - Obtener JWT Producto",
@@ -462,8 +462,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7904,
-        2128
+        -6240,
+        3440
       ],
       "id": "7b19ef7f-8f72-47a7-8c21-29681b4acdef",
       "name": "CAF - Obtener JWT Movimiento",
@@ -499,8 +499,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8464,
-        1760
+        -6880,
+        2080
       ],
       "id": "dcc0f38b-7ad6-4c00-b33c-ee3794f9eb99",
       "name": "¿Código de producto válido?"
@@ -532,8 +532,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8176,
-        2160
+        -6560,
+        3520
       ],
       "id": "4d03f9f7-e728-485e-9821-31e952a90401",
       "name": "¿Número de movimiento válido?"
@@ -546,8 +546,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -8176,
-        1920
+        -6560,
+        2240
       ],
       "id": "6a1a80ab-95c1-4eda-96b8-395544245ea9",
       "name": "Solicitar - Código producto",
@@ -561,8 +561,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -7904,
-        2416
+        -6240,
+        3680
       ],
       "id": "2d80f6d2-fd9b-4a56-81bb-7c334622c3da",
       "name": "Solicitar - Número movimiento",
@@ -595,8 +595,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8176,
-        2528
+        -6240,
+        4640
       ],
       "id": "4811fee0-1381-4a91-98e8-c19f4fd6499d",
       "name": "¿Es cliente?"
@@ -628,8 +628,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -7904,
-        2576
+        -5920,
+        4640
       ],
       "id": "92fb1f39-dc39-44ec-9c3c-c91e3103dd7a",
       "name": "¿Cuenta de cliente válida?"
@@ -675,8 +675,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7616,
-        2576
+        -5600,
+        4560
       ],
       "id": "6280edf1-9473-4d81-8f07-33e71f2e802d",
       "name": "CAF - Obtener JWT Cliente",
@@ -723,8 +723,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7344,
-        2528
+        -5280,
+        4560
       ],
       "id": "6b630a35-c80a-4685-b19a-76de98e47084",
       "name": "CAF - Consultar cliente",
@@ -761,8 +761,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -7056,
-        2528
+        -4960,
+        4560
       ],
       "id": "54de7347-90c2-4369-8a58-927d3d716c5e",
       "name": "¿Cliente encontrado?"
@@ -775,8 +775,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -6784,
-        2448
+        -4640,
+        4480
       ],
       "id": "da9eec72-78ab-4752-b772-ddf1a94097c7",
       "name": "Respuesta - Cliente",
@@ -790,8 +790,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -6784,
-        2608
+        -4640,
+        4720
       ],
       "id": "4ab2464d-0312-4129-9e7d-5f811192d4a2",
       "name": "Error - Cliente",
@@ -805,8 +805,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -7616,
-        2736
+        -5600,
+        4800
       ],
       "id": "f757abaa-a518-49b5-956e-08023d1ea818",
       "name": "Solicitar - Cuenta cliente",
@@ -839,8 +839,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -7904,
-        2768
+        -5920,
+        5200
       ],
       "id": "6e1400c0-b720-42e1-8a34-7593e4abd509",
       "name": "¿Es existencia?"
@@ -872,8 +872,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -7616,
-        2896
+        -5600,
+        5200
       ],
       "id": "6b2c9410-6a4e-45eb-8aec-412fb6d4f431",
       "name": "¿Código para existencia válido?"
@@ -919,8 +919,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7344,
-        2768
+        -5280,
+        5120
       ],
       "id": "4c514aab-d88a-43d9-92af-365876edbeb0",
       "name": "CAF - Obtener JWT Existencia",
@@ -967,8 +967,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7056,
-        2768
+        -4960,
+        5120
       ],
       "id": "91550bf5-3078-46ac-a9b1-66b9d24a90bb",
       "name": "CAF - Consultar existencia",
@@ -1005,8 +1005,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -6784,
-        2768
+        -4640,
+        5120
       ],
       "id": "5be16546-4fc4-425d-a8de-b7c44fd9e603",
       "name": "¿Existencia encontrada?"
@@ -1019,8 +1019,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -6496,
-        2688
+        -4320,
+        5040
       ],
       "id": "3a2fa56f-ca0b-4b97-94f0-4d1218acc518",
       "name": "Respuesta - Existencia",
@@ -1034,8 +1034,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -6496,
-        2848
+        -4320,
+        5280
       ],
       "id": "e51ce09d-5a37-466d-905f-460ea7bac84f",
       "name": "Error - Existencia",
@@ -1049,8 +1049,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -7344,
-        2928
+        -5280,
+        5360
       ],
       "id": "791a7d97-0c1d-4af9-b5c8-549b04d84376",
       "name": "Solicitar - Código existencia",
@@ -1094,8 +1094,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7344,
-        1760
+        -5600,
+        1840
       ],
       "id": "c922bb62-0251-49e9-abf6-f3ece5dde50c",
       "name": "CAF - Consultar existencia del producto",
@@ -1131,8 +1131,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8176,
-        2368
+        -6560,
+        4080
       ],
       "id": "0055cde8-ed80-4793-a0b5-d1a0c2a33d48",
       "name": "¿Es historial cliente?"
@@ -1164,8 +1164,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -7904,
-        2288
+        -6240,
+        4080
       ],
       "id": "bb329c66-445c-478c-ba59-10c4657838d6",
       "name": "¿Cuenta para historial válida?"
@@ -1211,8 +1211,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7616,
-        2272
+        -5920,
+        4000
       ],
       "id": "4f092fe8-dae7-4307-8117-eee285d8f2b2",
       "name": "CAF - Obtener JWT Historial",
@@ -1259,8 +1259,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7344,
-        2288
+        -5600,
+        4000
       ],
       "id": "c33d7a69-818f-4325-aca9-7c018cfd0a3f",
       "name": "CAF - Consultar historial cliente",
@@ -1297,8 +1297,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -7056,
-        2384
+        -5280,
+        4000
       ],
       "id": "9a7678ad-3615-4734-a2e2-12bb17c93241",
       "name": "¿Historial encontrado?"
@@ -1311,8 +1311,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -6784,
-        2208
+        -4960,
+        3920
       ],
       "id": "e0db6847-0536-4b3a-999b-a1454228cf7e",
       "name": "Respuesta - Historial cliente",
@@ -1326,8 +1326,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -6784,
-        2368
+        -4960,
+        4160
       ],
       "id": "ed27eeab-f9d8-4a8e-abe8-8274138d319f",
       "name": "Error - Historial cliente",
@@ -1341,8 +1341,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -7616,
-        2432
+        -5920,
+        4240
       ],
       "id": "7298b955-f70a-4be1-88a2-661847d14f73",
       "name": "Solicitar - Cuenta historial",
@@ -1355,8 +1355,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -8976,
-        1488
+        -9120,
+        1600
       ],
       "id": "d543b664-9655-49c2-a7ac-ec6cf3bd9bc2",
       "name": "Cotización - Gestionar borrador"
@@ -1389,8 +1389,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8704,
-        1488
+        -7840,
+        1680
       ],
       "id": "0f1a2b3a-08a8-421e-a39c-efb7aea4b6d6",
       "name": "¿Es cotización?"
@@ -1423,8 +1423,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8448,
-        1344
+        -7520,
+        1200
       ],
       "id": "26f5e3e8-353e-4e09-9dc9-a2af25addde3",
       "name": "¿Cotización cancelada?"
@@ -1457,8 +1457,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8192,
-        1504
+        -7200,
+        1280
       ],
       "id": "3517be21-bc22-47d0-82a8-0a5a7f5594cf",
       "name": "¿Datos cotización completos?"
@@ -1471,8 +1471,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -8192,
-        1280
+        -7200,
+        1040
       ],
       "id": "050967e7-ac19-4373-aab1-84e6f3337679",
       "name": "Respuesta - Cotización cancelada",
@@ -1486,8 +1486,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -7920,
-        1664
+        -6880,
+        1440
       ],
       "id": "7cc531a6-d656-471d-811d-00c102982450",
       "name": "Solicitar - Datos cotización",
@@ -1534,8 +1534,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7920,
-        1440
+        -6880,
+        1200
       ],
       "id": "1a960ac8-cf08-47cc-9904-5274919a28ef",
       "name": "CAF - Obtener JWT Cotización",
@@ -1588,8 +1588,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7648,
-        1440
+        -6560,
+        1200
       ],
       "id": "1ae530b6-25e4-42f4-819f-411bed64c3aa",
       "name": "CAF - Cotización consultar cliente",
@@ -1646,8 +1646,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7376,
-        1440
+        -6240,
+        1200
       ],
       "id": "62bd72b5-ccb9-49d5-80f5-7a8bb8a963b6",
       "name": "CAF - Cotización consultar producto",
@@ -1700,8 +1700,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7104,
-        1440
+        -5920,
+        1200
       ],
       "id": "1707782d-20b3-4438-9e48-19fe5b49d236",
       "name": "CAF - Cotización consultar existencia",
@@ -1717,8 +1717,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -6832,
-        1440
+        -5600,
+        1200
       ],
       "id": "c43a107e-47e9-4c31-aadb-2676b582ca5a",
       "name": "Cotización - Preparar datos Word PDF"
@@ -1731,8 +1731,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -6560,
-        1440
+        -4960,
+        1200
       ],
       "id": "c00bd3f0-ff5b-4058-b6c2-3341a2f6a052",
       "name": "Respuesta - Borrador cotización",
@@ -1762,8 +1762,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -8976,
-        1760
+        -10080,
+        1600
       ],
       "id": "fd7a8151-3155-46b3-96ad-4f9e8b5d4b41",
       "name": "Configuración CAF"
@@ -1792,8 +1792,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -9216,
-        1488
+        -9760,
+        1600
       ],
       "id": "6a132bcf-e269-4ef6-9e34-cec603284569",
       "name": "Memoria - Crear tabla si no existe"
@@ -1824,8 +1824,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -9088,
-        1488
+        -9440,
+        1600
       ],
       "id": "ca03ea57-26ee-420b-8962-07c68cf3f096",
       "name": "Memoria - Leer sesión",
@@ -1884,8 +1884,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -8848,
-        1488
+        -8800,
+        1600
       ],
       "id": "911f13da-9ee7-4371-a1bb-4420f45748ec",
       "name": "Memoria - Guardar borrador"
@@ -1943,8 +1943,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -6700,
-        1440
+        -5280,
+        1200
       ],
       "id": "51166c92-ab63-4994-b07d-d3f8e2990d5a",
       "name": "Memoria - Guardar estado final"
@@ -1977,8 +1977,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8500,
-        1488
+        -8160,
+        1680
       ],
       "id": "7f1e1ad5-cce1-4376-aa8f-1d8a94f16d64",
       "name": "¿Generar documento?"
@@ -1990,8 +1990,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -8240,
-        1248
+        -6560,
+        640
       ],
       "id": "3fc4f90b-76b1-4602-b678-bb08831ee86b",
       "name": "Cotización - Preparar documento"
@@ -2012,8 +2012,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        -8000,
-        1248
+        -6240,
+        640
       ],
       "id": "87fda5ad-9e13-4bb4-8874-218de17e88a5",
       "name": "Google Drive - Copiar plantilla",
@@ -2214,8 +2214,8 @@
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 2,
       "position": [
-        -7760,
-        1248
+        -5920,
+        640
       ],
       "id": "74e42b5c-6f95-48df-ad7f-d7f5b210089e",
       "name": "Google Docs - Completar cotización",
@@ -2248,8 +2248,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        -7520,
-        1248
+        -5600,
+        640
       ],
       "id": "2e8930a2-0d16-4cd4-81cd-06496480edab",
       "name": "Google Drive - Exportar PDF",
@@ -2282,8 +2282,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        -7280,
-        1248
+        -5280,
+        640
       ],
       "id": "01e1fee0-1c06-4e24-a5c5-aadcaec128a3",
       "name": "Google Drive - Exportar Word",
@@ -2318,8 +2318,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        -7040,
-        1168
+        -4960,
+        520
       ],
       "id": "08a023ce-7d9b-419f-ab4b-913b19b1602b",
       "name": "Google Drive - Guardar PDF",
@@ -2354,8 +2354,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        -7040,
-        1328
+        -4960,
+        760
       ],
       "id": "b7c5a382-9e9c-41ab-a1a4-20726579f18d",
       "name": "Google Drive - Guardar Word",
@@ -2383,8 +2383,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -6800,
-        1248
+        -4640,
+        640
       ],
       "id": "371bfe11-1295-49f7-b2d4-3a4d0517ab39",
       "name": "Cotización - Unir archivos"
@@ -2397,8 +2397,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -6560,
-        1248
+        -4320,
+        640
       ],
       "id": "fcc646e2-4ba9-4c75-bf72-b5fa5dc70fe8",
       "name": "Respuesta - Documento generado"
@@ -2431,8 +2431,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -8660,
-        1488
+        -8480,
+        1600
       ],
       "id": "1c422c44-84d7-4411-9262-6bca30650948",
       "name": "¿Respuesta revisión comercial?"
@@ -2445,7 +2445,7 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -8420,
+        -8160,
         1360
       ],
       "id": "bd16f434-c7a7-407f-a49f-b86e3cc25699",
@@ -2463,8 +2463,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        -8208,
-        1936
+        -6560,
+        2560
       ],
       "id": "b5838b4f-3b74-4c26-b713-c5a10fcd1001",
       "name": "IA - Preparar búsqueda producto"
@@ -2510,8 +2510,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -7936,
-        1936
+        -5600,
+        2560
       ],
       "id": "b5838b4f-3b74-4c26-b713-c5a10fcd1002",
       "name": "CAF - Obtener JWT Búsqueda producto",
@@ -2572,8 +2572,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7664,
-        1936
+        -5280,
+        2560
       ],
       "id": "b5838b4f-3b74-4c26-b713-c5a10fcd1003",
       "name": "CAF - Buscar productos por descripción"
@@ -2585,8 +2585,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -7392,
-        1936
+        -4960,
+        2560
       ],
       "id": "b5838b4f-3b74-4c26-b713-c5a10fcd1004",
       "name": "Producto - Preparar candidatos"
@@ -2599,8 +2599,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1,
       "position": [
-        -7120,
-        1936
+        -4320,
+        2720
       ],
       "id": "b5838b4f-3b74-4c26-b713-c5a10fcd1005",
       "name": "Respuesta - Candidatos producto"
@@ -2620,8 +2620,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        -7936,
-        2208
+        -6240,
+        2560
       ]
     },
     {
@@ -2642,8 +2642,8 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
       "typeVersion": 1.2,
       "position": [
-        -7776,
-        2448
+        -6240,
+        2960
       ]
     },
     {
@@ -2655,8 +2655,8 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -7984,
-        2672
+        -6240,
+        3200
       ]
     },
     {
@@ -2670,8 +2670,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -7664,
-        2208
+        -5920,
+        2560
       ]
     },
     {
@@ -2704,8 +2704,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -7120,
-        2208
+        -4640,
+        2560
       ]
     },
     {
@@ -2719,8 +2719,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -6864,
-        2144
+        -4320,
+        2480
       ]
     },
     {
@@ -2769,8 +2769,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -6608,
-        2144
+        -4000,
+        2480
       ]
     },
     {
@@ -2784,8 +2784,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -6352,
-        2144
+        -3680,
+        2480
       ]
     },
     {
@@ -2798,8 +2798,8 @@
       "type": "@n8n/n8n-nodes-langchain.chat",
       "typeVersion": 1.3,
       "position": [
-        -6096,
-        2144
+        -2720,
+        2480
       ]
     },
     {
@@ -2813,8 +2813,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -6096,
-        2368
+        -3360,
+        2480
       ]
     },
     {
@@ -2872,8 +2872,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -5840,
-        2368
+        -3040,
+        2480
       ]
     },
     {
@@ -2904,8 +2904,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -8240,
-        1056
+        -7840,
+        640
       ],
       "alwaysOutputData": true
     },
@@ -2920,8 +2920,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -8000,
-        1056
+        -7520,
+        640
       ]
     },
     {
@@ -2979,8 +2979,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -7760,
-        1056
+        -7200,
+        640
       ]
     },
     {
@@ -3038,8 +3038,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        -7520,
-        1056
+        -6880,
+        640
       ]
     }
   ],
