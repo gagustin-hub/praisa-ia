@@ -17,7 +17,7 @@
   <div id="access-gate" class="access-gate">
     <form id="access-form" class="access-card" autocomplete="off">
       <div class="access-glow" aria-hidden="true"></div>
-      <img src="logo.svg" alt="Praisa" class="access-logo" />
+      <img src="logo-dark.svg" data-theme-logo alt="Praisa" class="access-logo" />
       <div class="access-lock"><span>●</span> Acceso interno</div>
       <h1>Praisa IA Interno</h1>
       <p class="access-copy">Ingresa con las credenciales internas asignadas para acceder al piloto privado del asistente.</p>
@@ -39,7 +39,7 @@
 
   <header class="topbar">
     <div class="brand">
-      <img src="logo.svg" alt="Praisa - Proveedores y Asesores Industriales, S.A." class="brand-logo" />
+      <img src="logo-dark.svg" data-theme-logo alt="Praisa - Proveedores y Asesores Industriales, S.A." class="brand-logo" />
       <div class="brand-divider" aria-hidden="true"></div>
       <div class="brand-copy">
         <h1>Praisa <span>IA Interno</span></h1>
@@ -49,13 +49,14 @@
 
     <div class="top-slogan">IMPULSAMOS<br>LA INDUSTRIA<br>JUNTOS <i></i></div>
 
-    <div class="top-search" aria-hidden="true">
-      <span>⌕</span>
-      <span>Buscar en Praisa IA...</span>
+    <label class="top-search" for="global-search">
+      <span class="search-icon">⌕</span>
+      <input id="global-search" type="search" placeholder="Buscar o escribir una instrucción..." autocomplete="off" />
       <kbd>Ctrl + K</kbd>
-    </div>
+    </label>
 
     <div class="topbar-actions">
+      <button id="theme-cycle-button" class="theme-cycle-button" type="button" aria-label="Cambiar tema" title="Cambiar tema">◐</button>
       <div class="topbar-status">
         <span class="status-dot" id="status-dot"></span>
         <div>
@@ -70,7 +71,7 @@
   <main class="workspace">
     <aside class="sidebar">
       <nav class="side-nav" aria-label="Funciones internas">
-        <button class="side-link active" type="button" data-section="chat">
+        <button class="side-link active" id="nav-chat" type="button" data-section="chat">
           <span class="side-icon">▢</span>
           <span><strong>Chat IA</strong><small>Asistente Praisa IA</small></span>
           <b>›</b>
@@ -109,9 +110,10 @@
 
       <div class="side-divider"></div>
 
-      <button class="side-link compact" type="button">
+      <button class="side-link compact" id="settings-button" type="button">
         <span class="side-icon">⚙</span>
-        <span><strong>Configuración</strong><small>Preferencias</small></span>
+        <span><strong>Configuración</strong><small>Tema y preferencias</small></span>
+        <b>›</b>
       </button>
 
       <section class="industry-card">
@@ -221,6 +223,70 @@
       </section>
     </aside>
   </main>
+
+  <div id="settings-backdrop" class="settings-backdrop" hidden></div>
+  <aside id="settings-drawer" class="settings-drawer" aria-hidden="true" aria-label="Configuración de Praisa IA">
+    <div class="settings-head">
+      <div>
+        <p>CONFIGURACIÓN</p>
+        <h2>Preferencias visuales</h2>
+      </div>
+      <button id="settings-close" class="icon-button" type="button" aria-label="Cerrar configuración">×</button>
+    </div>
+
+    <section class="settings-section">
+      <h3>Apariencia</h3>
+      <p>Elige cómo quieres ver Praisa IA Interno.</p>
+      <div class="theme-options" role="group" aria-label="Tema">
+        <button class="theme-option" type="button" data-theme-choice="dark">
+          <span class="theme-preview dark-preview"></span>
+          <strong>Oscuro</strong>
+          <small>Industrial y moderno</small>
+        </button>
+        <button class="theme-option" type="button" data-theme-choice="light">
+          <span class="theme-preview light-preview"></span>
+          <strong>Claro</strong>
+          <small>Limpio y luminoso</small>
+        </button>
+        <button class="theme-option" type="button" data-theme-choice="system">
+          <span class="theme-preview system-preview"></span>
+          <strong>Sistema</strong>
+          <small>Sigue tu dispositivo</small>
+        </button>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <div class="setting-row">
+        <div>
+          <h3>Animaciones</h3>
+          <p>Transiciones, glow y movimiento suave.</p>
+        </div>
+        <label class="switch">
+          <input id="motion-toggle" type="checkbox" checked />
+          <span></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <div class="setting-row">
+        <div>
+          <h3>Interfaz compacta</h3>
+          <p>Reduce espacios para ver más información.</p>
+        </div>
+        <label class="switch">
+          <input id="compact-toggle" type="checkbox" />
+          <span></span>
+        </label>
+      </div>
+    </section>
+
+    <div class="settings-footer">
+      <button id="reset-preferences" class="secondary-button" type="button">Restablecer</button>
+      <span>Las preferencias se guardan solo en este navegador.</span>
+    </div>
+  </aside>
 
   <footer class="footer">
     <span>Praisa IA Interno · Piloto</span>
