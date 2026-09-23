@@ -317,6 +317,21 @@ function observeChatContext() {
     root.querySelectorAll('.chat-message:not([data-praisa-enhanced])').forEach((message) => {
       message.dataset.praisaEnhanced = 'true';
 
+      const messageText = (message.innerText || message.textContent || '').trim();
+      const isUserMessage = message.classList.contains('chat-message-from-user');
+      const isBotMessage = message.classList.contains('chat-message-from-bot');
+      const quoteInProgress = contextQuote && /preparaci[oó]n/i.test(contextQuote.textContent || '');
+
+      if (isUserMessage && quoteInProgress && /^\d+(?:[.,]\d+)?$/.test(messageText)) {
+        root.classList.add('praisa-validating-stock');
+        helperText.textContent = 'Validando producto y existencias en CAF…';
+      }
+
+      if (isBotMessage && root.classList.contains('praisa-validating-stock')) {
+        root.classList.remove('praisa-validating-stock');
+        helperText.textContent = 'Puedes seguir agregando códigos o continuar con la cotización.';
+      }
+
       if (!message.classList.contains('chat-message-typing') && preferences.motion) {
         message.classList.add('praisa-message-enter');
         setTimeout(() => message.classList.remove('praisa-message-enter'), 500);
