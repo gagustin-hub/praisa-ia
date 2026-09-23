@@ -859,3 +859,75 @@ html[data-theme="light"] .access-card input{border-color:#ccd6de;color:#17222e;b
   .theme-option{grid-template-columns:52px 1fr;align-items:center}
   .theme-option small{grid-column:2}
 }
+
+
+/* ===== Rail derecho sin duplicar navegación ===== */
+.context-intro{
+  margin:-2px 0 12px;
+  color:var(--muted);
+  font-size:.68rem;
+  line-height:1.45;
+}
+.context-list{display:grid;gap:7px}
+.context-item{
+  min-height:58px;
+  padding:9px 10px;
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr);
+  gap:9px;
+  align-items:center;
+  border:1px solid #304657;
+  border-radius:11px;
+  background:linear-gradient(145deg,#142330,#0f1b26);
+}
+.context-icon{
+  width:30px;height:30px;border-radius:9px;
+  display:grid;place-items:center;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  font-size:1rem;
+}
+.context-icon.product{color:#35dda7}
+.context-icon.client{color:#58a9ff}
+.context-icon.quote{color:#ffc14f}
+.context-icon.approval{color:#ff5660}
+.context-item>div{min-width:0;display:grid;gap:2px}
+.context-item small{color:var(--muted);font-size:.59rem}
+.context-item strong{
+  overflow:hidden;
+  color:var(--text);
+  font-size:.72rem;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.context-item.updated{
+  border-color:rgba(239,27,36,.46);
+  box-shadow:0 0 18px rgba(239,27,36,.08);
+}
+.integrations-card{border-bottom-color:rgba(239,27,36,.38)}
+.integration-row{
+  padding:10px 1px;
+  display:grid;
+  grid-template-columns:10px minmax(0,1fr) auto;
+  gap:9px;
+  align-items:center;
+  border-top:1px solid rgba(255,255,255,.055);
+}
+.integration-dot{width:8px;height:8px;border-radius:50%}
+.integration-dot.online{background:var(--green);box-shadow:0 0 10px rgba(25,213,154,.3)}
+.integration-dot.pending{background:var(--amber)}
+.integration-row>div{min-width:0;display:grid;gap:2px}
+.integration-row strong{font-size:.69rem}
+.integration-row small{color:var(--muted);font-size:.58rem;line-height:1.25}
+.integration-row>b{
+  color:#91a2b0;
+  font-size:.57rem;
+  font-weight:700;
+  white-space:nowrap;
+}
+html[data-theme="light"] .context-item{
+  border-color:#d7e0e7;
+  background:linear-gradient(145deg,#ffffff,#f1f4f6);
+}
+html[data-theme="light"] .context-icon{background:#f3f6f8;border-color:#dce4ea}
+html[data-theme="light"] .integration-row{border-color:#e4e9ed}
