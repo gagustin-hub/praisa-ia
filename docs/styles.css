@@ -1028,3 +1028,45 @@ html[data-theme="light"] #n8n-chat .chat-inputs textarea{
   margin-top:0!important;
   flex:0 0 auto!important;
 }
+
+
+/* FIX estructural: el chat se ajusta al contenido y sólo hace scroll cuando crece */
+.chat-shell{
+  min-height:0!important;
+}
+.chat-card{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+#n8n-chat{
+  height:auto!important;
+  min-height:0!important;
+}
+#n8n-chat .chat-layout{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+#n8n-chat .chat-body{
+  flex:0 1 auto!important;
+  display:block!important;
+  min-height:0!important;
+  max-height:360px!important;
+  overflow-y:auto!important;
+}
+#n8n-chat .chat-messages-list{
+  margin:0!important;
+  padding:18px!important;
+}
+#n8n-chat .chat-footer{
+  position:static!important;
+  flex:0 0 auto!important;
+}
+@media(max-width:800px){
+  .chat-card{height:auto!important;max-height:none!important}
+  #n8n-chat{min-height:0!important}
+  #n8n-chat .chat-body{max-height:52vh!important}
+}
