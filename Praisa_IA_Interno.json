@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Asistente Interno - Piloto v1.7.0 - Cotización multiproducto",
+  "name": "Praisa IA - Asistente Interno - Piloto v1.7.1 - Filas multiproducto",
   "nodes": [
     {
       "parameters": {
@@ -1933,7 +1933,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const gestion = $('Cotización - Gestionar borrador').first().json;\nconst draft = gestion.draft || {};\nconst clienteResp = $('CAF - Cotización consultar cliente').first().json || {};\nconst productoResp = $('CAF - Cotización consultar producto').first().json || {};\nconst existenciaResp = $('CAF - Cotización consultar existencia').first().json || {};\n\nconst c = clienteResp.cliente || {};\nconst p = productoResp.prod || {};\nconst existencias = Array.isArray(existenciaResp.v_existencia) ? existenciaResp.v_existencia : [];\n\nconst limpio = v => (v ?? '').toString().trim();\nconst num = v => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\n\nconst clienteValido = Boolean(clienteResp.success && limpio(c.cuenta));\nconst productoValido = Boolean(productoResp.success && limpio(p.codpro));\n\nconst sessionId = gestion.sessionKeyCotizacion || 'sesion-default';\n\nlet estado = {};\ntry {\n  estado = JSON.parse(gestion.persist_state_json || '{}');\n} catch (e) {}\nif (!estado || typeof estado !== 'object') estado = {};\n\nconst salidaPersistente = (extra = {}) => ({\n  ...extra,\n  persist_session_id: sessionId,\n  persist_state_json: JSON.stringify(estado)\n});\n\nif (!clienteValido || !productoValido) {\n  const problemas = [];\n  if (!clienteValido) problemas.push('No pude validar la cuenta del cliente en CAF Web.');\n  if (!productoValido) problemas.push('No pude validar el producto en CAF Web.');\n\n  estado.active = true;\n  estado.phase = 'base';\n  estado.pendingField = '';\n  estado.draft = draft;\n\n  return [{\n    json: salidaPersistente({\n      listoDocumento: false,\n      estado: 'ERROR_VALIDACION_CAF',\n      mensaje: problemas.join('\\n') + '\\n\\nEl borrador de cotización sigue guardado. Puedes corregir la cuenta o el código e intentarlo nuevamente.',\n      draft\n    })\n  }];\n}\n\nconst contactoCAF = limpio(c.contacto);\nconst correoCAF = [...new Set(\n  limpio(c.email)\n    .replace(/\\\\+@/g, '@')\n    .split(',')\n    .map(x => x.trim().replace(/\\\\+@/g, '@'))\n    .filter(Boolean)\n)].join(', ');\nconst telefonoCAF = limpio(c.telefono);\n\nconst contactoFinal = limpio(draft.contacto) || contactoCAF;\nconst correoFinal = limpio(draft.correo) || correoCAF;\nconst telefonoFinal = limpio(draft.telefono) || telefonoCAF;\n\nconst faltantesContacto = [];\nif (!contactoFinal) faltantesContacto.push('contacto');\nif (!correoFinal) faltantesContacto.push('correo');\nif (!telefonoFinal) faltantesContacto.push('telefono');\n\nif (faltantesContacto.length > 0) {\n  estado.active = true;\n  estado.phase = 'contacto';\n  estado.pendingField = faltantesContacto[0];\n  estado.draft = {\n    ...draft,\n    contacto: contactoFinal,\n    correo: correoFinal,\n    telefono: telefonoFinal\n  };\n\n  let pregunta = '';\n  if (estado.pendingField === 'contacto') {\n    pregunta = '¿A nombre de quién debe dirigirse la cotización?';\n  } else if (estado.pendingField === 'correo') {\n    pregunta = '¿Cuál es el correo del contacto?';\n  } else {\n    pregunta = '¿Cuál es el teléfono del contacto?';\n  }\n\n  return [{\n    json: salidaPersistente({\n      listoDocumento: false,\n      estado: 'FALTAN_DATOS_CONTACTO',\n      mensaje:\n        '✅ Ya validé el cliente y el producto en CAF Web.\\n\\n' +\n        'Antes de preparar el documento necesito completar los datos de contacto que no están registrados en CAF.\\n\\n' +\n        pregunta,\n      draft: estado.draft\n    })\n  }];\n}\n\nconst cantidad = num(draft.cantidad);\nconst precioUnitario = num(p.precioa);\nconst totalLinea = precioUnitario * cantidad;\n\nlet existenciaTotal = 0;\nfor (const r of existencias) existenciaTotal += num(r.existencia);\n\nlet tiempoEntrega = 'Por confirmar';\nif (existencias.length > 0 && existenciaTotal >= cantidad) {\n  tiempoEntrega = 'Inmediato, salvo previa venta';\n} else if (existencias.length > 0 && existenciaTotal < cantidad) {\n  tiempoEntrega = 'Existencia insuficiente; confirmar plazo de entrega';\n} else {\n  tiempoEntrega = 'Sin existencia registrada; confirmar plazo de entrega';\n}\n\nconst fecha = new Intl.DateTimeFormat('es-GT', {\n  day: '2-digit',\n  month: '2-digit',\n  year: 'numeric',\n  timeZone: 'America/Guatemala'\n}).format(new Date());\n\nconst itemNuevo = {\n  item: 1,\n  cantidad,\n  codigo: limpio(p.codpro),\n  descripcion: limpio(p.nombre_prod),\n  unidad: limpio(p.umedida),\n  precio_unitario_preliminar: precioUnitario,\n  precio_total_preliminar: totalLinea,\n  existencia_total: existenciaTotal,\n  tiempo_entrega: tiempoEntrega\n};\n\nconst anterior = estado.quoteDraft && typeof estado.quoteDraft === 'object'\n  ? estado.quoteDraft\n  : null;\n\nlet items = Array.isArray(anterior?.items) ? [...anterior.items] : [];\nconst codigoNuevo = itemNuevo.codigo.toUpperCase();\nconst indiceExistente = items.findIndex(it => limpio(it.codigo).toUpperCase() === codigoNuevo);\n\nif (indiceExistente >= 0) {\n  items[indiceExistente] = { ...itemNuevo, item: indiceExistente + 1 };\n} else {\n  items.push({ ...itemNuevo, item: items.length + 1 });\n}\n\nitems = items.map((it, index) => ({ ...it, item: index + 1 }));\nconst totalPreliminar = items.reduce((acc, it) => acc + num(it.precio_total_preliminar), 0);\n\nconst datosDocumento = {\n  cotizacion: anterior?.cotizacion || 'PENDIENTE',\n  fecha: anterior?.fecha || fecha,\n  empresa: anterior?.empresa || limpio(c.nombre_cliente),\n  cuenta_cliente: anterior?.cuenta_cliente || limpio(c.cuenta),\n  nit: anterior?.nit || limpio(c.nit),\n  atencion: anterior?.atencion || contactoFinal,\n  correo: anterior?.correo || correoFinal,\n  telefono: anterior?.telefono || telefonoFinal,\n  direccion_cliente: anterior?.direccion_cliente || limpio(c.direccion),\n  direccion_entrega: anterior?.direccion_entrega || limpio(draft.direccion_entrega) || limpio(c.direccion) || 'Por confirmar',\n  condiciones_pago: anterior?.condiciones_pago || limpio(c.terminos) || 'Por confirmar',\n  condiciones_pago_caf: anterior?.condiciones_pago_caf || limpio(c.terminos) || 'Por confirmar',\n  validez: anterior?.validez || '15 días',\n  moneda: 'GTQ',\n  iva_estado: '',\n  asesor: anterior?.asesor || 'Por asignar',\n  telefono_asesor: anterior?.telefono_asesor || '',\n  correo_asesor: anterior?.correo_asesor || '',\n  items,\n  total_preliminar: totalPreliminar,\n  estado: 'PENDIENTE_REVISION',\n  fuente_precio: 'Precio A CAF',\n  nota_control: 'BORRADOR INTERNO. No enviar al cliente sin revisión técnica y comercial.'\n};\n\nestado.quoteDraft = datosDocumento;\nestado.active = true;\nestado.phase = 'agregando_items';\nestado.pendingField = 'codigo_producto';\nestado.lastCompleted = null;\nestado.commercialApproved = false;\nestado.draft = {\n  cuenta_cliente: datosDocumento.cuenta_cliente,\n  codigo_producto: '',\n  cantidad: null,\n  direccion_entrega: datosDocumento.direccion_entrega,\n  contacto: datosDocumento.atencion,\n  correo: datosDocumento.correo,\n  telefono: datosDocumento.telefono\n};\n\nconst formatoNumero = v => {\n  const n = Number(v);\n  const seguro = Number.isFinite(n) ? n : 0;\n  const partes = seguro.toFixed(2).split('.');\n  partes[0] = partes[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n  return partes.join('.');\n};\nconst dinero = v => 'Q' + formatoNumero(v);\n\nconst faltan = Math.max(0, cantidad - existenciaTotal);\nlet resultadoExistencia = '';\nif (existenciaTotal >= cantidad) {\n  resultadoExistencia =\n    '✅ **Existencia confirmada:** solicitaste **' + cantidad + '** y CAF reporta **' + existenciaTotal + '** disponibles.';\n} else if (existenciaTotal > 0) {\n  resultadoExistencia =\n    '⚠️ **Existencia insuficiente:** solicitaste **' + cantidad + '** y CAF reporta **' + existenciaTotal + '** disponibles. Faltan **' + faltan + '** por confirmar.';\n} else {\n  resultadoExistencia =\n    '⚠️ **Sin existencia disponible en CAF** para este código. El plazo de entrega debe confirmarse antes de emitir la cotización.';\n}\n\nconst listaBreve = items\n  .map(it => '- **' + it.codigo + '** · ' + it.cantidad + ' und. · ' + dinero(it.precio_total_preliminar))\n  .join('\\n');\n\nconst mensaje =\n  '🔎 Ya validé el producto y las existencias en CAF.\\n\\n' +\n  resultadoExistencia + '\\n\\n' +\n  '**Producto agregado al borrador**\\n' +\n  '- Código: **' + itemNuevo.codigo + '**\\n' +\n  '- Descripción: ' + itemNuevo.descripcion + '\\n' +\n  '- Cantidad: ' + cantidad + '\\n' +\n  '- Precio A CAF: ' + dinero(precioUnitario) + '\\n' +\n  '- Total línea: ' + dinero(totalLinea) + '\\n' +\n  '- Entrega: ' + tiempoEntrega + '\\n\\n' +\n  '**Productos en la cotización (' + items.length + ')**\\n' +\n  listaBreve + '\\n\\n' +\n  '**Total preliminar:** ' + dinero(totalPreliminar) + '\\n\\n' +\n  'Si tienes otro código, **escríbelo y lo sigo agregando**. Si ya terminaste, escribe **Continuar cotización**.';\n\nreturn [{\n  json: salidaPersistente({\n    listoDocumento: true,\n    estado: 'AGREGANDO_PRODUCTOS',\n    datosDocumento,\n    mensaje\n  })\n}];"
+        "jsCode": "const gestion = $('Cotización - Gestionar borrador').first().json;\nconst draft = gestion.draft || {};\nconst clienteResp = $('CAF - Cotización consultar cliente').first().json || {};\nconst productoResp = $('CAF - Cotización consultar producto').first().json || {};\nconst existenciaResp = $('CAF - Cotización consultar existencia').first().json || {};\n\nconst c = clienteResp.cliente || {};\nconst p = productoResp.prod || {};\nconst existencias = Array.isArray(existenciaResp.v_existencia) ? existenciaResp.v_existencia : [];\n\nconst limpio = v => (v ?? '').toString().trim();\nconst num = v => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\n\nconst clienteValido = Boolean(clienteResp.success && limpio(c.cuenta));\nconst productoValido = Boolean(productoResp.success && limpio(p.codpro));\n\nconst sessionId = gestion.sessionKeyCotizacion || 'sesion-default';\n\nlet estado = {};\ntry {\n  estado = JSON.parse(gestion.persist_state_json || '{}');\n} catch (e) {}\nif (!estado || typeof estado !== 'object') estado = {};\n\nconst salidaPersistente = (extra = {}) => ({\n  ...extra,\n  persist_session_id: sessionId,\n  persist_state_json: JSON.stringify(estado)\n});\n\nif (!clienteValido || !productoValido) {\n  const problemas = [];\n  if (!clienteValido) problemas.push('No pude validar la cuenta del cliente en CAF Web.');\n  if (!productoValido) problemas.push('No pude validar el producto en CAF Web.');\n\n  estado.active = true;\n  estado.phase = 'base';\n  estado.pendingField = '';\n  estado.draft = draft;\n\n  return [{\n    json: salidaPersistente({\n      listoDocumento: false,\n      estado: 'ERROR_VALIDACION_CAF',\n      mensaje: problemas.join('\\n') + '\\n\\nEl borrador de cotización sigue guardado. Puedes corregir la cuenta o el código e intentarlo nuevamente.',\n      draft\n    })\n  }];\n}\n\nconst contactoCAF = limpio(c.contacto);\nconst correoCAF = [...new Set(\n  limpio(c.email)\n    .replace(/\\\\+@/g, '@')\n    .split(',')\n    .map(x => x.trim().replace(/\\\\+@/g, '@'))\n    .filter(Boolean)\n)].join(', ');\nconst telefonoCAF = limpio(c.telefono);\n\nconst contactoFinal = limpio(draft.contacto) || contactoCAF;\nconst correoFinal = limpio(draft.correo) || correoCAF;\nconst telefonoFinal = limpio(draft.telefono) || telefonoCAF;\n\nconst faltantesContacto = [];\nif (!contactoFinal) faltantesContacto.push('contacto');\nif (!correoFinal) faltantesContacto.push('correo');\nif (!telefonoFinal) faltantesContacto.push('telefono');\n\nif (faltantesContacto.length > 0) {\n  estado.active = true;\n  estado.phase = 'contacto';\n  estado.pendingField = faltantesContacto[0];\n  estado.draft = {\n    ...draft,\n    contacto: contactoFinal,\n    correo: correoFinal,\n    telefono: telefonoFinal\n  };\n\n  let pregunta = '';\n  if (estado.pendingField === 'contacto') {\n    pregunta = '¿A nombre de quién debe dirigirse la cotización?';\n  } else if (estado.pendingField === 'correo') {\n    pregunta = '¿Cuál es el correo del contacto?';\n  } else {\n    pregunta = '¿Cuál es el teléfono del contacto?';\n  }\n\n  return [{\n    json: salidaPersistente({\n      listoDocumento: false,\n      estado: 'FALTAN_DATOS_CONTACTO',\n      mensaje:\n        '✅ Ya validé el cliente y el producto en CAF Web.\\n\\n' +\n        'Antes de preparar el documento necesito completar los datos de contacto que no están registrados en CAF.\\n\\n' +\n        pregunta,\n      draft: estado.draft\n    })\n  }];\n}\n\nconst cantidad = num(draft.cantidad);\nconst precioUnitario = num(p.precioa);\nconst totalLinea = precioUnitario * cantidad;\n\nlet existenciaTotal = 0;\nfor (const r of existencias) existenciaTotal += num(r.existencia);\n\nlet tiempoEntrega = 'Por confirmar';\nif (existencias.length > 0 && existenciaTotal >= cantidad) {\n  tiempoEntrega = 'Inmediato, salvo previa venta';\n} else if (existencias.length > 0 && existenciaTotal < cantidad) {\n  tiempoEntrega = 'Existencia insuficiente; confirmar plazo de entrega';\n} else {\n  tiempoEntrega = 'Sin existencia registrada; confirmar plazo de entrega';\n}\n\nconst fecha = new Intl.DateTimeFormat('es-GT', {\n  day: '2-digit',\n  month: '2-digit',\n  year: 'numeric',\n  timeZone: 'America/Guatemala'\n}).format(new Date());\n\nconst itemNuevo = {\n  item: 1,\n  cantidad,\n  codigo: limpio(p.codpro),\n  descripcion: limpio(p.nombre_prod),\n  unidad: limpio(p.umedida),\n  precio_unitario_preliminar: precioUnitario,\n  precio_total_preliminar: totalLinea,\n  existencia_total: existenciaTotal,\n  tiempo_entrega: tiempoEntrega\n};\n\nconst anterior = estado.quoteDraft && typeof estado.quoteDraft === 'object'\n  ? estado.quoteDraft\n  : null;\n\nlet items = Array.isArray(anterior?.items) ? [...anterior.items] : [];\nconst codigoNuevo = itemNuevo.codigo.toUpperCase();\nconst indiceExistente = items.findIndex(it => limpio(it.codigo).toUpperCase() === codigoNuevo);\n\nif (indiceExistente < 0 && items.length >= 10) {\n  estado.quoteDraft = anterior;\n  estado.active = true;\n  estado.phase = 'agregando_items';\n  estado.pendingField = 'codigo_producto';\n  estado.draft = {\n    cuenta_cliente: anterior?.cuenta_cliente || limpio(c.cuenta),\n    codigo_producto: '',\n    cantidad: null,\n    direccion_entrega: anterior?.direccion_entrega || '',\n    contacto: anterior?.atencion || contactoFinal,\n    correo: anterior?.correo || correoFinal,\n    telefono: anterior?.telefono || telefonoFinal\n  };\n\n  return [{\n    json: salidaPersistente({\n      listoDocumento: true,\n      estado: 'LIMITE_RENGLONES',\n      datosDocumento: anterior,\n      mensaje:\n        'La cotización ya tiene **10 productos**, que es la capacidad actual de la plantilla. ' +\n        'Puedes escribir **Continuar cotización** para pasar a revisión y generar el documento.'\n    })\n  }];\n}\n\nif (indiceExistente >= 0) {\n  items[indiceExistente] = { ...itemNuevo, item: indiceExistente + 1 };\n} else {\n  items.push({ ...itemNuevo, item: items.length + 1 });\n}\n\nitems = items.map((it, index) => ({ ...it, item: index + 1 }));\nconst totalPreliminar = items.reduce((acc, it) => acc + num(it.precio_total_preliminar), 0);\n\nconst datosDocumento = {\n  cotizacion: anterior?.cotizacion || 'PENDIENTE',\n  fecha: anterior?.fecha || fecha,\n  empresa: anterior?.empresa || limpio(c.nombre_cliente),\n  cuenta_cliente: anterior?.cuenta_cliente || limpio(c.cuenta),\n  nit: anterior?.nit || limpio(c.nit),\n  atencion: anterior?.atencion || contactoFinal,\n  correo: anterior?.correo || correoFinal,\n  telefono: anterior?.telefono || telefonoFinal,\n  direccion_cliente: anterior?.direccion_cliente || limpio(c.direccion),\n  direccion_entrega: anterior?.direccion_entrega || limpio(draft.direccion_entrega) || limpio(c.direccion) || 'Por confirmar',\n  condiciones_pago: anterior?.condiciones_pago || limpio(c.terminos) || 'Por confirmar',\n  condiciones_pago_caf: anterior?.condiciones_pago_caf || limpio(c.terminos) || 'Por confirmar',\n  validez: anterior?.validez || '15 días',\n  moneda: 'GTQ',\n  iva_estado: '',\n  asesor: anterior?.asesor || 'Por asignar',\n  telefono_asesor: anterior?.telefono_asesor || '',\n  correo_asesor: anterior?.correo_asesor || '',\n  items,\n  total_preliminar: totalPreliminar,\n  estado: 'PENDIENTE_REVISION',\n  fuente_precio: 'Precio A CAF',\n  nota_control: 'BORRADOR INTERNO. No enviar al cliente sin revisión técnica y comercial.'\n};\n\nestado.quoteDraft = datosDocumento;\nestado.active = true;\nestado.phase = 'agregando_items';\nestado.pendingField = 'codigo_producto';\nestado.lastCompleted = null;\nestado.commercialApproved = false;\nestado.draft = {\n  cuenta_cliente: datosDocumento.cuenta_cliente,\n  codigo_producto: '',\n  cantidad: null,\n  direccion_entrega: datosDocumento.direccion_entrega,\n  contacto: datosDocumento.atencion,\n  correo: datosDocumento.correo,\n  telefono: datosDocumento.telefono\n};\n\nconst formatoNumero = v => {\n  const n = Number(v);\n  const seguro = Number.isFinite(n) ? n : 0;\n  const partes = seguro.toFixed(2).split('.');\n  partes[0] = partes[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n  return partes.join('.');\n};\nconst dinero = v => 'Q' + formatoNumero(v);\n\nconst faltan = Math.max(0, cantidad - existenciaTotal);\nlet resultadoExistencia = '';\nif (existenciaTotal >= cantidad) {\n  resultadoExistencia =\n    '✅ **Existencia confirmada:** solicitaste **' + cantidad + '** y CAF reporta **' + existenciaTotal + '** disponibles.';\n} else if (existenciaTotal > 0) {\n  resultadoExistencia =\n    '⚠️ **Existencia insuficiente:** solicitaste **' + cantidad + '** y CAF reporta **' + existenciaTotal + '** disponibles. Faltan **' + faltan + '** por confirmar.';\n} else {\n  resultadoExistencia =\n    '⚠️ **Sin existencia disponible en CAF** para este código. El plazo de entrega debe confirmarse antes de emitir la cotización.';\n}\n\nconst listaBreve = items\n  .map(it => '- **' + it.codigo + '** · ' + it.cantidad + ' und. · ' + dinero(it.precio_total_preliminar))\n  .join('\\n');\n\nconst mensaje =\n  '🔎 Ya validé el producto y las existencias en CAF.\\n\\n' +\n  resultadoExistencia + '\\n\\n' +\n  '**Producto agregado al borrador**\\n' +\n  '- Código: **' + itemNuevo.codigo + '**\\n' +\n  '- Descripción: ' + itemNuevo.descripcion + '\\n' +\n  '- Cantidad: ' + cantidad + '\\n' +\n  '- Precio A CAF: ' + dinero(precioUnitario) + '\\n' +\n  '- Total línea: ' + dinero(totalLinea) + '\\n' +\n  '- Entrega: ' + tiempoEntrega + '\\n\\n' +\n  '**Productos en la cotización (' + items.length + ')**\\n' +\n  listaBreve + '\\n\\n' +\n  '**Total preliminar:** ' + dinero(totalPreliminar) + '\\n\\n' +\n  'Si tienes otro código, **escríbelo y lo sigo agregando**. Si ya terminaste, escribe **Continuar cotización**.';\n\nreturn [{\n  json: salidaPersistente({\n    listoDocumento: true,\n    estado: 'AGREGANDO_PRODUCTOS',\n    datosDocumento,\n    mensaje\n  })\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -2220,7 +2220,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const gestion = $('Cotización - Asignar consecutivo IA').item.json || {};\nconst d = gestion.datosDocumento || {};\nconst items = Array.isArray(d.items) ? d.items : [];\nconst item = items.length ? items[0] : {};\n\nconst limpio = v => (v ?? '').toString().trim();\nconst limpiarCorreo = v => limpio(v).replace(/\\\\@/g, '@');\nconst num = v => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\nconst formatoNumero = v => {\n  const n = Number(v);\n  const seguro = Number.isFinite(n) ? n : 0;\n  const partes = seguro.toFixed(2).split('.');\n  partes[0] = partes[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n  return partes.join('.');\n};\nconst dinero = v => 'Q' + formatoNumero(v);\n\nconst fechaIso = new Intl.DateTimeFormat('en-CA', {\n  year: 'numeric', month: '2-digit', day: '2-digit',\n  timeZone: 'America/Guatemala'\n}).format(new Date());\n\nconst cuenta = limpio(d.cuenta_cliente) || 'SIN-CUENTA';\nconst codigo = limpio(item.codigo) || 'SIN-CODIGO';\nconst numero = limpio(d.cotizacion) || 'SIN-NUMERO';\n\nconst archivoBase = `Cotizacion Praisa - ${numero} - ${cuenta} - ${fechaIso}`\n  .replace(/[\\\\/:*?\"<>|]/g, '-');\n\nconst campos = {\n  fecha: limpio(d.fecha) || fechaIso,\n  cotizacion: numero,\n  referencia: limpio(d.atencion) || 'Por confirmar',\n  empresa: limpio(d.empresa) || 'Por confirmar',\n  atencion: limpio(d.atencion) || 'Por confirmar',\n  correo: limpiarCorreo(d.correo) || 'Por confirmar',\n  telefono: limpio(d.telefono) || 'Por confirmar',\n  item: items.length ? items.map((it,i) => String(it.item || i + 1)).join('\\n') : '1',\n  cant: items.length ? items.map(it => limpio(it.cantidad) || '0').join('\\n') : '0',\n  descripcion: items.length ? items.map(it => (limpio(it.codigo) ? limpio(it.codigo) + ' - ' : '') + (limpio(it.descripcion) || 'Por confirmar')).join('\\n') : 'Por confirmar',\n  p_unit: items.length ? items.map(it => dinero(it.precio_unitario_preliminar)).join('\\n') : dinero(0),\n  p_total: items.length ? items.map(it => dinero(it.precio_total_preliminar)).join('\\n') : dinero(0),\n  entrega: items.length ? items.map(it => limpio(it.tiempo_entrega) || 'Por confirmar').join('\\n') : 'Por confirmar',\n  moneda: limpio(d.moneda) || 'GTQ',\n  total: dinero(d.total_preliminar),\n  condicion_precio: 'Precio puesto en nuestras bodegas, Ciudad de Guatemala',\n  nota_impuestos: '(El precio ya incluye IVA del 12%)',\n  pago: limpio(d.condiciones_pago) || 'Por confirmar',\n  validez: limpio(d.validez) || '15 días',\n  direccion_entrega: limpio(d.direccion_entrega) || 'Por confirmar',\n  nota_entrega: items.length ? items.map(it => limpio(it.codigo) + ': ' + (limpio(it.tiempo_entrega) || 'Por confirmar')).join('\\n') : 'Por confirmar',\n  asesor_nombre: limpio(d.asesor) || 'Por asignar',\n  asesor_cargo: 'Asesor de ventas',\n  asesor_telefono: limpio(d.telefono_asesor),\n  asesor_email: limpiarCorreo(d.correo_asesor)\n};\n\nreturn [{\n  json: {\n    ...gestion,\n    datosDocumento: d,\n    archivoBase,\n    templateId: '1PMaVm4Ur1Tf8hwkXPZKYBi1DY7s1WX0RN4DlKTAxSPI',\n    folderId: '1g_tfYk28JfY7WZIqkO8rrd0wCAMoLedK',\n    campos\n  }\n}];"
+        "jsCode": "const gestion = $('Cotización - Asignar consecutivo IA').item.json || {};\nconst d = gestion.datosDocumento || {};\nconst items = Array.isArray(d.items) ? d.items : [];\nconst item = items.length ? items[0] : {};\n\nconst limpio = v => (v ?? '').toString().trim();\nconst limpiarCorreo = v => limpio(v).replace(/\\\\@/g, '@');\nconst num = v => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\nconst formatoNumero = v => {\n  const n = Number(v);\n  const seguro = Number.isFinite(n) ? n : 0;\n  const partes = seguro.toFixed(2).split('.');\n  partes[0] = partes[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n  return partes.join('.');\n};\nconst dinero = v => 'Q' + formatoNumero(v);\n\nconst fechaIso = new Intl.DateTimeFormat('en-CA', {\n  year: 'numeric', month: '2-digit', day: '2-digit',\n  timeZone: 'America/Guatemala'\n}).format(new Date());\n\nconst cuenta = limpio(d.cuenta_cliente) || 'SIN-CUENTA';\nconst codigo = limpio(item.codigo) || 'SIN-CODIGO';\nconst numero = limpio(d.cotizacion) || 'SIN-NUMERO';\n\nconst archivoBase = `Cotizacion Praisa - ${numero} - ${cuenta} - ${fechaIso}`\n  .replace(/[\\\\/:*?\"<>|]/g, '-');\n\nconst campos = {\n  fecha: limpio(d.fecha) || fechaIso,\n  cotizacion: numero,\n  referencia: limpio(d.atencion) || 'Por confirmar',\n  empresa: limpio(d.empresa) || 'Por confirmar',\n  atencion: limpio(d.atencion) || 'Por confirmar',\n  correo: limpiarCorreo(d.correo) || 'Por confirmar',\n  telefono: limpio(d.telefono) || 'Por confirmar',\n  moneda: limpio(d.moneda) || 'GTQ',\n  total: dinero(d.total_preliminar),\n  condicion_precio: 'Precio puesto en nuestras bodegas, Ciudad de Guatemala',\n  nota_impuestos: '(El precio ya incluye IVA del 12%)',\n  pago: limpio(d.condiciones_pago) || 'Por confirmar',\n  validez: limpio(d.validez) || '15 días',\n  direccion_entrega: limpio(d.direccion_entrega) || 'Por confirmar',\n  nota_entrega: items.length\n    ? items.map(it => limpio(it.codigo) + ': ' + (limpio(it.tiempo_entrega) || 'Por confirmar')).join('\\n')\n    : 'Por confirmar',\n  asesor_nombre: limpio(d.asesor) || 'Por asignar',\n  asesor_cargo: 'Asesor de ventas',\n  asesor_telefono: limpio(d.telefono_asesor),\n  asesor_email: limpiarCorreo(d.correo_asesor)\n};\n\nfor (let i = 1; i <= 10; i++) {\n  const it = items[i - 1] || {};\n  campos['item_' + i] = items[i - 1] ? String(it.item || i) : '';\n  campos['cant_' + i] = items[i - 1] ? (limpio(it.cantidad) || '0') : '';\n  campos['descripcion_' + i] = items[i - 1]\n    ? ((limpio(it.codigo) ? limpio(it.codigo) + ' - ' : '') + (limpio(it.descripcion) || 'Por confirmar'))\n    : '';\n  campos['p_unit_' + i] = items[i - 1] ? dinero(it.precio_unitario_preliminar) : '';\n  campos['p_total_' + i] = items[i - 1] ? dinero(it.precio_total_preliminar) : '';\n  campos['entrega_' + i] = items[i - 1] ? (limpio(it.tiempo_entrega) || 'Por confirmar') : '';\n}\n\nreturn [{\n  json: {\n    ...gestion,\n    datosDocumento: d,\n    archivoBase,\n    templateId: '1O3I-3wyNw92raHqMLhphkvDaoKpFzCtHc43FDfFkhFQ',\n    folderId: '1g_tfYk28JfY7WZIqkO8rrd0wCAMoLedK',\n    campos\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -2237,7 +2237,7 @@
         "operation": "copy",
         "fileId": {
           "__rl": true,
-          "value": "1PMaVm4Ur1Tf8hwkXPZKYBi1DY7s1WX0RN4DlKTAxSPI",
+          "value": "1O3I-3wyNw92raHqMLhphkvDaoKpFzCtHc43FDfFkhFQ",
           "mode": "id"
         },
         "name": "={{ $('Cotización - Preparar documento').item.json.archivoBase }}",
@@ -2314,48 +2314,6 @@
               "action": "replaceAll",
               "text": "{{telefono}}",
               "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.telefono }}",
-              "matchCase": true
-            },
-            {
-              "object": "text",
-              "action": "replaceAll",
-              "text": "{{item}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item }}",
-              "matchCase": true
-            },
-            {
-              "object": "text",
-              "action": "replaceAll",
-              "text": "{{cant}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant }}",
-              "matchCase": true
-            },
-            {
-              "object": "text",
-              "action": "replaceAll",
-              "text": "{{descripcion}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion }}",
-              "matchCase": true
-            },
-            {
-              "object": "text",
-              "action": "replaceAll",
-              "text": "{{p_unit}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit }}",
-              "matchCase": true
-            },
-            {
-              "object": "text",
-              "action": "replaceAll",
-              "text": "{{p_total}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total }}",
-              "matchCase": true
-            },
-            {
-              "object": "text",
-              "action": "replaceAll",
-              "text": "{{entrega}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega }}",
               "matchCase": true
             },
             {
@@ -2440,6 +2398,426 @@
               "action": "replaceAll",
               "text": "{{asesor_email}}",
               "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.asesor_email }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{item_1}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_1 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{cant_1}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_1 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{descripcion_1}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_1 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_unit_1}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_1 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_total_1}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_1 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{entrega_1}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_1 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{item_2}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_2 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{cant_2}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_2 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{descripcion_2}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_2 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_unit_2}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_2 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_total_2}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_2 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{entrega_2}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_2 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{item_3}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_3 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{cant_3}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_3 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{descripcion_3}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_3 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_unit_3}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_3 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_total_3}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_3 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{entrega_3}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_3 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{item_4}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_4 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{cant_4}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_4 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{descripcion_4}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_4 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_unit_4}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_4 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_total_4}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_4 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{entrega_4}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_4 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{item_5}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_5 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{cant_5}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_5 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{descripcion_5}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_5 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_unit_5}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_5 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_total_5}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_5 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{entrega_5}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_5 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{item_6}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_6 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{cant_6}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_6 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{descripcion_6}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_6 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_unit_6}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_6 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_total_6}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_6 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{entrega_6}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_6 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{item_7}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_7 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{cant_7}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_7 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{descripcion_7}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_7 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_unit_7}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_7 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_total_7}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_7 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{entrega_7}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_7 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{item_8}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_8 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{cant_8}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_8 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{descripcion_8}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_8 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_unit_8}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_8 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_total_8}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_8 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{entrega_8}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_8 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{item_9}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_9 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{cant_9}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_9 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{descripcion_9}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_9 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_unit_9}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_9 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_total_9}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_9 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{entrega_9}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_9 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{item_10}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_10 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{cant_10}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_10 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{descripcion_10}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_10 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_unit_10}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_10 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{p_total_10}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_10 }}",
+              "matchCase": true
+            },
+            {
+              "object": "text",
+              "action": "replaceAll",
+              "text": "{{entrega_10}}",
+              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_10 }}",
               "matchCase": true
             }
           ]
@@ -5270,6 +5648,6 @@
   "nodeGroups": [],
   "tags": [],
   "meta": {
-    "praisaVersion": "1.7.0"
+    "praisaVersion": "1.7.1"
   }
 }
