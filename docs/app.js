@@ -1,6 +1,6 @@
 import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
-const WEBHOOK_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/c4c5322d-8e15-4f0c-a9fd-9a889fa30b27/chat';
+const WEBHOOK_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/8f4d8f21-7b6a-4f47-9d2e-166000000167/chat';
 const PREF_KEY = 'praisa-ia-preferences-v1';
 
 const gate = document.getElementById('access-gate');
