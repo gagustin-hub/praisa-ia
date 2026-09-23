@@ -300,16 +300,42 @@ function updateSessionContext(text) {
 function observeChatContext() {
   const root = document.getElementById('n8n-chat');
   if (!root) return;
+
   let lastText = '';
+
+  const enhanceMessages = () => {
+    const body = root.querySelector('.chat-body');
+
+    root.querySelectorAll('.chat-message:not([data-praisa-enhanced])').forEach((message) => {
+      message.dataset.praisaEnhanced = 'true';
+
+      if (!message.classList.contains('chat-message-typing') && preferences.motion) {
+        message.classList.add('praisa-message-enter');
+        setTimeout(() => message.classList.remove('praisa-message-enter'), 500);
+      }
+    });
+
+    if (body) {
+      requestAnimationFrame(() => {
+        body.scrollTo({
+          top: body.scrollHeight,
+          behavior: preferences.motion ? 'smooth' : 'auto'
+        });
+      });
+    }
+  };
+
   const read = () => {
     const text = root.innerText || root.textContent || '';
     if (text !== lastText) {
       lastText = text;
       updateSessionContext(text);
     }
+    enhanceMessages();
   };
+
   const observer = new MutationObserver(read);
-  observer.observe(root, { childList:true, subtree:true, characterData:true });
+  observer.observe(root, { childList:true, subtree:true,characterData:true });
   read();
 }
 
