@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - CAF Web - v2.0 - Piloto técnico DelVal",
+  "name": "Praisa IA - CAF Web - v2.1 - Base Técnica + cruce CAF",
   "nodes": [
     {
       "parameters": {
@@ -2536,7 +2536,7 @@
             },
             {
               "name": "psearch",
-              "value": "={{ \n(() => {\n  const texto = ($('IA - Preparar búsqueda producto').item.json.text || '')\n    .toString()\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toUpperCase()\n    .trim();\n  const tokens = texto.split(/\\s+/).filter(Boolean);\n  return tokens.find(t => t.length >= 4 && !/^\\d/.test(t)) || tokens.find(t => t.length >= 3) || texto;\n})()\n}}"
+              "value": "={{ $('Producto - Interpretar análisis técnico').item.json.terminoCAF }}"
             },
             {
               "name": "empresa",
@@ -2580,7 +2580,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const resp = $json || {};\nconst limpio = v => (v ?? '').toString().trim();\n\nlet registros = [];\nconst candidatosArray = [\n  resp.prod,\n  resp.productos,\n  resp.data,\n  resp.rows,\n  resp.results,\n  resp.items\n];\n\nfor (const a of candidatosArray) {\n  if (Array.isArray(a)) {\n    registros = a;\n    break;\n  }\n}\n\nif (!registros.length) {\n  for (const v of Object.values(resp)) {\n    if (Array.isArray(v) && v.length && typeof v[0] === 'object') {\n      registros = v;\n      break;\n    }\n  }\n}\n\nconst busqueda = limpio($('IA - Preparar búsqueda producto').item.json.text);\nconst originales = limpio($('Chat - Entrada').item.json.chatInput);\n\nconst normaliza = s => limpio(s)\n  .normalize('NFD')\n  .replace(/[\\u0300-\\u036f]/g, '')\n  .toUpperCase()\n  .replace(/[“”]/g, '\"')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\nconst q = normaliza(busqueda);\nconst original = normaliza(originales);\nconst tokens = q.split(/\\s+/).filter(t => t.length >= 2);\n\nconst familias = [\n  ['BOLA', ['BOLA', 'BALL', 'ESFERA']],\n  ['MARIPOSA', ['MARIPOSA', 'BUTTERFLY']],\n  ['COMPUERTA', ['COMPUERTA', 'GATE']],\n  ['GLOBO', ['GLOBO', 'GLOBE']],\n  ['RETENCION', ['RETENCION', 'CHECK', 'NO RETORNO']],\n  ['AGUJA', ['AGUJA', 'NEEDLE']],\n  ['REGULADORA', ['REGULADORA', 'REGULADOR', 'PRV']],\n  ['SEGURIDAD', ['SEGURIDAD', 'SAFETY']],\n  ['TRAMPA', ['TRAMPA', 'TRAP']],\n  ['MANOMETRO', ['MANOMETRO', 'PRESSURE GAUGE']]\n];\n\nlet familiaSolicitada = null;\nfor (const [nombre, sinonimos] of familias) {\n  if (sinonimos.some(s => q.includes(s) || original.includes(s))) {\n    familiaSolicitada = { nombre, sinonimos };\n    break;\n  }\n}\n\nlet conexionSolicitada = null;\nif (/\\bROSCAD[AO]\\b|\\bROSCA\\b|\\bNPT\\b|\\bBSP\\b/.test(q + ' ' + original)) {\n  conexionSolicitada = { nombre: 'ROSCADA', sinonimos: ['ROSCAD', 'ROSCA', 'NPT', 'BSP'] };\n} else if (/\\bBRID[AO]\\b|\\bBRIDA\\b|\\bFLANGE\\b|\\bFLANCHAD[AO]\\b/.test(q + ' ' + original)) {\n  conexionSolicitada = { nombre: 'BRIDA', sinonimos: ['BRIDA', 'BRID', 'FLANGE', 'FLANCH'] };\n}\n\nconst servicioVapor = /\\bVAPOR\\b|\\bSTEAM\\b/.test(q + ' ' + original);\n\nconst sizeMatch = original.match(/\\b(\\d+(?:\\s+\\d+\\/\\d+|\\/\\d+)?)\\s*(?:PULGADAS?|PULG|\")/);\nconst tamanoSolicitado = sizeMatch ? sizeMatch[1].replace(/\\s+/g, ' ') : '';\n\nconst textoRegistro = r => normaliza([\n  r.nombre_prod,\n  r.descripcion,\n  r.descrip,\n  r.codpro,\n  r.codigo_fabricante,\n  r.categoria,\n  r.marca\n].filter(Boolean).join(' '));\n\nconst escRegex = s => s.replace(/[.*+?^$()|[\\]\\\\]/g, '\\\\$&');\n\nconst contieneTamano = (texto, tamano) => {\n  if (!tamano) return false;\n  const esc = escRegex(tamano);\n  const re = new RegExp('(^|[^0-9/])' + esc + '\\\\s*(?:\"|PULG|NPT|BSP|BRIDA|FLANGE|$)');\n  return re.test(texto);\n};\n\nconst evalua = r => {\n  const texto = textoRegistro(r);\n  let score = 0;\n  let familiaOk = !familiaSolicitada;\n  let conexionOk = !conexionSolicitada;\n  let tamanoOk = !tamanoSolicitado;\n  let vaporOk = !servicioVapor;\n\n  if (familiaSolicitada) {\n    familiaOk = familiaSolicitada.sinonimos.some(s => texto.includes(s));\n    if (familiaOk) score += 12;\n  }\n\n  if (conexionSolicitada) {\n    conexionOk = conexionSolicitada.sinonimos.some(s => texto.includes(s));\n    if (conexionOk) score += 6;\n  }\n\n  if (tamanoSolicitado) {\n    tamanoOk = contieneTamano(texto, tamanoSolicitado);\n    if (tamanoOk) score += 8;\n  }\n\n  if (servicioVapor) {\n    vaporOk = texto.includes('VAPOR') || texto.includes('STEAM');\n    if (vaporOk) score += 3;\n  }\n\n  for (const t of tokens) {\n    if (/^\\d+$/.test(t)) continue;\n    if (texto.includes(t)) score += 1;\n  }\n\n  const esenciales = [familiaOk, conexionOk, tamanoOk];\n\n  return {\n    ...r,\n    __texto: texto,\n    __score: score,\n    __familiaOk: familiaOk,\n    __conexionOk: conexionOk,\n    __tamanoOk: tamanoOk,\n    __vaporOk: vaporOk,\n    __esencialesCumplidos: esenciales.filter(Boolean).length\n  };\n};\n\nconst evaluados = registros\n  .map(evalua)\n  .sort((a, b) =>\n    b.__esencialesCumplidos - a.__esencialesCumplidos ||\n    b.__score - a.__score\n  );\n\nlet candidatos = evaluados;\n\nif (familiaSolicitada) {\n  candidatos = candidatos.filter(r => r.__familiaOk);\n}\n\nif (conexionSolicitada) {\n  const mismaConexion = candidatos.filter(r => r.__conexionOk);\n  if (mismaConexion.length) candidatos = mismaConexion;\n}\n\nif (tamanoSolicitado) {\n  const mismoTamano = candidatos.filter(r => r.__tamanoOk);\n  if (mismoTamano.length) candidatos = mismoTamano;\n}\n\ncandidatos = candidatos.slice(0, 6);\n\nconst terminoCAF = (() => {\n  const ts = q.split(/\\s+/).filter(Boolean);\n  return ts.find(t => t.length >= 4 && !/^\\d/.test(t)) ||\n    ts.find(t => t.length >= 3) ||\n    q;\n})();\n\nif (!candidatos.length) {\n  const criterios = [];\n  if (familiaSolicitada) criterios.push('tipo **' + familiaSolicitada.nombre + '**');\n  if (tamanoSolicitado) criterios.push('diámetro **' + tamanoSolicitado + ' pulgadas**');\n  if (conexionSolicitada) criterios.push('conexión **' + conexionSolicitada.nombre.toLowerCase() + '**');\n  if (servicioVapor) criterios.push('servicio de **vapor**');\n\n  return [{\n    json: {\n      encontrados: false,\n      busqueda,\n      terminoCAF,\n      mensaje:\n        'CAF sí devolvió productos del grupo general, pero no encontré una opción que cumpla de forma segura con ' +\n        (criterios.length ? criterios.join(', ') : 'las características solicitadas') + '.\\n\\n' +\n        'No voy a proponerte un producto diferente solo por parecerse en la descripción. ' +\n        'Si tienes marca, modelo, presión, temperatura, material o algún otro dato técnico, indícamelo y vuelvo a buscar.'\n    }\n  }];\n}\n\nconst lineas = candidatos.map((r, i) => {\n  const codigo = limpio(r.codpro || r.codigo || r.code);\n  const desc = limpio(r.nombre_prod || r.descripcion || r.descrip || r.nombre);\n  const fab = limpio(r.codigo_fabricante || r.cod_fabricante || r.modelo);\n  let linea = (i + 1) + '. **' + (desc || 'Producto sin descripción') + '**';\n  if (codigo) linea += '\\n   Código interno CAF: ' + codigo;\n  if (fab) linea += '\\n   Código fabricante/modelo: ' + fab;\n  return linea;\n}).join('\\n\\n');\n\n// PILOTO BASE TÉCNICA DELVAL.\n// Reglas extraídas de documentación técnica almacenada en CATALOGOS PRAISA.\n// Sirven para enriquecer la búsqueda, no para aprobar técnicamente un producto.\nconst delval = candidatos.filter(r => r.__texto.includes('DELVAL'));\nconst delvalTresPiezas = delval.filter(r =>\n  /TRES PIEZAS|3 PIEZAS|3PC|3-PC/.test(r.__texto)\n);\n\nlet bloqueTecnico = '';\nlet requiereValidacionTecnica = false;\n\nif (\n  familiaSolicitada &&\n  familiaSolicitada.nombre === 'BOLA' &&\n  conexionSolicitada &&\n  conexionSolicitada.nombre === 'ROSCADA' &&\n  delvalTresPiezas.length\n) {\n  requiereValidacionTecnica = true;\n\n  bloqueTecnico =\n    '\\n\\n**Cruce técnico piloto con catálogo DelVal:**\\n' +\n    '- Las opciones DelVal de **tres piezas y conexión roscada** coinciden por configuración con la familia **Serie 64** documentada por DelVal.\\n' +\n    '- La documentación de Praisa para esta familia contempla cuerpos en **acero inoxidable 316 o acero al carbón**, según configuración, y asientos **PTFE/RTFE**; para la configuración documentada se indica hasta **180 °C**.\\n';\n\n  if (servicioVapor) {\n    bloqueTecnico +=\n      '- Como solicitaste **vapor**, todavía no la voy a declarar apta solo por la descripción de CAF. En la documentación consultada de Serie 64, vapor no aparece como uso explícito; necesito **presión y temperatura de trabajo** y conviene confirmar material/asiento antes de recomendar o cotizar.\\n';\n  } else {\n    bloqueTecnico +=\n      '- Antes de recomendar una opción definitiva necesito confirmar **presión, temperatura y material/asiento** de la aplicación.\\n';\n  }\n}\n\nconst cierre = requiereValidacionTecnica\n  ? '\\nIndícame la **presión de trabajo** y la **temperatura**. Con eso afinamos cuál candidato corresponde antes de revisar existencia.'\n  : '\\nTodavía no voy a cotizar ninguna automáticamente. Confírmame cuál corresponde. Si todavía no sabes cuál, indícame presión de trabajo, temperatura, material preferido o marca para afinar la selección antes de revisar existencia.';\n\nreturn [{\n  json: {\n    encontrados: true,\n    busqueda,\n    terminoCAF,\n    solicitudOriginal: originales,\n    candidatos,\n    requiereValidacionTecnica,\n    fuenteTecnicaPiloto: requiereValidacionTecnica ? 'CATALOGOS PRAISA > Delval' : null,\n    mensaje:\n      'Encontré estas opciones en CAF que coinciden mejor con las características solicitadas:\\n\\n' +\n      lineas +\n      bloqueTecnico +\n      cierre\n  }\n}];"
+        "jsCode": "const resp = $json || {};\n  const limpio = v => (v ?? \"\").toString().trim();\n\n  let registros = [];\n  const arrays = [resp.prod, resp.productos, resp.data, resp.rows, resp.results, resp.items];\n  for (const a of arrays) {\n    if (Array.isArray(a)) {\n      registros = a;\n      break;\n    }\n  }\n  if (!registros.length) {\n    for (const v of Object.values(resp)) {\n      if (Array.isArray(v) && v.length && typeof v[0] === \"object\") {\n        registros = v;\n        break;\n      }\n    }\n  }\n\n  const tecnico = $(\"Producto - Interpretar análisis técnico\").item.json.analisisTecnico || {};\n  const originales = limpio($(\"Chat - Entrada\").item.json.chatInput);\n  const busqueda = limpio(tecnico.consulta_caf || $(\"IA - Preparar búsqueda producto\").item.json.text);\n\n  const normaliza = s => limpio(s)\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .toUpperCase()\n    .replace(/[“”]/g, '\"')\n    .replace(/\\s+/g, \" \")\n    .trim();\n\n  const q = normaliza(busqueda);\n  const original = normaliza(originales);\n  const tokens = q.split(/\\s+/).filter(t => t.length >= 2);\n\n  const familias = [\n    [\"BOLA\", [\"BOLA\", \"BALL\", \"ESFERA\"]],\n    [\"MARIPOSA\", [\"MARIPOSA\", \"BUTTERFLY\"]],\n    [\"COMPUERTA\", [\"COMPUERTA\", \"GATE\"]],\n    [\"GLOBO\", [\"GLOBO\", \"GLOBE\"]],\n    [\"RETENCION\", [\"RETENCION\", \"CHECK\", \"NO RETORNO\"]],\n    [\"AGUJA\", [\"AGUJA\", \"NEEDLE\"]],\n    [\"REGULADORA\", [\"REGULADORA\", \"REGULADOR\", \"PRV\"]],\n    [\"SEGURIDAD\", [\"SEGURIDAD\", \"SAFETY\"]],\n    [\"TRAMPA\", [\"TRAMPA\", \"TRAP\"]],\n    [\"MANOMETRO\", [\"MANOMETRO\", \"PRESSURE GAUGE\"]]\n  ];\n\n  let familiaSolicitada = null;\n  for (const [nombre, sinonimos] of familias) {\n    if (sinonimos.some(s => q.includes(s) || original.includes(s))) {\n      familiaSolicitada = { nombre, sinonimos };\n      break;\n    }\n  }\n\n  let conexionSolicitada = null;\n  if (/\\bROSCAD[AO]\\b|\\bROSCA\\b|\\bNPT\\b|\\bBSP\\b|\\bSCREWED\\b|\\bTHREADED\\b/.test(q + \" \" + original)) {\n    conexionSolicitada = { nombre: \"ROSCADA\", sinonimos: [\"ROSCAD\", \"ROSCA\", \"NPT\", \"BSP\", \"SCREWED\", \"THREADED\"] };\n  } else if (/\\bBRID[AO]\\b|\\bBRIDA\\b|\\bFLANGE\\b|\\bFLANCHAD[AO]\\b/.test(q + \" \" + original)) {\n    conexionSolicitada = { nombre: \"BRIDA\", sinonimos: [\"BRIDA\", \"BRID\", \"FLANGE\", \"FLANCH\"] };\n  }\n\n  const servicioVapor = /\\bVAPOR\\b|\\bSTEAM\\b/.test(q + \" \" + original);\n  const sizeMatch = original.match(/\\b(\\d+(?:\\s+\\d+\\/\\d+|\\/\\d+)?)\\s*(?:PULGADAS?|PULG|\")/);\n  const tamanoSolicitado = sizeMatch ? sizeMatch[1].replace(/\\s+/g, \" \") : limpio(tecnico.diametro);\n\n  const fabricanteSolicitado = normaliza(tecnico.fabricante);\n  const serieSolicitada = normaliza(tecnico.serie).replace(/^SERIE\\s+/, \"\");\n\n  const textoRegistro = r => normaliza([\n    r.nombre_prod, r.descripcion, r.descrip, r.codpro,\n    r.codigo_fabricante, r.categoria, r.marca\n  ].filter(Boolean).join(\" \"));\n\n  const escRegex = s => s.replace(/[.*+?^$()|[\\]\\\\]/g, \"\\\\$&\");\n\n  const contieneTamano = (texto, tamano) => {\n    if (!tamano) return false;\n    const esc = escRegex(tamano);\n    const re = new RegExp(\"(^|[^0-9/])\" + esc + '\\\\s*(?:\"|PULG|NPT|BSP|BRIDA|FLANGE|$)');\n    return re.test(texto);\n  };\n\n  const serieCoincide = (texto, serie) => {\n    if (!serie) return true;\n    const esc = escRegex(serie);\n    return new RegExp(\"\\\\b(?:SERIE\\\\s*)?\" + esc + \"\\\\b\").test(texto);\n  };\n\n  const evalua = r => {\n    const texto = textoRegistro(r);\n    let score = 0;\n    let familiaOk = !familiaSolicitada;\n    let conexionOk = !conexionSolicitada;\n    let tamanoOk = !tamanoSolicitado;\n    let fabricanteOk = !fabricanteSolicitado;\n    let serieOk = !serieSolicitada;\n\n    if (familiaSolicitada) {\n      familiaOk = familiaSolicitada.sinonimos.some(s => texto.includes(s));\n      if (familiaOk) score += 15;\n    }\n    if (conexionSolicitada) {\n      conexionOk = conexionSolicitada.sinonimos.some(s => texto.includes(s));\n      if (conexionOk) score += 8;\n    }\n    if (tamanoSolicitado) {\n      tamanoOk = contieneTamano(texto, tamanoSolicitado);\n      if (tamanoOk) score += 12;\n    }\n    if (fabricanteSolicitado) {\n      fabricanteOk = texto.includes(fabricanteSolicitado);\n      if (fabricanteOk) score += 10;\n    }\n    if (serieSolicitada) {\n      serieOk = serieCoincide(texto, serieSolicitada);\n      if (serieOk) score += 14;\n    }\n\n    if (servicioVapor && (texto.includes(\"VAPOR\") || texto.includes(\"STEAM\"))) score += 2;\n    for (const t of tokens) {\n      if (/^\\d+$/.test(t)) continue;\n      if (texto.includes(t)) score += 1;\n    }\n\n    return {\n      ...r,\n      __texto: texto,\n      __score: score,\n      __familiaOk: familiaOk,\n      __conexionOk: conexionOk,\n      __tamanoOk: tamanoOk,\n      __fabricanteOk: fabricanteOk,\n      __serieOk: serieOk\n    };\n  };\n\n  let candidatos = registros.map(evalua).sort((a,b) => b.__score - a.__score);\n\n  if (familiaSolicitada) {\n    const x = candidatos.filter(r => r.__familiaOk);\n    if (x.length) candidatos = x;\n  }\n  if (conexionSolicitada) {\n    const x = candidatos.filter(r => r.__conexionOk);\n    if (x.length) candidatos = x;\n  }\n  if (tamanoSolicitado) {\n    const x = candidatos.filter(r => r.__tamanoOk);\n    if (x.length) candidatos = x;\n  }\n  if (fabricanteSolicitado) {\n    const x = candidatos.filter(r => r.__fabricanteOk);\n    if (x.length) candidatos = x;\n  }\n  if (serieSolicitada) {\n    const x = candidatos.filter(r => r.__serieOk);\n    if (x.length) candidatos = x;\n  }\n\n  candidatos = candidatos.slice(0, 6);\n\n  if (!candidatos.length) {\n    return [{\n      json: {\n        encontrados: false,\n        analisisTecnico: tecnico,\n        mensaje:\n          \"La Base Técnica orientó la búsqueda, pero no encontré en CAF una coincidencia comercial suficientemente segura para esa configuración.\\n\\n\" +\n          \"**Conclusión técnica:** \" + limpio(tecnico.nota_tecnica) + \"\\n\\n\" +\n          \"No voy a forzar una relación con un código CAF. Se requiere validación técnica/comercial antes de cotizar.\"\n      }\n    }];\n  }\n\n  return [{\n    json: {\n      encontrados: true,\n      solicitudOriginal: originales,\n      analisisTecnico: tecnico,\n      candidatos\n    }\n  }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -2604,6 +2604,203 @@
       ],
       "id": "b5838b4f-3b74-4c26-b713-c5a10fcd1005",
       "name": "Respuesta - Candidatos producto"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Solicitud original del cliente:\n{{ $('Chat - Entrada').item.json.chatInput }}\n\nBúsqueda preliminar para CAF:\n{{ $('IA - Preparar búsqueda producto').item.json.text }}\n\nAnaliza técnicamente la solicitud antes de cruzarla con CAF.",
+        "hasOutputParser": false,
+        "needsFallback": false,
+        "options": {
+          "systemMessage": "Eres el módulo de cruce técnico de Praisa IA.\n\nTienes acceso a la herramienta base_tecnica_delval, que contiene el piloto técnico DelVal Series 64 y 64-IS.\n\nREGLAS:\n1. Usa la herramienta antes de responder cuando la solicitud pueda relacionarse con DelVal o válvulas de bola.\n2. No inventes compatibilidad técnica.\n3. Separa coincidencia de configuración de aptitud de servicio.\n4. Si la Base Técnica no cubre la marca/familia solicitada, no bloquees la búsqueda comercial: devuelve SIN_EVIDENCIA y conserva buenos términos para buscar en CAF.\n5. No consultes precios ni existencias; eso lo hará CAF después.\n6. Responde SOLO un objeto JSON válido, sin Markdown ni texto adicional.\n\nESQUEMA EXACTO:\n{\n  \"base_tecnica_consultada\": true,\n  \"fabricante\": \"DELVAL o vacío\",\n  \"familia\": \"VALVULA DE BOLA u otra familia\",\n  \"serie\": \"64, 64-IS o vacío\",\n  \"conexion\": \"NPT/ROSCADA/BSP/BRIDA/etc.\",\n  \"diametro\": \"2 o vacío\",\n  \"servicio\": \"VAPOR/AGUA/AIRE/etc.\",\n  \"presion_psi\": 150,\n  \"temperatura_c\": 160,\n  \"configuracion\": \"COINCIDE|PARCIAL|SIN_EVIDENCIA\",\n  \"servicio_validado\": \"SI|NO|PENDIENTE\",\n  \"consulta_caf\": \"términos concisos para buscar el producto en CAF\",\n  \"nota_tecnica\": \"resumen breve y prudente de lo que respaldan los documentos\",\n  \"fuentes\": [\"documento/sección si fue recuperado\"]\n}\n\nSi un dato no está presente, usa cadena vacía o null."
+        }
+      },
+      "id": "4b09461f-e224-46ea-9384-b430b6395a01",
+      "name": "IA - Análisis técnico RAG",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -7936,
+        2208
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "base_tecnica_delval",
+        "toolDescription": "Busca exclusivamente en los manuales DelVal Series 64 y 64-IS ya indexados. Úsala para confirmar válvula de bola de tres piezas, conexión roscada/screwed, serie, límites y materiales. No inventes aptitud de servicio.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "praisa_delval_piloto_v14",
+          "mode": "id"
+        },
+        "topK": 12,
+        "includeDocumentMetadata": true
+      },
+      "id": "28ddeca8-39da-4a04-86e1-e2d3fb353d02",
+      "name": "Base Técnica DelVal - Cruce CAF",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.2,
+      "position": [
+        -7776,
+        2448
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-2"
+      },
+      "id": "2f1bd9d8-0a0e-4056-b679-835b7ca92d03",
+      "name": "Gemini Embeddings - Cruce CAF",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -7984,
+        2672
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const raw = (($json.output ?? $json.text ?? \"\") + \"\").trim();\n  const preliminar = (($(\"IA - Preparar búsqueda producto\").item.json.text ?? \"\") + \"\").trim();\n  const original = (($(\"Chat - Entrada\").item.json.chatInput ?? \"\") + \"\").trim();\n\n  let parsed = {};\n  try {\n    const ini = raw.indexOf(\"{\");\n    const fin = raw.lastIndexOf(\"}\");\n    if (ini >= 0 && fin > ini) parsed = JSON.parse(raw.slice(ini, fin + 1));\n  } catch (e) {\n    parsed = {};\n  }\n\n  const limpio = v => (v ?? \"\").toString().trim();\n  const consulta = limpio(parsed.consulta_caf) || preliminar || original;\n\n  const tokens = consulta\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .toUpperCase()\n    .split(/\\s+/)\n    .filter(Boolean);\n\n  const terminoCAF =\n    tokens.find(t => [\"VALVULA\",\"TRAMPA\",\"MANOMETRO\",\"ACTUADOR\",\"REGULADOR\",\"AISLAMIENTO\"].includes(t)) ||\n    tokens.find(t => t.length >= 4 && !/^\\d/.test(t)) ||\n    tokens.find(t => t.length >= 3) ||\n    consulta;\n\n  return [{\n    json: {\n      solicitudOriginal: original,\n      busquedaPreliminar: preliminar,\n      analisisTecnicoRaw: raw,\n      analisisTecnico: {\n        base_tecnica_consultada: parsed.base_tecnica_consultada === true,\n        fabricante: limpio(parsed.fabricante),\n        familia: limpio(parsed.familia),\n        serie: limpio(parsed.serie),\n        conexion: limpio(parsed.conexion),\n        diametro: limpio(parsed.diametro),\n        servicio: limpio(parsed.servicio),\n        presion_psi: parsed.presion_psi ?? null,\n        temperatura_c: parsed.temperatura_c ?? null,\n        configuracion: limpio(parsed.configuracion) || \"SIN_EVIDENCIA\",\n        servicio_validado: limpio(parsed.servicio_validado) || \"PENDIENTE\",\n        consulta_caf: consulta,\n        nota_tecnica: limpio(parsed.nota_tecnica) || \"La Base Técnica no devolvió una conclusión estructurada suficiente; CAF se consultará solo como búsqueda comercial.\",\n        fuentes: Array.isArray(parsed.fuentes) ? parsed.fuentes : []\n      },\n      consultaCAF: consulta,\n      terminoCAF\n    }\n  }];"
+      },
+      "id": "cc7acd2a-3069-4df2-96d0-a89358789704",
+      "name": "Producto - Interpretar análisis técnico",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7664,
+        2208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "849c64d9-d76c-44db-a92a-21d1911a5905",
+              "leftValue": "={{ $json.encontrados === true && Array.isArray($json.candidatos) && $json.candidatos.length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e168c07a-b769-4e2f-8a29-d45b503f9e06",
+      "name": "¿Candidatos técnicos encontrados?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -7120,
+        2208
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const base = $json || {};\n  const tecnico = base.analisisTecnico || {};\n  const candidatos = Array.isArray(base.candidatos) ? base.candidatos : [];\n  const limpio = v => (v ?? \"\").toString().trim();\n\n  return candidatos.map((r, i) => ({\n    json: {\n      indice: i + 1,\n      codigo: limpio(r.codpro || r.codigo || r.code),\n      descripcion: limpio(r.nombre_prod || r.descripcion || r.descrip || r.nombre),\n      codigoFabricante: limpio(r.codigo_fabricante || r.cod_fabricante || r.modelo),\n      precioA: Number(r.precioa || 0),\n      analisisTecnico: tecnico\n    }\n  }));"
+      },
+      "id": "53d3f359-fd28-40b9-bc98-3037d60d6f07",
+      "name": "Producto - Expandir candidatos CAF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6864,
+        2144
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://207.246.124.103:81/cafweb25/api/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "list"
+            },
+            {
+              "name": "object",
+              "value": "v_existencia"
+            },
+            {
+              "name": "psearch",
+              "value": "={{ $json.codigo }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Authorization",
+              "value": "={{ $('CAF - Obtener JWT Búsqueda producto').first().json.JWT }}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "592802dd-a158-419f-a607-35214158a708",
+      "name": "CAF - Existencia candidatos técnicos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -6608,
+        2144
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const respuestas = $input.all();\n  const candidatos = $(\"Producto - Expandir candidatos CAF\").all().map(x => x.json);\n  const limpio = v => (v ?? \"\").toString().trim();\n  const tecnico = $(\"Producto - Preparar candidatos\").first().json.analisisTecnico || {};\n\n  const lineas = candidatos.map((c, i) => {\n    const resp = respuestas[i]?.json || {};\n    const regs = Array.isArray(resp.v_existencia) ? resp.v_existencia : [];\n    const total = regs.reduce((s, r) => s + Number(r.existencia || 0), 0);\n    const precio = Number(c.precioA || 0);\n    const precioTxt = precio > 0\n      ? \"Q\" + precio.toLocaleString(\"en-US\", {minimumFractionDigits:2, maximumFractionDigits:2})\n      : \"No registrado\";\n\n    return (\n      (i + 1) + \". **\" + (c.descripcion || \"Producto sin descripción\") + \"**\\n\" +\n      \"   Código CAF: \" + (c.codigo || \"No disponible\") + \"\\n\" +\n      (c.codigoFabricante ? \"   Código fabricante/modelo: \" + c.codigoFabricante + \"\\n\" : \"\") +\n      \"   Precio A CAF: \" + precioTxt + \"\\n\" +\n      \"   Existencia total CAF: \" + total.toLocaleString(\"en-US\", {maximumFractionDigits:2}) + \" unidades\"\n    );\n  }).join(\"\\n\\n\");\n\n  const config = limpio(tecnico.configuracion) || \"SIN_EVIDENCIA\";\n  const servicio = limpio(tecnico.servicio_validado) || \"PENDIENTE\";\n  const nota = limpio(tecnico.nota_tecnica);\n\n  let control = \"\";\n  if (servicio !== \"SI\") {\n    control =\n      \"\\n\\n⚠️ **Control técnico:** estos son candidatos encontrados en CAF, pero la aptitud para la aplicación todavía está **\" +\n      servicio.toLowerCase() +\n      \"**. No voy a generar una cotización automáticamente hasta contar con validación técnica suficiente.\";\n  } else {\n    control =\n      \"\\n\\n✅ La Base Técnica indica respaldo para la aplicación consultada. Antes de cotizar, todavía corresponde confirmar cuál código CAF/configuración comercial es la correcta.\";\n  }\n\n  const fuentes = Array.isArray(tecnico.fuentes) && tecnico.fuentes.length\n    ? \"\\n\\n**Fuentes técnicas recuperadas:** \" + tecnico.fuentes.join(\"; \")\n    : \"\";\n\n  return [{\n    json: {\n      mensaje:\n        \"**Análisis técnico previo**\\n\" +\n        \"- Estado de configuración: **\" + config + \"**\\n\" +\n        \"- Estado de servicio: **\" + servicio + \"**\\n\" +\n        (nota ? \"- \" + nota + \"\\n\" : \"\") +\n        fuentes +\n        \"\\n\\n**Cruce con CAF Web**\\n\\n\" +\n        lineas +\n        control\n    }\n  }];"
+      },
+      "id": "9b2d480d-132c-465f-83d1-990dc12ce509",
+      "name": "Producto - Resumir cruce técnico CAF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6352,
+        2144
+      ]
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.mensaje }}",
+        "options": {}
+      },
+      "id": "323d4370-115e-457c-a5ca-771ed4c1a00a",
+      "name": "Respuesta - Cruce técnico CAF",
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        -6096,
+        2144
+      ]
     }
   ],
   "pinData": {},
@@ -2629,6 +2826,11 @@
           },
           {
             "node": "IA - Preparar búsqueda producto",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "IA - Análisis técnico RAG",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -3345,7 +3547,7 @@
       "main": [
         [
           {
-            "node": "CAF - Obtener JWT Búsqueda producto",
+            "node": "IA - Análisis técnico RAG",
             "type": "main",
             "index": 0
           }
@@ -3378,7 +3580,102 @@
       "main": [
         [
           {
+            "node": "¿Candidatos técnicos encontrados?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IA - Análisis técnico RAG": {
+      "main": [
+        [
+          {
+            "node": "Producto - Interpretar análisis técnico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Producto - Interpretar análisis técnico": {
+      "main": [
+        [
+          {
+            "node": "CAF - Obtener JWT Búsqueda producto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base Técnica DelVal - Cruce CAF": {
+      "ai_tool": [
+        [
+          {
+            "node": "IA - Análisis técnico RAG",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Embeddings - Cruce CAF": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Base Técnica DelVal - Cruce CAF",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Candidatos técnicos encontrados?": {
+      "main": [
+        [
+          {
+            "node": "Producto - Expandir candidatos CAF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Respuesta - Candidatos producto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Producto - Expandir candidatos CAF": {
+      "main": [
+        [
+          {
+            "node": "CAF - Existencia candidatos técnicos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CAF - Existencia candidatos técnicos": {
+      "main": [
+        [
+          {
+            "node": "Producto - Resumir cruce técnico CAF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Producto - Resumir cruce técnico CAF": {
+      "main": [
+        [
+          {
+            "node": "Respuesta - Cruce técnico CAF",
             "type": "main",
             "index": 0
           }
