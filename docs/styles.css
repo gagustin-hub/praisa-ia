@@ -1070,3 +1070,14 @@ html[data-theme="light"] #n8n-chat .chat-inputs textarea{
   #n8n-chat{min-height:0!important}
   #n8n-chat .chat-body{max-height:52vh!important}
 }
+
+
+/* Ajuste de layout: la columna central no se estira a la altura del panel derecho */
+.main-column{
+  align-content:start!important;
+  align-self:start!important;
+}
+.chat-shell{
+  height:auto!important;
+  align-self:start!important;
+}
