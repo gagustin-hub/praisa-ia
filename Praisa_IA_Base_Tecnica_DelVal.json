@@ -1,0 +1,335 @@
+{
+  "name": "Praisa IA - Base Técnica DelVal - Piloto RAG",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8f54d62a-b414-47bc-9fd8-5f88a1e1a101",
+      "name": "Indexar catálogos DelVal",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return [\n  {\n    json: {\n      fileId: '10GMKTEYmYvCazI9NelEKiGqzEUtY_0Kx',\n      title: 'PDBLV55150_4_Series 64 (1).pdf',\n      fabricante: 'DelVal',\n      carpetaFuente: 'CATALOGOS PRAISA > Delval'\n    }\n  },\n  {\n    json: {\n      fileId: '1SfcsYOao5bgt3xfAE-0qcsQ2EUqhTABV',\n      title: 'HOMOLOGACIÓN- VALVULAS MARIPOSA- BOLA DELVAL.pdf',\n      fabricante: 'DelVal',\n      carpetaFuente: 'CATALOGOS PRAISA > Delval'\n    }\n  },\n  {\n    json: {\n      fileId: '1F7OWGiiHTfLbYvcZTvYZdRJSFDO8mrMJ',\n      title: 'Guía de selección de materiales de asientos.pdf',\n      fabricante: 'DelVal',\n      carpetaFuente: 'CATALOGOS PRAISA > Delval'\n    }\n  }\n];"
+      },
+      "id": "a2e7290c-e688-42c1-8d8a-b4eb192a4102",
+      "name": "Piloto - Documentos DelVal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.fileId }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data",
+          "fileName": "={{ $json.title }}"
+        }
+      },
+      "id": "ac258363-0069-4500-ad19-91d355f79572",
+      "name": "Google Drive - Descargar catálogo",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -576,
+        -240
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "U7uRzeh2qoJS1cD0",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "value": "praisa_delval_piloto",
+          "mode": "list",
+          "cachedResultName": "praisa_delval_piloto"
+        }
+      },
+      "id": "f07f02c7-671f-48f9-a707-b48b8a78d980",
+      "name": "Base Técnica - Indexar DelVal",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.2,
+      "position": [
+        -320,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "loader": "auto",
+        "textSplittingMode": "simple",
+        "options": {
+          "splitPages": true,
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "fabricante",
+                "value": "DelVal"
+              },
+              {
+                "name": "fuente",
+                "value": "CATALOGOS PRAISA > Delval"
+              }
+            ]
+          }
+        }
+      },
+      "id": "26df2c08-ab91-41dd-a594-53139bdc12c8",
+      "name": "Document Loader - Catálogos DelVal",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-2"
+      },
+      "id": "0a2e5c08-6f2c-44d6-9173-c66d26f9fd0b",
+      "name": "Gemini Embeddings - DelVal",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "public": false,
+        "mode": "hostedChat",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "6e58b451-e4a5-49ea-97d7-a637ca682bdf",
+      "name": "Chat técnico DelVal",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        176,
+        -240
+      ],
+      "webhookId": "1741fe8a-1e58-49cb-9bd2-9cd353a02a56"
+    },
+    {
+      "parameters": {
+        "promptType": "auto",
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": false,
+        "needsFallback": false,
+        "options": {
+          "systemMessage": "Eres el asistente técnico de prueba de Praisa para documentación DelVal.\n\nREGLAS OBLIGATORIAS:\n1. Para preguntas técnicas sobre productos DelVal, usa SIEMPRE la herramienta base_tecnica_delval antes de responder.\n2. Responde únicamente con información respaldada por los documentos recuperados.\n3. No declares que un producto es apto para una aplicación solo porque se parece por nombre o descripción.\n4. Para selección técnica considera, cuando estén disponibles: tipo de válvula, diámetro, conexión, presión, temperatura, material del cuerpo, material del asiento, fluido, serie/modelo y límites de uso.\n5. Si falta un dato crítico para decidir, pregunta únicamente por los datos faltantes.\n6. Si la documentación no respalda una conclusión, dilo claramente: \"No encontré respaldo suficiente en la documentación DelVal cargada.\"\n7. Cuando sea posible, menciona la serie/modelo y la fuente técnica recuperada.\n8. Todavía NO consultes precio, existencia ni generes cotizaciones. Este workflow solo valida la búsqueda técnica.\n9. No inventes equivalencias ni compatibilidades.\n\nObjetivo del piloto: comprobar si la Base Técnica puede orientar correctamente una solicitud antes de cruzarla con CAF."
+        }
+      },
+      "id": "0a06f6dd-7fb9-48fa-b1ef-ad95b8d42aba",
+      "name": "Agente Técnico DelVal",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        432,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "base_tecnica_delval",
+        "toolDescription": "Busca información técnica exclusivamente en los catálogos, fichas y guías DelVal indexados desde CATALOGOS PRAISA. Úsala para validar series, materiales, presión, temperatura, conexiones, asientos, aplicaciones y límites.",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "praisa_delval_piloto"
+        }
+      },
+      "id": "e7d941f8-941d-4df3-97de-a230f128789a",
+      "name": "Base Técnica DelVal - Buscar",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.2,
+      "position": [
+        576,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a28fb170-dd7a-4dcf-b2a5-1f514cf40031",
+      "name": "DeepSeek - Técnico DelVal",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        352,
+        16
+      ],
+      "credentials": {
+        "deepSeekApi": {
+          "id": "upQT39PDJSE90yDE",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### 1. Indexación\nEjecuta **Indexar catálogos DelVal** una vez para descargar 3 documentos piloto desde `CATALOGOS PRAISA > Delval` y cargarlos en el Simple Vector Store.\n\nDocumentos piloto:\n- Serie 64\n- Homologación válvulas mariposa/bola DelVal\n- Guía de selección de materiales de asientos\n\nDespués usa el chat de la derecha.",
+        "height": 288,
+        "width": 672,
+        "color": 7
+      },
+      "id": "f76e91bd-074f-41c5-b5e8-021494054ea5",
+      "name": "Nota - Indexación",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1088,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 2. Prueba técnica\nDespués de indexar, abre el chat y prueba:\n\n`Estoy buscando una válvula de bola de 2 pulgadas roscada para vapor a 150 PSI y 160 °C.`\n\nEste piloto **no consulta CAF**. Primero queremos validar que la recuperación técnica desde los catálogos funciona correctamente.",
+        "height": 288,
+        "width": 640,
+        "color": 7
+      },
+      "id": "14ed0e22-520c-417f-8777-aeaa5802c29e",
+      "name": "Nota - Prueba",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -400
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Indexar catálogos DelVal": {
+      "main": [
+        [
+          {
+            "node": "Piloto - Documentos DelVal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Piloto - Documentos DelVal": {
+      "main": [
+        [
+          {
+            "node": "Google Drive - Descargar catálogo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive - Descargar catálogo": {
+      "main": [
+        [
+          {
+            "node": "Base Técnica - Indexar DelVal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Loader - Catálogos DelVal": {
+      "ai_document": [
+        [
+          {
+            "node": "Base Técnica - Indexar DelVal",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Embeddings - DelVal": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Base Técnica - Indexar DelVal",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Base Técnica DelVal - Buscar",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat técnico DelVal": {
+      "main": [
+        [
+          {
+            "node": "Agente Técnico DelVal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Base Técnica DelVal - Buscar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Técnico DelVal",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek - Técnico DelVal": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente Técnico DelVal",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cd925d97-b631-4ec0-9c14-b3a9fcd685bc",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
