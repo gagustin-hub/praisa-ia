@@ -454,3 +454,87 @@ html[data-theme="light"] .praisa-advisor-card small{
 @media(max-width:680px){
   .praisa-advisor-selector{grid-template-columns:1fr}
 }
+
+
+/* ===== Voz Praisa IA ===== */
+.chat-card #n8n-chat .chat-inputs{
+  position:relative!important;
+}
+.chat-card #n8n-chat .praisa-voice-button{
+  flex:0 0 auto;
+  width:42px;
+  height:42px;
+  margin:5px 2px 5px 4px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:50%;
+  background:#172734;
+  color:#fff;
+  cursor:pointer;
+  font-size:18px;
+  line-height:1;
+  box-shadow:0 4px 12px rgba(0,0,0,.18);
+  transition:transform .16s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.chat-card #n8n-chat .praisa-voice-button:hover{
+  transform:translateY(-1px);
+  border-color:rgba(239,48,56,.72);
+  background:#203645;
+}
+.chat-card #n8n-chat .praisa-voice-button:active{
+  transform:scale(.95);
+}
+.chat-card #n8n-chat .praisa-voice-button.is-listening{
+  background:#d61f28;
+  border-color:#ff6a70;
+  box-shadow:0 0 0 0 rgba(214,31,40,.46);
+  animation:praisaVoicePulse 1.35s infinite;
+}
+.chat-card #n8n-chat .praisa-voice-button.is-listening span{
+  animation:praisaMicBeat .72s ease-in-out infinite alternate;
+}
+.chat-card #n8n-chat .praisa-voice-button.is-unsupported{
+  opacity:.42;
+  cursor:not-allowed;
+  filter:grayscale(1);
+}
+.chat-card #n8n-chat.praisa-voice-listening .chat-inputs{
+  border-color:#ef3038!important;
+  box-shadow:0 0 0 3px rgba(239,48,56,.12),0 10px 25px rgba(0,0,0,.14)!important;
+}
+@keyframes praisaVoicePulse{
+  0%{box-shadow:0 0 0 0 rgba(214,31,40,.48)}
+  70%{box-shadow:0 0 0 10px rgba(214,31,40,0)}
+  100%{box-shadow:0 0 0 0 rgba(214,31,40,0)}
+}
+@keyframes praisaMicBeat{
+  from{transform:scale(.92)}
+  to{transform:scale(1.08)}
+}
+html[data-theme="light"] .chat-card #n8n-chat .praisa-voice-button{
+  background:#fff;
+  color:#172531;
+  border-color:#cbd6de;
+  box-shadow:0 4px 12px rgba(26,41,54,.10);
+}
+html[data-theme="light"] .chat-card #n8n-chat .praisa-voice-button.is-listening{
+  background:#d61f28;
+  color:#fff;
+  border-color:#e84b52;
+}
+@media(max-width:680px){
+  .chat-card #n8n-chat .praisa-voice-button{
+    width:40px;
+    height:40px;
+    margin-left:2px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .chat-card #n8n-chat .praisa-voice-button.is-listening,
+  .chat-card #n8n-chat .praisa-voice-button.is-listening span{
+    animation:none!important;
+  }
+}
