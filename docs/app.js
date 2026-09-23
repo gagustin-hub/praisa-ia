@@ -31,6 +31,15 @@ const contextQuote = document.getElementById('context-quote');
 const contextTech = document.getElementById('context-tech');
 
 let chatStarted = false;
+
+const PRAISA_ADVISORS = [
+  { name:'Alejandra Reyes', role:'Asesora de ventas', phone:'+502 4250-9322', email:'areyes@praisa.com' },
+  { name:'Aura Ramírez', role:'Asesora de ventas internas', phone:'+502 4296-8353', email:'aramirez@praisa.com' },
+  { name:'Luis Agustín', role:'Asesor de ventas internas', phone:'+502 4707-0021', email:'lagustin@praisa.com' },
+  { name:'Cristián Serovic', role:'Asesor de ventas', phone:'+502 5017-6258', email:'cserovic@praisa.com' },
+  { name:'Susana Pineda', role:'Asesora de ventas externas', phone:'+502 4149-8926', email:'spineda@praisa.com' }
+];
+
 let preferences = {
   theme: 'dark',
   motion: true,
@@ -200,6 +209,79 @@ function putPromptInChat(prompt) {
   focusChat();
 }
 
+function sendPromptNow(prompt) {
+  putPromptInChat(prompt);
+
+  setTimeout(() => {
+    const root = document.getElementById('n8n-chat');
+    const input = chatInput();
+    if (!root || !input) return;
+
+    const sendButton =
+      root.querySelector('.chat-input-send-button') ||
+      root.querySelector('button[type="submit"]') ||
+      root.querySelector('.chat-input button:last-of-type');
+
+    if (sendButton && !sendButton.disabled) {
+      sendButton.click();
+      return;
+    }
+
+    input.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Enter',
+      code: 'Enter',
+      bubbles: true,
+      cancelable: true
+    }));
+  }, 90);
+}
+
+function enhanceAdvisorSelector(message) {
+  if (!message || message.dataset.praisaAdvisorSelector === 'true') return;
+
+  const text = (message.innerText || message.textContent || '');
+  if (!/selecciona el asesor responsable/i.test(text)) return;
+
+  message.dataset.praisaAdvisorSelector = 'true';
+
+  const panel = document.createElement('div');
+  panel.className = 'praisa-advisor-selector';
+  panel.setAttribute('aria-label', 'Seleccionar asesor Praisa');
+
+  PRAISA_ADVISORS.forEach((advisor) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'praisa-advisor-card';
+    button.innerHTML =
+      '<strong>' + advisor.name + '</strong>' +
+      '<span>' + advisor.role + '</span>' +
+      '<small>' + advisor.phone + ' · ' + advisor.email + '</small>';
+    button.addEventListener('click', () => {
+      sendPromptNow('Asesor: ' + advisor.name);
+    });
+    panel.appendChild(button);
+  });
+
+  const other = document.createElement('button');
+  other.type = 'button';
+  other.className = 'praisa-advisor-card praisa-advisor-other';
+  other.innerHTML =
+    '<strong>Otro asesor</strong>' +
+    '<span>Registrar manualmente</span>' +
+    '<small>Nombre, teléfono y correo</small>';
+  other.addEventListener('click', () => {
+    sendPromptNow('Otro asesor');
+  });
+  panel.appendChild(other);
+
+  const bubble =
+    message.querySelector('.chat-message-markdown') ||
+    message.querySelector('.chat-message-body') ||
+    message;
+
+  bubble.appendChild(panel);
+}
+
 function setActiveNav(button) {
   document.querySelectorAll('.side-link').forEach((item) => item.classList.remove('active'));
   if (button?.classList.contains('side-link')) button.classList.add('active');
@@ -321,6 +403,10 @@ function observeChatContext() {
       const isUserMessage = message.classList.contains('chat-message-from-user');
       const isBotMessage = message.classList.contains('chat-message-from-bot');
       const quoteInProgress = contextQuote && /preparaci[oó]n/i.test(contextQuote.textContent || '');
+
+      if (isBotMessage) {
+        enhanceAdvisorSelector(message);
+      }
 
       if (isUserMessage && quoteInProgress && /^\d+(?:[.,]\d+)?$/.test(messageText)) {
         root.classList.add('praisa-validating-stock');
