@@ -25,6 +25,10 @@ const motionToggle = document.getElementById('motion-toggle');
 const compactToggle = document.getElementById('compact-toggle');
 const resetPreferences = document.getElementById('reset-preferences');
 const navChat = document.getElementById('nav-chat');
+const contextProduct = document.getElementById('context-product');
+const contextClient = document.getElementById('context-client');
+const contextQuote = document.getElementById('context-quote');
+const contextTech = document.getElementById('context-tech');
 
 let chatStarted = false;
 let preferences = {
@@ -205,7 +209,10 @@ document.querySelectorAll('.quick-prompt').forEach((button) => {
   button.addEventListener('click', () => {
     setActiveNav(button);
     const prompt = button.dataset.prompt || '';
-    if (prompt) putPromptInChat(prompt);
+    if (prompt) {
+      updateSessionContext(prompt);
+      putPromptInChat(prompt);
+    }
   });
 });
 
@@ -219,6 +226,7 @@ globalSearch?.addEventListener('keydown', (event) => {
     event.preventDefault();
     const query = globalSearch.value.trim();
     if (query) {
+      updateSessionContext(query);
       putPromptInChat(query);
       globalSearch.value = '';
     }
@@ -232,6 +240,74 @@ document.addEventListener('keydown', (event) => {
     globalSearch?.select();
   }
 });
+
+function flashContext(element) {
+  const row = element?.closest('.context-item');
+  if (!row) return;
+  row.classList.add('updated');
+  setTimeout(() => row.classList.remove('updated'), 900);
+}
+
+function updateSessionContext(text) {
+  if (!text) return;
+  const upper = text.toUpperCase();
+
+  const accounts = upper.match(/\b[A-Z]{1,5}-\d{2,8}\b/g) || [];
+  const account = accounts.at(-1);
+  if (account && contextClient && contextClient.textContent !== account) {
+    contextClient.textContent = account;
+    flashContext(contextClient);
+  }
+
+  const allCodes = upper.match(/\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\d)[A-Z0-9-]{5,}\b/g) || [];
+  const product = [...allCodes].reverse().find((value) =>
+    !/^[A-Z]{1,5}-\d{2,8}$/.test(value) &&
+    !/^COT-/.test(value) &&
+    !/^GTQ/.test(value)
+  );
+  if (product && contextProduct && contextProduct.textContent !== product) {
+    contextProduct.textContent = product;
+    flashContext(contextProduct);
+  }
+
+  const quotes = upper.match(/\bCOT[-A-Z0-9]*\d[A-Z0-9-]*\b/g) || [];
+  const quote = quotes.at(-1);
+  if (quote && contextQuote) {
+    contextQuote.textContent = quote;
+    flashContext(contextQuote);
+  } else if (/\b(COTIZA|COTIZAR|COTIZACIÓN|COTIZACION|CREAR COTIZACIÓN|CREAR COTIZACION)\b/.test(upper) && contextQuote?.textContent === 'Sin iniciar') {
+    contextQuote.textContent = 'En preparación';
+    flashContext(contextQuote);
+  }
+
+  if (/VALIDACIÓN TÉCNICA REGISTRADA|VALIDACION TECNICA REGISTRADA|APROBAR TÉCNICAMENTE|APROBAR TECNICAMENTE/.test(upper)) {
+    if (contextTech) {
+      contextTech.textContent = /REGISTRADA/.test(upper) ? 'Aprobada' : 'Pendiente de aprobación';
+      flashContext(contextTech);
+    }
+  } else if (/COTIZACIÓN DETENIDA POR CONTROL TÉCNICO|COTIZACION DETENIDA POR CONTROL TECNICO/.test(upper)) {
+    if (contextTech) {
+      contextTech.textContent = 'Pendiente de aprobación';
+      flashContext(contextTech);
+    }
+  }
+}
+
+function observeChatContext() {
+  const root = document.getElementById('n8n-chat');
+  if (!root) return;
+  let lastText = '';
+  const read = () => {
+    const text = root.innerText || root.textContent || '';
+    if (text !== lastText) {
+      lastText = text;
+      updateSessionContext(text);
+    }
+  };
+  const observer = new MutationObserver(read);
+  observer.observe(root, { childList:true, subtree:true, characterData:true });
+  read();
+}
 
 function startChat(username, password) {
   if (chatStarted) return;
@@ -279,6 +355,7 @@ function startChat(username, password) {
   passInput.value = '';
   setTimeout(() => {
     helperText.textContent = 'Puedes escribir en lenguaje natural. Praisa IA entiende el contexto de la sesión.';
+    observeChatContext();
   }, 600);
 }
 
