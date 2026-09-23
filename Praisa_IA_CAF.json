@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - CAF Web - v2.5.3 - Texto comercial plantilla",
+  "name": "Praisa IA - CAF Web - v2.6 - Chat web embebido",
   "nodes": [
     {
       "parameters": {
@@ -94,8 +94,12 @@
     },
     {
       "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "authentication": "none",
         "options": {
-          "responseMode": "responseNodes"
+          "allowedOrigins": "https://gagustin-hub.github.io",
+          "responseMode": "lastNode"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
@@ -110,11 +114,21 @@
     },
     {
       "parameters": {
-        "message": "={{\n\"Información consultada directamente en CAF Web:\\n\\n\" +\n\"🔹 Código: \" + $('CAF - Consultar movimiento').item.json.dmovim.codpro + \"\\n\" +\n\"🔹 Producto: \" + $('CAF - Consultar movimiento').item.json.dmovim.nombre_prod + \"\\n\" +\n\"🔹 Cantidad: \" + Number($('CAF - Consultar movimiento').item.json.dmovim.cant).toFixed(0) + \"\\n\" +\n\"🔹 Precio unitario: Q\" + Number($('CAF - Consultar movimiento').item.json.dmovim.precio).toLocaleString(\"en-US\", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + \"\\n\" +\n\"🔹 Total: Q\" + Number($('CAF - Consultar movimiento').item.json.dmovim.calc_dtotal).toLocaleString(\"en-US\", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + \"\\n\" +\n\"🔹 Movimiento: \" + $('CAF - Consultar movimiento').item.json.dmovim.movim\n}}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-01",
+              "name": "output",
+              "value": "={{\n\"Información consultada directamente en CAF Web:\\n\\n\" +\n\"🔹 Código: \" + $('CAF - Consultar movimiento').item.json.dmovim.codpro + \"\\n\" +\n\"🔹 Producto: \" + $('CAF - Consultar movimiento').item.json.dmovim.nombre_prod + \"\\n\" +\n\"🔹 Cantidad: \" + Number($('CAF - Consultar movimiento').item.json.dmovim.cant).toFixed(0) + \"\\n\" +\n\"🔹 Precio unitario: Q\" + Number($('CAF - Consultar movimiento').item.json.dmovim.precio).toLocaleString(\"en-US\", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + \"\\n\" +\n\"🔹 Total: Q\" + Number($('CAF - Consultar movimiento').item.json.dmovim.calc_dtotal).toLocaleString(\"en-US\", {minimumFractionDigits: 2, maximumFractionDigits: 2}) + \"\\n\" +\n\"🔹 Movimiento: \" + $('CAF - Consultar movimiento').item.json.dmovim.movim\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -5280,
         3360
@@ -159,11 +173,21 @@
     },
     {
       "parameters": {
-        "message": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré información para el registro consultado en CAF Web. Verifica el número e inténtalo nuevamente.\"\n}}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-02",
+              "name": "output",
+              "value": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré información para el registro consultado en CAF Web. Verifica el número e inténtalo nuevamente.\"\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -5280,
         3600
@@ -293,11 +317,21 @@
     },
     {
       "parameters": {
-        "message": "={{\n(() => {\n  const p = $('CAF - Consultar producto').item.json.prod || {};\n  const registros = Array.isArray($json.v_existencia)\n    ? $json.v_existencia\n    : [];\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const codigo = limpio(p.codpro);\n  const producto = limpio(p.nombre_prod);\n  const categoria = limpio(p.categoria);\n  const fabricante = limpio(p.codigo_fabricante);\n  const unidad = limpio(p.umedida);\n\n  const precioNumerico = Number(p.precioa || 0);\n  const precio = precioNumerico > 0\n    ? \"Q\" + precioNumerico.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 2,\n        maximumFractionDigits: 2\n      })\n    : \"No registrado\";\n\n  let total = 0;\n\n  const detalleBodegas = registros.map(r => {\n    const bodega = limpio(r.bodega);\n    const existencia = Number(r.existencia || 0);\n\n    total += existencia;\n\n    return \"- 📦 Bodega \" + bodega + \": \" +\n      existencia.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades\";\n  }).join(\"\\n\");\n\n  let respuesta =\n    \"Información consultada directamente en CAF Web:\\n\\n\" +\n    \"**Datos del producto**\\n\" +\n    \"- Código: \" + codigo + \"\\n\" +\n    \"- Producto: \" + producto + \"\\n\" +\n    \"- Categoría: \" + categoria + \"\\n\" +\n    \"- Código fabricante: \" + (fabricante || \"No registrado\") + \"\\n\" +\n    \"- Unidad: \" + (unidad || \"No registrada\") + \"\\n\\n\" +\n    \"**Precio**\\n\" +\n    \"- 💰 Precio A CAF: \" + precio;\n\n  if ($json.error) {\n    respuesta +=\n      \"\\n\\n**Existencias**\\n\" +\n      \"- No pude consultar las existencias en CAF Web en este momento. Intenta nuevamente.\";\n  } else if (registros.length > 0) {\n    respuesta +=\n      \"\\n\\n**Existencias por bodega**\\n\" +\n      detalleBodegas +\n      \"\\n\\n**Existencia total: \" +\n      total.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades**\";\n  } else {\n    respuesta +=\n      \"\\n\\n**Existencia**\\n\" +\n      \"- No se encontraron registros de existencia para este producto.\";\n  }\n\n  return respuesta;\n})()\n}}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-03",
+              "name": "output",
+              "value": "={{\n(() => {\n  const p = $('CAF - Consultar producto').item.json.prod || {};\n  const registros = Array.isArray($json.v_existencia)\n    ? $json.v_existencia\n    : [];\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const codigo = limpio(p.codpro);\n  const producto = limpio(p.nombre_prod);\n  const categoria = limpio(p.categoria);\n  const fabricante = limpio(p.codigo_fabricante);\n  const unidad = limpio(p.umedida);\n\n  const precioNumerico = Number(p.precioa || 0);\n  const precio = precioNumerico > 0\n    ? \"Q\" + precioNumerico.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 2,\n        maximumFractionDigits: 2\n      })\n    : \"No registrado\";\n\n  let total = 0;\n\n  const detalleBodegas = registros.map(r => {\n    const bodega = limpio(r.bodega);\n    const existencia = Number(r.existencia || 0);\n\n    total += existencia;\n\n    return \"- 📦 Bodega \" + bodega + \": \" +\n      existencia.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades\";\n  }).join(\"\\n\");\n\n  let respuesta =\n    \"Información consultada directamente en CAF Web:\\n\\n\" +\n    \"**Datos del producto**\\n\" +\n    \"- Código: \" + codigo + \"\\n\" +\n    \"- Producto: \" + producto + \"\\n\" +\n    \"- Categoría: \" + categoria + \"\\n\" +\n    \"- Código fabricante: \" + (fabricante || \"No registrado\") + \"\\n\" +\n    \"- Unidad: \" + (unidad || \"No registrada\") + \"\\n\\n\" +\n    \"**Precio**\\n\" +\n    \"- 💰 Precio A CAF: \" + precio;\n\n  if ($json.error) {\n    respuesta +=\n      \"\\n\\n**Existencias**\\n\" +\n      \"- No pude consultar las existencias en CAF Web en este momento. Intenta nuevamente.\";\n  } else if (registros.length > 0) {\n    respuesta +=\n      \"\\n\\n**Existencias por bodega**\\n\" +\n      detalleBodegas +\n      \"\\n\\n**Existencia total: \" +\n      total.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades**\";\n  } else {\n    respuesta +=\n      \"\\n\\n**Existencia**\\n\" +\n      \"- No se encontraron registros de existencia para este producto.\";\n  }\n\n  return respuesta;\n})()\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -5280,
         1840
@@ -308,11 +342,21 @@
     },
     {
       "parameters": {
-        "message": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré el producto solicitado en CAF Web. Verifica el código e inténtalo nuevamente.\"\n}}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-04",
+              "name": "output",
+              "value": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré el producto solicitado en CAF Web. Verifica el código e inténtalo nuevamente.\"\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -5600,
         2080
@@ -357,11 +401,21 @@
     },
     {
       "parameters": {
-        "message": "Hola, soy Praisa IA. Actualmente puedo consultar directamente en CAF Web: productos, Precio A, existencias por bodega, datos de clientes, detalles de movimientos e historial de movimientos por cuenta de cliente. También puedo iniciar un borrador de cotización y recopilar la cuenta CAF, código de producto y cantidad para consultar los datos necesarios antes de la revisión técnica y comercial. ¿Qué necesitas consultar?",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-05",
+              "name": "output",
+              "value": "Hola, soy Praisa IA. Actualmente puedo consultar directamente en CAF Web: productos, Precio A, existencias por bodega, datos de clientes, detalles de movimientos e historial de movimientos por cuenta de cliente. También puedo iniciar un borrador de cotización y recopilar la cuenta CAF, código de producto y cantidad para consultar los datos necesarios antes de la revisión técnica y comercial. ¿Qué necesitas consultar?",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -5600,
         5680
@@ -540,11 +594,21 @@
     },
     {
       "parameters": {
-        "message": "Descríbeme el producto que necesitas (tipo, diámetro, presión, conexión, material, marca o aplicación) y buscaré opciones relacionadas en CAF. Si conoces el código interno, también puedes indicarlo.",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-06",
+              "name": "output",
+              "value": "Descríbeme el producto que necesitas (tipo, diámetro, presión, conexión, material, marca o aplicación) y buscaré opciones relacionadas en CAF. Si conoces el código interno, también puedes indicarlo.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -6560,
         2240
@@ -555,11 +619,21 @@
     },
     {
       "parameters": {
-        "message": "Claro. Para consultar ese registro en CAF Web necesito el número de movimiento o detalle. Por ejemplo: 8960.",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-07",
+              "name": "output",
+              "value": "Claro. Para consultar ese registro en CAF Web necesito el número de movimiento o detalle. Por ejemplo: 8960.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -6240,
         3680
@@ -769,11 +843,21 @@
     },
     {
       "parameters": {
-        "message": "={{\n(() => {\n  const c = $json.cliente || {};\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const telefono = limpio(c.telefono);\n  const contacto = limpio(c.contacto);\n\n  const correo = [...new Set(\n    limpio(c.email)\n      .split(',')\n      .map(x => x.trim())\n      .filter(Boolean)\n  )].join(', ');\n\n  const faltantes = [];\n\n  if (!telefono) faltantes.push('Teléfono');\n  if (!contacto) faltantes.push('Contacto');\n  if (!correo) faltantes.push('Correo');\n\n  let respuesta =\n    \"Información consultada directamente en CAF Web:\\n\\n\" +\n    \"🔹 Cuenta: \" + limpio(c.cuenta) + \"\\n\" +\n    \"🔹 Cliente: \" + limpio(c.nombre_cliente) + \"\\n\" +\n    \"🔹 NIT: \" + limpio(c.nit) + \"\\n\" +\n    \"🔹 Dirección: \" + limpio(c.direccion) + \"\\n\" +\n    \"🔹 Ciudad: \" + limpio(c.ciudad) + \"\\n\" +\n    \"🔹 Teléfono: \" + (telefono || \"No registrado\") + \"\\n\" +\n    \"🔹 Contacto: \" + (contacto || \"No registrado\") + \"\\n\" +\n    \"🔹 Correo: \" + (correo || \"No registrado\");\n\n  if (faltantes.length > 0) {\n    respuesta +=\n      \"\\n\\n⚠️ Información pendiente de completar:\\n\" +\n      faltantes.map(campo => \"• \" + campo).join(\"\\n\");\n  } else {\n    respuesta +=\n      \"\\n\\n✅ El cliente tiene completos los datos principales de contacto en CAF Web.\";\n  }\n\n  return respuesta;\n})()\n}}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-08",
+              "name": "output",
+              "value": "={{\n(() => {\n  const c = $json.cliente || {};\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const telefono = limpio(c.telefono);\n  const contacto = limpio(c.contacto);\n\n  const correo = [...new Set(\n    limpio(c.email)\n      .split(',')\n      .map(x => x.trim())\n      .filter(Boolean)\n  )].join(', ');\n\n  const faltantes = [];\n\n  if (!telefono) faltantes.push('Teléfono');\n  if (!contacto) faltantes.push('Contacto');\n  if (!correo) faltantes.push('Correo');\n\n  let respuesta =\n    \"Información consultada directamente en CAF Web:\\n\\n\" +\n    \"🔹 Cuenta: \" + limpio(c.cuenta) + \"\\n\" +\n    \"🔹 Cliente: \" + limpio(c.nombre_cliente) + \"\\n\" +\n    \"🔹 NIT: \" + limpio(c.nit) + \"\\n\" +\n    \"🔹 Dirección: \" + limpio(c.direccion) + \"\\n\" +\n    \"🔹 Ciudad: \" + limpio(c.ciudad) + \"\\n\" +\n    \"🔹 Teléfono: \" + (telefono || \"No registrado\") + \"\\n\" +\n    \"🔹 Contacto: \" + (contacto || \"No registrado\") + \"\\n\" +\n    \"🔹 Correo: \" + (correo || \"No registrado\");\n\n  if (faltantes.length > 0) {\n    respuesta +=\n      \"\\n\\n⚠️ Información pendiente de completar:\\n\" +\n      faltantes.map(campo => \"• \" + campo).join(\"\\n\");\n  } else {\n    respuesta +=\n      \"\\n\\n✅ El cliente tiene completos los datos principales de contacto en CAF Web.\";\n  }\n\n  return respuesta;\n})()\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -4640,
         4480
@@ -784,11 +868,21 @@
     },
     {
       "parameters": {
-        "message": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré el cliente solicitado en CAF Web. Verifica la cuenta e inténtalo nuevamente.\"\n}}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-09",
+              "name": "output",
+              "value": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré el cliente solicitado en CAF Web. Verifica la cuenta e inténtalo nuevamente.\"\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -4640,
         4720
@@ -799,11 +893,21 @@
     },
     {
       "parameters": {
-        "message": "Claro. Para consultar el cliente directamente en CAF Web necesito la cuenta del cliente. Por ejemplo: AR-026.",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-10",
+              "name": "output",
+              "value": "Claro. Para consultar el cliente directamente en CAF Web necesito la cuenta del cliente. Por ejemplo: AR-026.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -5600,
         4800
@@ -1013,11 +1117,21 @@
     },
     {
       "parameters": {
-        "message": "={{\n(() => {\n  const registros = Array.isArray($json.v_existencia)\n    ? $json.v_existencia\n    : [];\n\n  if (registros.length === 0) {\n    return \"No encontré información de existencias para ese producto en CAF Web.\";\n  }\n\n  const limpio = (v) => (v ?? '').toString().trim();\n  const codigo = limpio(registros[0].codpro);\n\n  let total = 0;\n\n  const detalle = registros.map(r => {\n    const bodega = limpio(r.bodega);\n    const existencia = Number(r.existencia || 0);\n\n    total += existencia;\n\n    return \"🔹 Bodega \" + bodega + \": \" +\n      existencia.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades\";\n  }).join(\"\\n\");\n\n  return (\n    \"Existencias consultadas directamente en CAF Web:\\n\\n\" +\n    \"🔹 Código: \" + codigo + \"\\n\\n\" +\n    detalle +\n    \"\\n\\n📦 Existencia total: \" +\n    total.toLocaleString(\"en-US\", {\n      minimumFractionDigits: 0,\n      maximumFractionDigits: 2\n    }) +\n    \" unidades\"\n  );\n})()\n}}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-11",
+              "name": "output",
+              "value": "={{\n(() => {\n  const registros = Array.isArray($json.v_existencia)\n    ? $json.v_existencia\n    : [];\n\n  if (registros.length === 0) {\n    return \"No encontré información de existencias para ese producto en CAF Web.\";\n  }\n\n  const limpio = (v) => (v ?? '').toString().trim();\n  const codigo = limpio(registros[0].codpro);\n\n  let total = 0;\n\n  const detalle = registros.map(r => {\n    const bodega = limpio(r.bodega);\n    const existencia = Number(r.existencia || 0);\n\n    total += existencia;\n\n    return \"🔹 Bodega \" + bodega + \": \" +\n      existencia.toLocaleString(\"en-US\", {\n        minimumFractionDigits: 0,\n        maximumFractionDigits: 2\n      }) +\n      \" unidades\";\n  }).join(\"\\n\");\n\n  return (\n    \"Existencias consultadas directamente en CAF Web:\\n\\n\" +\n    \"🔹 Código: \" + codigo + \"\\n\\n\" +\n    detalle +\n    \"\\n\\n📦 Existencia total: \" +\n    total.toLocaleString(\"en-US\", {\n      minimumFractionDigits: 0,\n      maximumFractionDigits: 2\n    }) +\n    \" unidades\"\n  );\n})()\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -4320,
         5040
@@ -1028,11 +1142,21 @@
     },
     {
       "parameters": {
-        "message": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré información de existencias para el producto solicitado en CAF Web. Verifica el código e inténtalo nuevamente.\"\n}}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-12",
+              "name": "output",
+              "value": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré información de existencias para el producto solicitado en CAF Web. Verifica el código e inténtalo nuevamente.\"\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -4320,
         5280
@@ -1043,11 +1167,21 @@
     },
     {
       "parameters": {
-        "message": "Claro. Para consultar existencias en CAF Web necesito el código del producto. Por ejemplo: 06SPI0142.",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-13",
+              "name": "output",
+              "value": "Claro. Para consultar existencias en CAF Web necesito el código del producto. Por ejemplo: 06SPI0142.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -5280,
         5360
@@ -1305,11 +1439,21 @@
     },
     {
       "parameters": {
-        "message": "={{\n(() => {\n  const registros = Array.isArray($json.movim) ? $json.movim : [];\n  const cuenta = (($('Chat - Entrada').item.json.chatInput || '')\n    .toUpperCase()\n    .match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/) || [''])[0];\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const valor = (r, campos) => {\n    for (const c of campos) {\n      const v = limpio(r[c]);\n      if (v) return v;\n    }\n    return \"\";\n  };\n\n  const dinero = (v) => {\n    const n = Number(v);\n    if (!Number.isFinite(n) || n === 0) return \"\";\n    return \"Q\" + n.toLocaleString(\"en-US\", {\n      minimumFractionDigits: 2,\n      maximumFractionDigits: 2\n    });\n  };\n\n  const mostrados = registros.slice(0, 10);\n\n  const detalle = mostrados.map((r, i) => {\n    const mov = valor(r, [\"movim\", \"movimiento\"]);\n    const fecha = valor(r, [\"fecha\", \"fecha_movim\"]);\n    const tipo = valor(r, [\"tipo\", \"tipomovim\", \"tipo_movim\", \"documento\", \"movimiento_tipo\"]);\n    const totalRaw = valor(r, [\"total\", \"monto\", \"importe\", \"calc_total\", \"total_movim\"]);\n    const total = dinero(totalRaw);\n\n    const partes = [];\n    if (mov) partes.push(\"Movimiento: \" + mov);\n    if (fecha) partes.push(\"Fecha: \" + fecha);\n    if (tipo) partes.push(\"Tipo: \" + tipo);\n    if (total) partes.push(\"Total: \" + total);\n\n    return (i + 1) + \". \" + (partes.length ? partes.join(\" | \") : \"Registro de movimiento\");\n  }).join(\"\\n\");\n\n  const totalRegistros = Number($json.totalRecordCount || registros.length);\n\n  let respuesta =\n    \"Historial de movimientos consultado directamente en CAF Web:\\n\\n\" +\n    \"🔹 Cuenta: \" + cuenta + \"\\n\" +\n    \"🔹 Registros reportados por CAF: \" + totalRegistros + \"\\n\\n\" +\n    detalle;\n\n  if (registros.length > 10) {\n    respuesta += \"\\n\\nMostrando los primeros 10 registros devueltos por CAF.\";\n  }\n\n  return respuesta;\n})()\n}}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-14",
+              "name": "output",
+              "value": "={{\n(() => {\n  const registros = Array.isArray($json.movim) ? $json.movim : [];\n  const cuenta = (($('Chat - Entrada').item.json.chatInput || '')\n    .toUpperCase()\n    .match(/\\b[A-Z]{1,5}-\\d{2,8}\\b/) || [''])[0];\n\n  const limpio = (v) => (v ?? '').toString().trim();\n\n  const valor = (r, campos) => {\n    for (const c of campos) {\n      const v = limpio(r[c]);\n      if (v) return v;\n    }\n    return \"\";\n  };\n\n  const dinero = (v) => {\n    const n = Number(v);\n    if (!Number.isFinite(n) || n === 0) return \"\";\n    return \"Q\" + n.toLocaleString(\"en-US\", {\n      minimumFractionDigits: 2,\n      maximumFractionDigits: 2\n    });\n  };\n\n  const mostrados = registros.slice(0, 10);\n\n  const detalle = mostrados.map((r, i) => {\n    const mov = valor(r, [\"movim\", \"movimiento\"]);\n    const fecha = valor(r, [\"fecha\", \"fecha_movim\"]);\n    const tipo = valor(r, [\"tipo\", \"tipomovim\", \"tipo_movim\", \"documento\", \"movimiento_tipo\"]);\n    const totalRaw = valor(r, [\"total\", \"monto\", \"importe\", \"calc_total\", \"total_movim\"]);\n    const total = dinero(totalRaw);\n\n    const partes = [];\n    if (mov) partes.push(\"Movimiento: \" + mov);\n    if (fecha) partes.push(\"Fecha: \" + fecha);\n    if (tipo) partes.push(\"Tipo: \" + tipo);\n    if (total) partes.push(\"Total: \" + total);\n\n    return (i + 1) + \". \" + (partes.length ? partes.join(\" | \") : \"Registro de movimiento\");\n  }).join(\"\\n\");\n\n  const totalRegistros = Number($json.totalRecordCount || registros.length);\n\n  let respuesta =\n    \"Historial de movimientos consultado directamente en CAF Web:\\n\\n\" +\n    \"🔹 Cuenta: \" + cuenta + \"\\n\" +\n    \"🔹 Registros reportados por CAF: \" + totalRegistros + \"\\n\\n\" +\n    detalle;\n\n  if (registros.length > 10) {\n    respuesta += \"\\n\\nMostrando los primeros 10 registros devueltos por CAF.\";\n  }\n\n  return respuesta;\n})()\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -4960,
         3920
@@ -1320,11 +1464,21 @@
     },
     {
       "parameters": {
-        "message": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré movimientos para esa cuenta en la respuesta de CAF Web. Verifica la cuenta e inténtalo nuevamente.\"\n}}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-15",
+              "name": "output",
+              "value": "={{\n$json.error\n  ? \"No pude consultar CAF Web en este momento. Intenta nuevamente en unos segundos.\"\n  : \"No encontré movimientos para esa cuenta en la respuesta de CAF Web. Verifica la cuenta e inténtalo nuevamente.\"\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -4960,
         4160
@@ -1335,11 +1489,21 @@
     },
     {
       "parameters": {
-        "message": "Claro. Para consultar el historial de movimientos necesito la cuenta del cliente. Por ejemplo: OL-002.",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-16",
+              "name": "output",
+              "value": "Claro. Para consultar el historial de movimientos necesito la cuenta del cliente. Por ejemplo: OL-002.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -5920,
         4240
@@ -1465,11 +1629,21 @@
     },
     {
       "parameters": {
-        "message": "={{ $('Cotización - Gestionar borrador').item.json.mensajeCotizacion }}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-17",
+              "name": "output",
+              "value": "={{ $('Cotización - Gestionar borrador').item.json.mensajeCotizacion }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -7200,
         1040
@@ -1480,11 +1654,21 @@
     },
     {
       "parameters": {
-        "message": "={{ $('Cotización - Gestionar borrador').item.json.mensajeCotizacion }}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-18",
+              "name": "output",
+              "value": "={{ $('Cotización - Gestionar borrador').item.json.mensajeCotizacion }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -6880,
         1440
@@ -1725,11 +1909,21 @@
     },
     {
       "parameters": {
-        "message": "={{ $('Cotización - Preparar datos Word PDF').item.json.mensaje }}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-19",
+              "name": "output",
+              "value": "={{ $('Cotización - Preparar datos Word PDF').item.json.mensaje }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -4960,
         1200
@@ -2391,11 +2585,21 @@
     },
     {
       "parameters": {
-        "message": "=✅ Cotización **{{ $('Cotización - Asignar consecutivo IA').item.json.numeroCotizacion }}** generada después de la revisión comercial.\n\n**Google Docs:** https://docs.google.com/document/d/{{ $('Google Drive - Copiar plantilla').item.json.id }}/edit\n**PDF:** https://drive.google.com/file/d/{{ $('Google Drive - Guardar PDF').item.json.id }}/view\n**Word:** https://drive.google.com/file/d/{{ $('Google Drive - Guardar Word').item.json.id }}/view\n\n📌 El número se asignó automáticamente con el consecutivo interno de Praisa IA.\n\n⚠️ Realiza una revisión final antes de enviarlo al cliente.",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-20",
+              "name": "output",
+              "value": "=✅ Cotización **{{ $('Cotización - Asignar consecutivo IA').item.json.numeroCotizacion }}** generada después de la revisión comercial.\n\n**Google Docs:** https://docs.google.com/document/d/{{ $('Google Drive - Copiar plantilla').item.json.id }}/edit\n**PDF:** https://drive.google.com/file/d/{{ $('Google Drive - Guardar PDF').item.json.id }}/view\n**Word:** https://drive.google.com/file/d/{{ $('Google Drive - Guardar Word').item.json.id }}/view\n\n📌 El número se asignó automáticamente con el consecutivo interno de Praisa IA.\n\n⚠️ Realiza una revisión final antes de enviarlo al cliente.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -4320,
         640
@@ -2439,11 +2643,21 @@
     },
     {
       "parameters": {
-        "message": "={{ $('Cotización - Gestionar borrador').item.json.mensajeCotizacion }}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-21",
+              "name": "output",
+              "value": "={{ $('Cotización - Gestionar borrador').item.json.mensajeCotizacion }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -8160,
         1360
@@ -2593,11 +2807,21 @@
     },
     {
       "parameters": {
-        "message": "={{ $('Producto - Preparar candidatos').item.json.mensaje }}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-22",
+              "name": "output",
+              "value": "={{ $('Producto - Preparar candidatos').item.json.mensaje }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -4320,
         2720
@@ -2790,13 +3014,23 @@
     },
     {
       "parameters": {
-        "message": "={{ $('Producto - Guardar contexto técnico').item.json.mensaje }}",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "praisa-output-23",
+              "name": "output",
+              "value": "={{ $('Producto - Guardar contexto técnico').item.json.mensaje }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
         "options": {}
       },
       "id": "323d4370-115e-457c-a5ca-771ed4c1a00a",
       "name": "Respuesta - Cruce técnico CAF",
-      "type": "@n8n/n8n-nodes-langchain.chat",
-      "typeVersion": 1.3,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -2720,
         2480
