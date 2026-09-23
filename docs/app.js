@@ -252,10 +252,18 @@ function updateSessionContext(text) {
   if (!text) return;
   const upper = text.toUpperCase();
 
+  const clientNames = [...text.matchAll(/(?:^|\n)\s*(?:🔹\s*)?Cliente:\s*([^\n]+)/gim)]
+    .map((match) => match[1]?.replace(/\*\*/g, '').trim())
+    .filter(Boolean);
+  const clientName = clientNames.at(-1);
+
   const accounts = upper.match(/\b[A-Z]{1,5}-\d{2,8}\b/g) || [];
   const account = accounts.at(-1);
-  if (account && contextClient && contextClient.textContent !== account) {
-    contextClient.textContent = account;
+  const clientDisplay = clientName || account;
+
+  if (clientDisplay && contextClient && contextClient.textContent !== clientDisplay) {
+    contextClient.textContent = clientDisplay;
+    contextClient.title = account && clientName ? `${clientName} · ${account}` : clientDisplay;
     flashContext(contextClient);
   }
 
