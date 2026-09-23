@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Base Técnica DelVal - Piloto RAG",
+  "name": "Praisa IA - Base Técnica DelVal - Piloto RAG v1.1",
   "nodes": [
     {
       "parameters": {},
@@ -143,7 +143,7 @@
         "hasOutputParser": false,
         "needsFallback": false,
         "options": {
-          "systemMessage": "Eres el asistente técnico de prueba de Praisa para documentación DelVal.\n\nREGLAS OBLIGATORIAS:\n1. Para preguntas técnicas sobre productos DelVal, usa SIEMPRE la herramienta base_tecnica_delval antes de responder.\n2. Responde únicamente con información respaldada por los documentos recuperados.\n3. No declares que un producto es apto para una aplicación solo porque se parece por nombre o descripción.\n4. Para selección técnica considera, cuando estén disponibles: tipo de válvula, diámetro, conexión, presión, temperatura, material del cuerpo, material del asiento, fluido, serie/modelo y límites de uso.\n5. Si falta un dato crítico para decidir, pregunta únicamente por los datos faltantes.\n6. Si la documentación no respalda una conclusión, dilo claramente: \"No encontré respaldo suficiente en la documentación DelVal cargada.\"\n7. Cuando sea posible, menciona la serie/modelo y la fuente técnica recuperada.\n8. Todavía NO consultes precio, existencia ni generes cotizaciones. Este workflow solo valida la búsqueda técnica.\n9. No inventes equivalencias ni compatibilidades.\n\nObjetivo del piloto: comprobar si la Base Técnica puede orientar correctamente una solicitud antes de cruzarla con CAF."
+          "systemMessage": "Eres el asistente técnico de prueba de Praisa para documentación DelVal.\n\nREGLAS OBLIGATORIAS:\n1. Para preguntas técnicas sobre productos DelVal, usa SIEMPRE la herramienta base_tecnica_delval antes de responder.\n2. Haz como mínimo DOS búsquedas cuando el usuario pida selección o validación:\n   A) búsqueda de identidad/configuración del producto: tipo, serie, diámetro y conexión, SIN priorizar todavía el fluido;\n   B) búsqueda de condiciones de servicio: presión, temperatura, fluido, material, asiento y límites.\n3. Si la primera recuperación devuelve una familia distinta a la solicitada (por ejemplo válvula mariposa cuando el usuario pidió válvula de bola), NO concluyas todavía que falta información. Vuelve a buscar usando términos específicos de la familia solicitada, por ejemplo: \"VALVULA DE BOLA ROSCADA SERIE 64 2 NPT\".\n4. Responde únicamente con información respaldada por los documentos recuperados.\n5. No declares que un producto es apto para una aplicación solo porque se parece por nombre o descripción.\n6. Para selección técnica considera, cuando estén disponibles: tipo de válvula, diámetro, conexión, presión, temperatura, material del cuerpo, material del asiento, fluido, serie/modelo y límites de uso.\n7. Si falta un dato crítico para decidir, pregunta únicamente por los datos faltantes.\n8. Si la documentación no respalda una conclusión, dilo claramente: \"No encontré respaldo suficiente en la documentación DelVal cargada.\"\n9. Cuando sea posible, menciona la serie/modelo y la fuente técnica recuperada.\n10. Todavía NO consultes precio, existencia ni generes cotizaciones. Este workflow solo valida la búsqueda técnica.\n11. No inventes equivalencias ni compatibilidades.\n\nObjetivo del piloto: comprobar si la Base Técnica puede orientar correctamente una solicitud antes de cruzarla con CAF."
         }
       },
       "id": "0a06f6dd-7fb9-48fa-b1ef-ad95b8d42aba",
@@ -159,12 +159,14 @@
       "parameters": {
         "mode": "retrieve-as-tool",
         "toolName": "base_tecnica_delval",
-        "toolDescription": "Busca información técnica exclusivamente en los catálogos, fichas y guías DelVal indexados desde CATALOGOS PRAISA. Úsala para validar series, materiales, presión, temperatura, conexiones, asientos, aplicaciones y límites.",
+        "toolDescription": "Busca información técnica exclusivamente en los catálogos, fichas y guías DelVal indexados desde CATALOGOS PRAISA. Para cada solicitud separa la búsqueda en: (1) identidad/configuración del producto: tipo, serie, diámetro y conexión; (2) condiciones de servicio: presión, temperatura, fluido, materiales y límites. Si una primera búsqueda devuelve otra familia de producto (por ejemplo mariposa cuando se pidió bola), vuelve a buscar con términos más específicos antes de concluir que no hay respaldo.",
         "memoryKey": {
           "__rl": true,
           "mode": "list",
           "value": "praisa_delval_piloto"
-        }
+        },
+        "topK": 10,
+        "includeDocumentMetadata": true
       },
       "id": "e7d941f8-941d-4df3-97de-a230f128789a",
       "name": "Base Técnica DelVal - Buscar",
