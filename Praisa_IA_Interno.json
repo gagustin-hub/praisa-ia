@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Asistente Interno - Piloto v1.6.6 - Cierre de cotización pulido",
+  "name": "Praisa IA - Asistente Interno - Piloto v1.6.7 - Webhook exclusivo",
   "nodes": [
     {
       "parameters": {
@@ -146,7 +146,7 @@
       ],
       "id": "9079c513-9b43-47df-ba94-79dce582f8d5",
       "name": "Chat - Entrada",
-      "webhookId": "c4c5322d-8e15-4f0c-a9fd-9a889fa30b27"
+      "webhookId": "8f4d8f21-7b6a-4f47-9d2e-166000000167"
     },
     {
       "parameters": {
@@ -5268,6 +5268,6 @@
   "nodeGroups": [],
   "tags": [],
   "meta": {
-    "praisaVersion": "1.6.6"
+    "praisaVersion": "1.6.7"
   }
 }
