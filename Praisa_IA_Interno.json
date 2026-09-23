@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Asistente Interno - Piloto v1.7.3 - Pago manual",
+  "name": "Praisa IA - Asistente Interno - Piloto v1.7.4 - Generación robusta",
   "nodes": [
     {
       "parameters": {
@@ -2220,7 +2220,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const gestion = $('Cotización - Asignar consecutivo IA').item.json || {};\nconst d = gestion.datosDocumento || {};\nconst items = Array.isArray(d.items) ? d.items : [];\nconst item = items.length ? items[0] : {};\n\nconst limpio = v => (v ?? '').toString().trim();\nconst limpiarCorreo = v => limpio(v).replace(/\\\\@/g, '@');\nconst num = v => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\nconst formatoNumero = v => {\n  const n = Number(v);\n  const seguro = Number.isFinite(n) ? n : 0;\n  const partes = seguro.toFixed(2).split('.');\n  partes[0] = partes[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n  return partes.join('.');\n};\nconst dinero = v => 'Q' + formatoNumero(v);\n\nconst fechaIso = new Intl.DateTimeFormat('en-CA', {\n  year: 'numeric', month: '2-digit', day: '2-digit',\n  timeZone: 'America/Guatemala'\n}).format(new Date());\n\nconst cuenta = limpio(d.cuenta_cliente) || 'SIN-CUENTA';\nconst codigo = limpio(item.codigo) || 'SIN-CODIGO';\nconst numero = limpio(d.cotizacion) || 'SIN-NUMERO';\n\nconst archivoBase = `Cotizacion Praisa - ${numero} - ${cuenta} - ${fechaIso}`\n  .replace(/[\\\\/:*?\"<>|]/g, '-');\n\nconst campos = {\n  fecha: limpio(d.fecha) || fechaIso,\n  cotizacion: numero,\n  referencia: limpio(d.atencion) || 'Por confirmar',\n  empresa: limpio(d.empresa) || 'Por confirmar',\n  atencion: limpio(d.atencion) || 'Por confirmar',\n  correo: limpiarCorreo(d.correo) || 'Por confirmar',\n  telefono: limpio(d.telefono) || 'Por confirmar',\n  moneda: limpio(d.moneda) || 'GTQ',\n  total: dinero(d.total_preliminar),\n  condicion_precio: 'Precio puesto en nuestras bodegas, Ciudad de Guatemala',\n  nota_impuestos: '(El precio ya incluye IVA del 12%)',\n  pago: limpio(d.condiciones_pago) || 'Por confirmar',\n  validez: limpio(d.validez) || '15 días',\n  direccion_entrega: limpio(d.direccion_entrega) || 'Por confirmar',\n  nota_entrega: items.length\n    ? items.map(it => limpio(it.codigo) + ': ' + (limpio(it.tiempo_entrega) || 'Por confirmar')).join('\\n')\n    : 'Por confirmar',\n  asesor_nombre: limpio(d.asesor) || 'Por asignar',\n  asesor_cargo: limpio(d.asesor_cargo) || 'Asesor de ventas',\n  asesor_telefono: limpio(d.telefono_asesor),\n  asesor_email: limpiarCorreo(d.correo_asesor)\n};\n\nfor (let i = 1; i <= 10; i++) {\n  const it = items[i - 1] || {};\n  campos['item_' + i] = items[i - 1] ? String(it.item || i) : '';\n  campos['cant_' + i] = items[i - 1] ? (limpio(it.cantidad) || '0') : '';\n  campos['descripcion_' + i] = items[i - 1]\n    ? ((limpio(it.codigo) ? limpio(it.codigo) + ' - ' : '') + (limpio(it.descripcion) || 'Por confirmar'))\n    : '';\n  campos['p_unit_' + i] = items[i - 1] ? dinero(it.precio_unitario_preliminar) : '';\n  campos['p_total_' + i] = items[i - 1] ? dinero(it.precio_total_preliminar) : '';\n  campos['entrega_' + i] = items[i - 1] ? (limpio(it.tiempo_entrega) || 'Por confirmar') : '';\n}\n\nreturn [{\n  json: {\n    ...gestion,\n    datosDocumento: d,\n    archivoBase,\n    templateId: '1O3I-3wyNw92raHqMLhphkvDaoKpFzCtHc43FDfFkhFQ',\n    folderId: '1g_tfYk28JfY7WZIqkO8rrd0wCAMoLedK',\n    campos\n  }\n}];"
+        "jsCode": "const gestion = $('Cotización - Asignar consecutivo IA').first().json || {};\nconst d = gestion.datosDocumento || {};\nconst items = Array.isArray(d.items) ? d.items : [];\nconst item = items.length ? items[0] : {};\n\nconst limpio = v => (v ?? '').toString().trim();\nconst limpiarCorreo = v => limpio(v).replace(/\\\\@/g, '@');\nconst num = v => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\nconst formatoNumero = v => {\n  const n = Number(v);\n  const seguro = Number.isFinite(n) ? n : 0;\n  const partes = seguro.toFixed(2).split('.');\n  partes[0] = partes[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n  return partes.join('.');\n};\nconst dinero = v => 'Q' + formatoNumero(v);\n\nconst fechaIso = new Intl.DateTimeFormat('en-CA', {\n  year: 'numeric', month: '2-digit', day: '2-digit',\n  timeZone: 'America/Guatemala'\n}).format(new Date());\n\nconst cuenta = limpio(d.cuenta_cliente) || 'SIN-CUENTA';\nconst codigo = limpio(item.codigo) || 'SIN-CODIGO';\nconst numero = limpio(d.cotizacion) || 'SIN-NUMERO';\n\nconst archivoBase = `Cotizacion Praisa - ${numero} - ${cuenta} - ${fechaIso}`\n  .replace(/[\\\\/:*?\"<>|]/g, '-');\n\nconst campos = {\n  fecha: limpio(d.fecha) || fechaIso,\n  cotizacion: numero,\n  referencia: limpio(d.atencion) || 'Por confirmar',\n  empresa: limpio(d.empresa) || 'Por confirmar',\n  atencion: limpio(d.atencion) || 'Por confirmar',\n  correo: limpiarCorreo(d.correo) || 'Por confirmar',\n  telefono: limpio(d.telefono) || 'Por confirmar',\n  moneda: limpio(d.moneda) || 'GTQ',\n  total: dinero(d.total_preliminar),\n  condicion_precio: 'Precio puesto en nuestras bodegas, Ciudad de Guatemala',\n  nota_impuestos: '(El precio ya incluye IVA del 12%)',\n  pago: limpio(d.condiciones_pago) || 'Por confirmar',\n  validez: limpio(d.validez) || '15 días',\n  direccion_entrega: limpio(d.direccion_entrega) || 'Por confirmar',\n  nota_entrega: items.length\n    ? items.map(it => limpio(it.codigo) + ': ' + (limpio(it.tiempo_entrega) || 'Por confirmar')).join('\\n')\n    : 'Por confirmar',\n  asesor_nombre: limpio(d.asesor) || 'Por asignar',\n  asesor_cargo: limpio(d.asesor_cargo) || 'Asesor de ventas',\n  asesor_telefono: limpio(d.telefono_asesor),\n  asesor_email: limpiarCorreo(d.correo_asesor)\n};\n\nfor (let i = 1; i <= 10; i++) {\n  const it = items[i - 1] || {};\n  campos['item_' + i] = items[i - 1] ? String(it.item || i) : '';\n  campos['cant_' + i] = items[i - 1] ? (limpio(it.cantidad) || '0') : '';\n  campos['descripcion_' + i] = items[i - 1]\n    ? ((limpio(it.codigo) ? limpio(it.codigo) + ' - ' : '') + (limpio(it.descripcion) || 'Por confirmar'))\n    : '';\n  campos['p_unit_' + i] = items[i - 1] ? dinero(it.precio_unitario_preliminar) : '';\n  campos['p_total_' + i] = items[i - 1] ? dinero(it.precio_total_preliminar) : '';\n  campos['entrega_' + i] = items[i - 1] ? (limpio(it.tiempo_entrega) || 'Por confirmar') : '';\n}\n\nreturn [{\n  json: {\n    ...gestion,\n    datosDocumento: d,\n    archivoBase,\n    templateId: '1O3I-3wyNw92raHqMLhphkvDaoKpFzCtHc43FDfFkhFQ',\n    folderId: '1g_tfYk28JfY7WZIqkO8rrd0wCAMoLedK',\n    campos\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -2240,7 +2240,7 @@
           "value": "1O3I-3wyNw92raHqMLhphkvDaoKpFzCtHc43FDfFkhFQ",
           "mode": "id"
         },
-        "name": "={{ $('Cotización - Preparar documento').item.json.archivoBase }}",
+        "name": "={{ $('Cotización - Preparar documento').first().json.archivoBase }}",
         "sameFolder": true,
         "options": {}
       },
@@ -2263,7 +2263,7 @@
       "parameters": {
         "resource": "document",
         "operation": "update",
-        "documentURL": "={{ $('Google Drive - Copiar plantilla').item.json.id }}",
+        "documentURL": "={{ $('Google Drive - Copiar plantilla').first().json.id }}",
         "simple": true,
         "actionsUi": {
           "actionFields": [
@@ -2271,553 +2271,553 @@
               "object": "text",
               "action": "replaceAll",
               "text": "{{fecha}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.fecha }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.fecha }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cotizacion}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cotizacion }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cotizacion }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{referencia}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.referencia }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.referencia }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{empresa}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.empresa }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.empresa }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{atencion}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.atencion }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.atencion }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{correo}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.correo }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.correo }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{telefono}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.telefono }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.telefono }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{moneda}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.moneda }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.moneda }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{total}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.total }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.total }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{condicion_precio}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.condicion_precio }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.condicion_precio }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{nota_impuestos}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.nota_impuestos }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.nota_impuestos }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{pago}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.pago }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.pago }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{validez}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.validez }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.validez }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{direccion_entrega}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.direccion_entrega }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.direccion_entrega }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{nota_entrega}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.nota_entrega }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.nota_entrega }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{asesor_nombre}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.asesor_nombre }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.asesor_nombre }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{asesor_cargo}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.asesor_cargo }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.asesor_cargo }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{asesor_telefono}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.asesor_telefono }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.asesor_telefono }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{asesor_email}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.asesor_email }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.asesor_email }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item_1}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_1 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.item_1 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant_1}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_1 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cant_1 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion_1}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_1 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.descripcion_1 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit_1}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_1 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_unit_1 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total_1}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_1 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_total_1 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega_1}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_1 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.entrega_1 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item_2}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_2 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.item_2 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant_2}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_2 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cant_2 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion_2}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_2 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.descripcion_2 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit_2}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_2 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_unit_2 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total_2}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_2 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_total_2 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega_2}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_2 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.entrega_2 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item_3}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_3 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.item_3 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant_3}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_3 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cant_3 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion_3}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_3 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.descripcion_3 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit_3}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_3 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_unit_3 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total_3}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_3 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_total_3 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega_3}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_3 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.entrega_3 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item_4}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_4 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.item_4 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant_4}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_4 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cant_4 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion_4}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_4 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.descripcion_4 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit_4}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_4 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_unit_4 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total_4}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_4 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_total_4 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega_4}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_4 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.entrega_4 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item_5}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_5 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.item_5 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant_5}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_5 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cant_5 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion_5}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_5 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.descripcion_5 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit_5}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_5 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_unit_5 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total_5}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_5 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_total_5 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega_5}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_5 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.entrega_5 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item_6}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_6 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.item_6 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant_6}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_6 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cant_6 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion_6}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_6 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.descripcion_6 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit_6}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_6 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_unit_6 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total_6}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_6 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_total_6 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega_6}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_6 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.entrega_6 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item_7}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_7 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.item_7 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant_7}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_7 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cant_7 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion_7}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_7 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.descripcion_7 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit_7}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_7 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_unit_7 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total_7}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_7 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_total_7 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega_7}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_7 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.entrega_7 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item_8}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_8 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.item_8 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant_8}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_8 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cant_8 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion_8}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_8 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.descripcion_8 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit_8}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_8 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_unit_8 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total_8}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_8 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_total_8 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega_8}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_8 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.entrega_8 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item_9}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_9 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.item_9 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant_9}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_9 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cant_9 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion_9}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_9 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.descripcion_9 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit_9}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_9 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_unit_9 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total_9}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_9 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_total_9 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega_9}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_9 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.entrega_9 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{item_10}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.item_10 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.item_10 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{cant_10}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.cant_10 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.cant_10 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{descripcion_10}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.descripcion_10 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.descripcion_10 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_unit_10}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_unit_10 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_unit_10 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{p_total_10}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.p_total_10 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.p_total_10 }}",
               "matchCase": true
             },
             {
               "object": "text",
               "action": "replaceAll",
               "text": "{{entrega_10}}",
-              "replaceText": "={{ $('Cotización - Preparar documento').item.json.campos.entrega_10 }}",
+              "replaceText": "={{ $('Cotización - Preparar documento').first().json.campos.entrega_10 }}",
               "matchCase": true
             }
           ]
@@ -2845,7 +2845,7 @@
         "operation": "download",
         "fileId": {
           "__rl": true,
-          "value": "={{ $('Google Drive - Copiar plantilla').item.json.id }}",
+          "value": "={{ $('Google Drive - Copiar plantilla').first().json.id }}",
           "mode": "id"
         },
         "options": {
@@ -2855,7 +2855,7 @@
               "docsToFormat": "application/pdf"
             }
           },
-          "fileName": "={{ $('Cotización - Preparar documento').item.json.archivoBase + '.pdf' }}"
+          "fileName": "={{ $('Cotización - Preparar documento').first().json.archivoBase + '.pdf' }}"
         }
       },
       "type": "n8n-nodes-base.googleDrive",
@@ -2879,7 +2879,7 @@
         "operation": "download",
         "fileId": {
           "__rl": true,
-          "value": "={{ $('Google Drive - Copiar plantilla').item.json.id }}",
+          "value": "={{ $('Google Drive - Copiar plantilla').first().json.id }}",
           "mode": "id"
         },
         "options": {
@@ -2889,7 +2889,7 @@
               "docsToFormat": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             }
           },
-          "fileName": "={{ $('Cotización - Preparar documento').item.json.archivoBase + '.docx' }}"
+          "fileName": "={{ $('Cotización - Preparar documento').first().json.archivoBase + '.docx' }}"
         }
       },
       "type": "n8n-nodes-base.googleDrive",
@@ -2912,7 +2912,7 @@
         "resource": "file",
         "operation": "upload",
         "inputDataFieldName": "pdf",
-        "name": "={{ $('Cotización - Preparar documento').item.json.archivoBase + '.pdf' }}",
+        "name": "={{ $('Cotización - Preparar documento').first().json.archivoBase + '.pdf' }}",
         "driveId": {
           "__rl": true,
           "value": "My Drive",
@@ -2948,7 +2948,7 @@
         "resource": "file",
         "operation": "upload",
         "inputDataFieldName": "word",
-        "name": "={{ $('Cotización - Preparar documento').item.json.archivoBase + '.docx' }}",
+        "name": "={{ $('Cotización - Preparar documento').first().json.archivoBase + '.docx' }}",
         "driveId": {
           "__rl": true,
           "value": "My Drive",
@@ -3009,7 +3009,7 @@
             {
               "id": "praisa-output-20",
               "name": "output",
-              "value": "=✅ Cotización **{{ $('Cotización - Asignar consecutivo IA').item.json.numeroCotizacion }}** generada correctamente después de la revisión comercial.\n\n**Archivos de la cotización**\n\n[📄 Abrir PDF](https://drive.google.com/file/d/{{ $('Google Drive - Guardar PDF').item.json.id }}/view)\n\n[📝 Abrir Word](https://drive.google.com/file/d/{{ $('Google Drive - Guardar Word').item.json.id }}/view)\n\n[📎 Abrir Google Docs](https://docs.google.com/document/d/{{ $('Google Drive - Copiar plantilla').item.json.id }}/edit)\n\nLos archivos quedaron guardados en Google Drive y conservan el acceso interno configurado.\n\n📌 El número se asignó automáticamente con el consecutivo interno de Praisa IA.\n\n⚠️ Realiza una revisión final antes de enviarlo al cliente.",
+              "value": "=✅ Cotización **{{ $('Cotización - Asignar consecutivo IA').first().json.numeroCotizacion }}** generada correctamente después de la revisión comercial.\n\n**Archivos de la cotización**\n\n[📄 Abrir PDF](https://drive.google.com/file/d/{{ $('Google Drive - Guardar PDF').first().json.id }}/view)\n\n[📝 Abrir Word](https://drive.google.com/file/d/{{ $('Google Drive - Guardar Word').first().json.id }}/view)\n\n[📎 Abrir Google Docs](https://docs.google.com/document/d/{{ $('Google Drive - Copiar plantilla').first().json.id }}/edit)\n\nLos archivos quedaron guardados en Google Drive y conservan el acceso interno configurado.\n\n📌 El número se asignó automáticamente con el consecutivo interno de Praisa IA.\n\n⚠️ Realiza una revisión final antes de enviarlo al cliente.",
               "type": "string"
             }
           ]
@@ -3567,7 +3567,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const gestionBase = $('Cotización - Gestionar borrador').item.json || {};\nconst gestion = JSON.parse(JSON.stringify(gestionBase));\nconst d = gestion.datosDocumento || {};\n\nconst limpio = v => (v ?? '').toString().trim();\n\nconst ahoraGT = new Date();\nconst year = Number(new Intl.DateTimeFormat('en-US', {\n  year: 'numeric',\n  timeZone: 'America/Guatemala'\n}).format(ahoraGT));\n\nconst existente = limpio(d.cotizacion);\nlet counter = { year, last: 0 };\n\ntry {\n  const row = $input.first().json || {};\n  if (row.state_json) {\n    const parsed = JSON.parse(row.state_json);\n    if (parsed && typeof parsed === 'object') {\n      counter.year = Number(parsed.year || year);\n      counter.last = Number(parsed.last || 0);\n    }\n  }\n} catch (e) {}\n\nif (counter.year !== year) {\n  counter = { year, last: 0 };\n}\n\nlet numero = existente;\nlet reutilizado = /^IA-\\d{4}-\\d{4,}$/.test(numero);\n\nif (!reutilizado) {\n  counter.last += 1;\n  numero = 'IA-' + year + '-' + String(counter.last).padStart(4, '0');\n}\n\nd.cotizacion = numero;\ngestion.datosDocumento = d;\n\n// Actualiza también el estado persistente de la sesión para que el mismo número\n// se reutilice si el usuario vuelve a pulsar \"Generar cotización\".\nlet estado = {};\ntry {\n  estado = JSON.parse(gestion.persist_state_json || '{}');\n} catch (e) {}\nif (!estado || typeof estado !== 'object') estado = {};\nif (!estado.lastCompleted || typeof estado.lastCompleted !== 'object') {\n  estado.lastCompleted = d;\n} else {\n  estado.lastCompleted.cotizacion = numero;\n}\nestado.assignedQuoteNumber = numero;\nestado.assignedQuoteAt = new Date().toISOString();\n\ngestion.persist_state_json = JSON.stringify(estado);\n\nreturn [{\n  json: {\n    ...gestion,\n    numeroCotizacion: numero,\n    consecutivo_reutilizado: reutilizado,\n    counter_session_id: '__PRAISA_COTIZADOR_CONSECUTIVO__',\n    counter_state_json: JSON.stringify(counter)\n  }\n}];"
+        "jsCode": "const gestionBase = $('Cotización - Gestionar borrador').first().json || {};\nconst gestion = JSON.parse(JSON.stringify(gestionBase));\nconst d = gestion.datosDocumento || {};\n\nconst limpio = v => (v ?? '').toString().trim();\n\nconst ahoraGT = new Date();\nconst year = Number(new Intl.DateTimeFormat('en-US', {\n  year: 'numeric',\n  timeZone: 'America/Guatemala'\n}).format(ahoraGT));\n\nconst existente = limpio(d.cotizacion);\nlet counter = { year, last: 0 };\n\ntry {\n  const row = $input.first().json || {};\n  if (row.state_json) {\n    const parsed = JSON.parse(row.state_json);\n    if (parsed && typeof parsed === 'object') {\n      counter.year = Number(parsed.year || year);\n      counter.last = Number(parsed.last || 0);\n    }\n  }\n} catch (e) {}\n\nif (counter.year !== year) {\n  counter = { year, last: 0 };\n}\n\nlet numero = existente;\nlet reutilizado = /^IA-\\d{4}-\\d{4,}$/.test(numero);\n\nif (!reutilizado) {\n  counter.last += 1;\n  numero = 'IA-' + year + '-' + String(counter.last).padStart(4, '0');\n}\n\nd.cotizacion = numero;\ngestion.datosDocumento = d;\n\n// Actualiza también el estado persistente de la sesión para que el mismo número\n// se reutilice si el usuario vuelve a pulsar \"Generar cotización\".\nlet estado = {};\ntry {\n  estado = JSON.parse(gestion.persist_state_json || '{}');\n} catch (e) {}\nif (!estado || typeof estado !== 'object') estado = {};\nif (!estado.lastCompleted || typeof estado.lastCompleted !== 'object') {\n  estado.lastCompleted = d;\n} else {\n  estado.lastCompleted.cotizacion = numero;\n}\nestado.assignedQuoteNumber = numero;\nestado.assignedQuoteAt = new Date().toISOString();\n\ngestion.persist_state_json = JSON.stringify(estado);\n\nreturn [{\n  json: {\n    ...gestion,\n    numeroCotizacion: numero,\n    consecutivo_reutilizado: reutilizado,\n    counter_session_id: '__PRAISA_COTIZADOR_CONSECUTIVO__',\n    counter_state_json: JSON.stringify(counter)\n  }\n}];"
       },
       "id": "d3e02b8a-43a8-4a71-b56e-17b7e4f4b978",
       "name": "Cotización - Asignar consecutivo IA",
@@ -5648,6 +5648,6 @@
   "nodeGroups": [],
   "tags": [],
   "meta": {
-    "praisaVersion": "1.7.3"
+    "praisaVersion": "1.7.4"
   }
 }
