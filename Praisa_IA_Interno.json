@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Asistente Interno - Piloto v1.0",
+  "name": "Praisa IA - Asistente Interno - Piloto v1.1 - Chat privado",
   "nodes": [
     {
       "parameters": {
@@ -94,14 +94,10 @@
     },
     {
       "parameters": {
-        "public": true,
-        "mode": "hostedChat",
-        "authentication": "n8nUserAuth",
-        "requireExecuteAccess": true,
-        "includeUserInOutput": true,
+        "public": false,
         "availableInChat": true,
         "agentName": "Praisa IA Interno",
-        "agentDescription": "Asistente interno de Praisa para consultar CAF, productos, existencias, clientes, historial, base técnica y preparar cotizaciones.",
+        "agentDescription": "Asistente virtual interno de Praisa para consultas de CAF, productos, existencias, clientes, historial, base técnica y cotizaciones.",
         "suggestedPrompts": {
           "prompts": [
             {
@@ -135,15 +131,7 @@
           ]
         },
         "options": {
-          "responseMode": "lastNode",
-          "allowedOrigins": "https://asistentepraisa.app.n8n.cloud",
-          "loadPreviousSession": "notSupported",
-          "showWelcomeScreen": false,
-          "title": "Praisa IA Interno",
-          "subtitle": "Asistente virtual interno para operaciones comerciales y técnicas",
-          "inputPlaceholder": "Escribe lo que necesitas consultar o hacer...",
-          "initialMessages": "Hola. Soy Praisa IA Interno. Puedo ayudarte con consultas de CAF, productos, existencias, clientes, historial, búsqueda técnica y cotizaciones.",
-          "customCss": ":root {\n  --chat--color--primary: #d71920;\n  --chat--color--primary-shade-50: #c4141b;\n  --chat--color--primary--shade-100: #a90f15;\n  --chat--color--secondary: #d71920;\n  --chat--color-secondary-shade-50: #b70f16;\n  --chat--color-white: #ffffff;\n  --chat--color-light: #f6f7f8;\n  --chat--color-light-shade-50: #eceef1;\n  --chat--color-medium: #cfd3d9;\n  --chat--color-dark: #252a31;\n  --chat--font-family: Inter, Arial, sans-serif;\n  --chat--border-radius: 14px;\n  --chat--header--background: #ffffff;\n  --chat--header--color: #252a31;\n  --chat--message--bot--background: #f3f4f6;\n  --chat--message--bot--color: #252a31;\n  --chat--message--user--background: #d71920;\n  --chat--message--user--color: #ffffff;\n  --chat--body--background: #ffffff;\n  --chat--footer--background: #ffffff;\n}\n.chat-header {\n  border-bottom: 3px solid #d71920;\n}\n.chat-message {\n  max-width: 82%;\n}"
+          "responseMode": "lastNode"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
