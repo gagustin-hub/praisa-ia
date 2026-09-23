@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Asistente Interno - Piloto v1.2 - Web privada",
+  "name": "Praisa IA - Asistente Interno - Piloto v1.3 - Respuestas estables",
   "nodes": [
     {
       "parameters": {
@@ -2118,7 +2118,8 @@
         1600
       ],
       "id": "911f13da-9ee7-4371-a1bb-4420f45748ec",
-      "name": "Memoria - Guardar borrador"
+      "name": "Memoria - Guardar borrador",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -2177,7 +2178,8 @@
         1200
       ],
       "id": "51166c92-ab63-4994-b07d-d3f8e2990d5a",
-      "name": "Memoria - Guardar estado final"
+      "name": "Memoria - Guardar estado final",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -3144,7 +3146,8 @@
       "position": [
         -3040,
         2480
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -3251,7 +3254,8 @@
       "position": [
         -7200,
         640
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -3310,7 +3314,8 @@
       "position": [
         -6880,
         640
-      ]
+      ],
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -3433,7 +3438,8 @@
       "position": [
         -4960,
         1840
-      ]
+      ],
+      "alwaysOutputData": true
     }
   ],
   "pinData": {},
