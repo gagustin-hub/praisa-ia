@@ -980,3 +980,24 @@ html[data-theme="light"] #n8n-chat .chat-inputs{
 html[data-theme="light"] #n8n-chat .chat-inputs textarea{
   color:#17222e!important;
 }
+
+
+/* Ajuste de espacios del chat: mensajes empiezan arriba, no pegados al fondo */
+#n8n-chat .chat-body{
+  justify-content:flex-start!important;
+}
+#n8n-chat .chat-messages-list{
+  margin-top:0!important;
+  padding-top:18px!important;
+  padding-bottom:18px!important;
+}
+#n8n-chat .chat-message{
+  margin-top:0!important;
+}
+.chat-card{
+  height:460px;
+}
+@media(max-width:800px){
+  .chat-card{height:58vh}
+  #n8n-chat{min-height:58vh}
+}
