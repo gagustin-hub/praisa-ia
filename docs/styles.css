@@ -538,3 +538,37 @@ html[data-theme="light"] .chat-card #n8n-chat .praisa-voice-button.is-listening{
     animation:none!important;
   }
 }
+
+
+/* ===== Medidor real de entrada de voz ===== */
+.praisa-voice-meter{
+  width:120px;
+  height:4px;
+  margin:5px auto 0;
+  overflow:hidden;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  opacity:0;
+  transform:scaleX(.92);
+  transition:opacity .15s ease,transform .15s ease;
+}
+.praisa-voice-meter span{
+  display:block;
+  width:100%;
+  height:100%;
+  transform-origin:left center;
+  transform:scaleX(var(--voice-level,0));
+  border-radius:inherit;
+  background:#45d694;
+  transition:transform .06s linear;
+}
+.chat-card #n8n-chat.praisa-voice-listening .praisa-voice-meter{
+  opacity:1;
+  transform:scaleX(1);
+}
+.chat-card #n8n-chat.praisa-audio-detected .praisa-voice-button{
+  border-color:#45d694;
+}
+html[data-theme="light"] .praisa-voice-meter{
+  background:rgba(20,35,45,.12);
+}
