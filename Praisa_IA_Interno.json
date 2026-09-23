@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Asistente Interno - Piloto v1.6.7 - Webhook exclusivo",
+  "name": "Praisa IA - Asistente Interno - Piloto v1.6.8 - Cotización robusta",
   "nodes": [
     {
       "parameters": {
@@ -1742,11 +1742,11 @@
           "parameters": [
             {
               "name": "username",
-              "value": "={{ $('Configuración CAF').item.json.caf_usuario }}"
+              "value": "={{ $('Configuración CAF').first().json.caf_usuario }}"
             },
             {
               "name": "password",
-              "value": "={{ $('Configuración CAF').item.json.caf_password }}"
+              "value": "={{ $('Configuración CAF').first().json.caf_password }}"
             }
           ]
         },
@@ -1781,7 +1781,7 @@
             },
             {
               "name": "cuenta",
-              "value": "={{ $('Cotización - Gestionar borrador').item.json.draft.cuenta_cliente }}"
+              "value": "={{ $('Cotización - Gestionar borrador').first().json.draft.cuenta_cliente }}"
             }
           ]
         },
@@ -1790,7 +1790,7 @@
           "parameters": [
             {
               "name": "X-Authorization",
-              "value": "={{ $('CAF - Obtener JWT Cotización').item.json.JWT }}"
+              "value": "={{ $('CAF - Obtener JWT Cotización').first().json.JWT }}"
             },
             {
               "name": "Accept",
@@ -1835,7 +1835,7 @@
             },
             {
               "name": "codpro",
-              "value": "={{ $('Cotización - Gestionar borrador').item.json.draft.codigo_producto }}"
+              "value": "={{ $('Cotización - Gestionar borrador').first().json.draft.codigo_producto }}"
             },
             {
               "name": "empresa",
@@ -1848,7 +1848,7 @@
           "parameters": [
             {
               "name": "X-Authorization",
-              "value": "={{ $('CAF - Obtener JWT Cotización').item.json.JWT }}"
+              "value": "={{ $('CAF - Obtener JWT Cotización').first().json.JWT }}"
             },
             {
               "name": "Accept",
@@ -1893,7 +1893,7 @@
             },
             {
               "name": "psearch",
-              "value": "={{ $('Cotización - Gestionar borrador').item.json.draft.codigo_producto }}"
+              "value": "={{ $('Cotización - Gestionar borrador').first().json.draft.codigo_producto }}"
             }
           ]
         },
@@ -1902,7 +1902,7 @@
           "parameters": [
             {
               "name": "X-Authorization",
-              "value": "={{ $('CAF - Obtener JWT Cotización').item.json.JWT }}"
+              "value": "={{ $('CAF - Obtener JWT Cotización').first().json.JWT }}"
             },
             {
               "name": "Accept",
@@ -1933,7 +1933,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const gestion = $('Cotización - Gestionar borrador').item.json;\nconst draft = gestion.draft || {};\nconst clienteResp = $('CAF - Cotización consultar cliente').item.json || {};\nconst productoResp = $('CAF - Cotización consultar producto').item.json || {};\nconst existenciaResp = $('CAF - Cotización consultar existencia').item.json || {};\n\nconst c = clienteResp.cliente || {};\nconst p = productoResp.prod || {};\nconst existencias = Array.isArray(existenciaResp.v_existencia) ? existenciaResp.v_existencia : [];\n\nconst limpio = v => (v ?? '').toString().trim();\nconst num = v => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\n\nconst clienteValido = Boolean(clienteResp.success && limpio(c.cuenta));\nconst productoValido = Boolean(productoResp.success && limpio(p.codpro));\n\nconst sessionId = gestion.sessionKeyCotizacion || 'sesion-default';\n\nlet estado = {};\ntry {\n  estado = JSON.parse(gestion.persist_state_json || '{}');\n} catch (e) {}\nif (!estado || typeof estado !== 'object') estado = {};\n\nconst salidaPersistente = (extra = {}) => ({\n  ...extra,\n  persist_session_id: sessionId,\n  persist_state_json: JSON.stringify(estado)\n});\n\nif (!clienteValido || !productoValido) {\n  const problemas = [];\n  if (!clienteValido) problemas.push('No pude validar la cuenta del cliente en CAF Web.');\n  if (!productoValido) problemas.push('No pude validar el producto en CAF Web.');\n\n  estado.active = true;\n  estado.phase = 'base';\n  estado.pendingField = '';\n  estado.draft = draft;\n\n  return [{\n    json: salidaPersistente({\n      listoDocumento: false,\n      estado: 'ERROR_VALIDACION_CAF',\n      mensaje: problemas.join('\\n') + '\\n\\nEl borrador de cotización sigue guardado. Puedes corregir la cuenta o el código e intentarlo nuevamente.',\n      draft\n    })\n  }];\n}\n\nconst contactoCAF = limpio(c.contacto);\nconst correoCAF = [...new Set(\n  limpio(c.email)\n    .replace(/\\\\+@/g, '@')\n    .split(',')\n    .map(x => x.trim().replace(/\\\\+@/g, '@'))\n    .filter(Boolean)\n)].join(', ');\nconst telefonoCAF = limpio(c.telefono);\n\nconst contactoFinal = limpio(draft.contacto) || contactoCAF;\nconst correoFinal = limpio(draft.correo) || correoCAF;\nconst telefonoFinal = limpio(draft.telefono) || telefonoCAF;\n\nconst faltantesContacto = [];\nif (!contactoFinal) faltantesContacto.push('contacto');\nif (!correoFinal) faltantesContacto.push('correo');\nif (!telefonoFinal) faltantesContacto.push('telefono');\n\nif (faltantesContacto.length > 0) {\n  estado.active = true;\n  estado.phase = 'contacto';\n  estado.pendingField = faltantesContacto[0];\n  estado.draft = {\n    ...draft,\n    contacto: contactoFinal,\n    correo: correoFinal,\n    telefono: telefonoFinal\n  };\n\n  let pregunta = '';\n  if (estado.pendingField === 'contacto') {\n    pregunta = '¿A nombre de quién debe dirigirse la cotización?';\n  } else if (estado.pendingField === 'correo') {\n    pregunta = '¿Cuál es el correo del contacto?';\n  } else {\n    pregunta = '¿Cuál es el teléfono del contacto?';\n  }\n\n  return [{\n    json: salidaPersistente({\n      listoDocumento: false,\n      estado: 'FALTAN_DATOS_CONTACTO',\n      mensaje:\n        '✅ Ya validé el cliente y el producto en CAF Web.\\n\\n' +\n        'Antes de preparar el documento necesito completar los datos de contacto que no están registrados en CAF.\\n\\n' +\n        pregunta,\n      draft: estado.draft\n    })\n  }];\n}\n\nconst cantidad = num(draft.cantidad);\nconst precioUnitario = num(p.precioa);\nconst totalPreliminar = precioUnitario * cantidad;\n\nlet existenciaTotal = 0;\nfor (const r of existencias) existenciaTotal += num(r.existencia);\n\nlet tiempoEntrega = 'Por confirmar';\nif (existencias.length > 0 && existenciaTotal >= cantidad) {\n  tiempoEntrega = 'Inmediato, salvo previa venta';\n} else if (existencias.length > 0 && existenciaTotal < cantidad) {\n  tiempoEntrega = 'Existencia insuficiente; confirmar plazo de entrega';\n}\n\nconst fecha = new Intl.DateTimeFormat('es-GT', {\n  day: '2-digit',\n  month: '2-digit',\n  year: 'numeric',\n  timeZone: 'America/Guatemala'\n}).format(new Date());\n\nconst datosDocumento = {\n  cotizacion: 'PENDIENTE',\n  fecha,\n  empresa: limpio(c.nombre_cliente),\n  cuenta_cliente: limpio(c.cuenta),\n  nit: limpio(c.nit),\n  atencion: contactoFinal,\n  correo: correoFinal,\n  telefono: telefonoFinal,\n  direccion_cliente: limpio(c.direccion),\n  direccion_entrega: limpio(draft.direccion_entrega) || limpio(c.direccion) || 'Por confirmar',\n  condiciones_pago: limpio(c.terminos) || 'Por confirmar',\n  condiciones_pago_caf: limpio(c.terminos) || 'Por confirmar',\n  validez: '15 días',\n  moneda: 'GTQ',\n  iva_estado: '',\n  asesor: 'Por asignar',\n  telefono_asesor: '',\n  correo_asesor: '',\n  items: [{\n    item: 1,\n    cantidad,\n    codigo: limpio(p.codpro),\n    descripcion: limpio(p.nombre_prod),\n    unidad: limpio(p.umedida),\n    precio_unitario_preliminar: precioUnitario,\n    precio_total_preliminar: totalPreliminar,\n    existencia_total: existenciaTotal,\n    tiempo_entrega: tiempoEntrega\n  }],\n  total_preliminar: totalPreliminar,\n  estado: 'PENDIENTE_REVISION',\n  fuente_precio: 'Precio A CAF',\n  nota_control: 'BORRADOR INTERNO. No enviar al cliente sin revisión técnica y comercial.'\n};\n\nestado.active = false;\nestado.phase = 'completa';\nestado.pendingField = '';\nestado.draft = {};\nestado.lastCompleted = datosDocumento;\nestado.commercialApproved = false;\n\nconst formatoNumero = v => {\n  const n = Number(v);\n  const seguro = Number.isFinite(n) ? n : 0;\n  const partes = seguro.toFixed(2).split('.');\n  partes[0] = partes[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n  return partes.join('.');\n};\nconst dinero = v => 'Q' + formatoNumero(v);\n\nconst mensaje =\n  'Perfecto. Registré **' + cantidad + ' ' + (cantidad === 1 ? 'unidad' : 'unidades') + '**.\\n\\n' +\n  '✅ Borrador de cotización preparado con datos consultados en CAF Web.\\n\\n' +\n  '**Cliente**\\n' +\n  '- Cuenta: ' + datosDocumento.cuenta_cliente + '\\n' +\n  '- Empresa: ' + datosDocumento.empresa + '\\n' +\n  '- Atención: ' + datosDocumento.atencion + '\\n' +\n  '- Correo: ' + limpiar(datosDocumento.correo).replace(/\\\\+@/g, '@') + '\\n' +\n  '- Teléfono: ' + datosDocumento.telefono + '\\n\\n' +\n  '**Producto**\\n' +\n  '- Código: ' + datosDocumento.items[0].codigo + '\\n' +\n  '- Descripción: ' + datosDocumento.items[0].descripcion + '\\n' +\n  '- Cantidad: ' + cantidad + '\\n' +\n  '- Precio A CAF: ' + dinero(precioUnitario) + '\\n' +\n  '- Total preliminar: ' + dinero(totalPreliminar) + '\\n' +\n  '- Existencia total: ' + existenciaTotal.toLocaleString('en-US', {maximumFractionDigits: 2}) + '\\n' +\n  '- Entrega: ' + tiempoEntrega + '\\n\\n' +\n  '⚠️ **Estado: PENDIENTE DE REVISIÓN**\\n' +\n  (existenciaTotal < cantidad\n    ? 'La cantidad solicitada supera la existencia disponible. Antes de generar la cotización debemos confirmar el **plazo de entrega** para las unidades faltantes.\\n\\n'\n    : 'Antes de generar la cotización final debemos revisar las condiciones comerciales y de entrega.\\n\\n') +\n  'Cuando estés listo, escribe **Generar cotización** para continuar con la revisión comercial.';\n\nreturn [{\n  json: salidaPersistente({\n    listoDocumento: true,\n    estado: 'PENDIENTE_REVISION',\n    datosDocumento,\n    mensaje\n  })\n}];"
+        "jsCode": "const gestion = $('Cotización - Gestionar borrador').first().json;\nconst draft = gestion.draft || {};\nconst clienteResp = $('CAF - Cotización consultar cliente').first().json || {};\nconst productoResp = $('CAF - Cotización consultar producto').first().json || {};\nconst existenciaResp = $('CAF - Cotización consultar existencia').first().json || {};\n\nconst c = clienteResp.cliente || {};\nconst p = productoResp.prod || {};\nconst existencias = Array.isArray(existenciaResp.v_existencia) ? existenciaResp.v_existencia : [];\n\nconst limpio = v => (v ?? '').toString().trim();\nconst num = v => {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : 0;\n};\n\nconst clienteValido = Boolean(clienteResp.success && limpio(c.cuenta));\nconst productoValido = Boolean(productoResp.success && limpio(p.codpro));\n\nconst sessionId = gestion.sessionKeyCotizacion || 'sesion-default';\n\nlet estado = {};\ntry {\n  estado = JSON.parse(gestion.persist_state_json || '{}');\n} catch (e) {}\nif (!estado || typeof estado !== 'object') estado = {};\n\nconst salidaPersistente = (extra = {}) => ({\n  ...extra,\n  persist_session_id: sessionId,\n  persist_state_json: JSON.stringify(estado)\n});\n\nif (!clienteValido || !productoValido) {\n  const problemas = [];\n  if (!clienteValido) problemas.push('No pude validar la cuenta del cliente en CAF Web.');\n  if (!productoValido) problemas.push('No pude validar el producto en CAF Web.');\n\n  estado.active = true;\n  estado.phase = 'base';\n  estado.pendingField = '';\n  estado.draft = draft;\n\n  return [{\n    json: salidaPersistente({\n      listoDocumento: false,\n      estado: 'ERROR_VALIDACION_CAF',\n      mensaje: problemas.join('\\n') + '\\n\\nEl borrador de cotización sigue guardado. Puedes corregir la cuenta o el código e intentarlo nuevamente.',\n      draft\n    })\n  }];\n}\n\nconst contactoCAF = limpio(c.contacto);\nconst correoCAF = [...new Set(\n  limpio(c.email)\n    .replace(/\\\\+@/g, '@')\n    .split(',')\n    .map(x => x.trim().replace(/\\\\+@/g, '@'))\n    .filter(Boolean)\n)].join(', ');\nconst telefonoCAF = limpio(c.telefono);\n\nconst contactoFinal = limpio(draft.contacto) || contactoCAF;\nconst correoFinal = limpio(draft.correo) || correoCAF;\nconst telefonoFinal = limpio(draft.telefono) || telefonoCAF;\n\nconst faltantesContacto = [];\nif (!contactoFinal) faltantesContacto.push('contacto');\nif (!correoFinal) faltantesContacto.push('correo');\nif (!telefonoFinal) faltantesContacto.push('telefono');\n\nif (faltantesContacto.length > 0) {\n  estado.active = true;\n  estado.phase = 'contacto';\n  estado.pendingField = faltantesContacto[0];\n  estado.draft = {\n    ...draft,\n    contacto: contactoFinal,\n    correo: correoFinal,\n    telefono: telefonoFinal\n  };\n\n  let pregunta = '';\n  if (estado.pendingField === 'contacto') {\n    pregunta = '¿A nombre de quién debe dirigirse la cotización?';\n  } else if (estado.pendingField === 'correo') {\n    pregunta = '¿Cuál es el correo del contacto?';\n  } else {\n    pregunta = '¿Cuál es el teléfono del contacto?';\n  }\n\n  return [{\n    json: salidaPersistente({\n      listoDocumento: false,\n      estado: 'FALTAN_DATOS_CONTACTO',\n      mensaje:\n        '✅ Ya validé el cliente y el producto en CAF Web.\\n\\n' +\n        'Antes de preparar el documento necesito completar los datos de contacto que no están registrados en CAF.\\n\\n' +\n        pregunta,\n      draft: estado.draft\n    })\n  }];\n}\n\nconst cantidad = num(draft.cantidad);\nconst precioUnitario = num(p.precioa);\nconst totalPreliminar = precioUnitario * cantidad;\n\nlet existenciaTotal = 0;\nfor (const r of existencias) existenciaTotal += num(r.existencia);\n\nlet tiempoEntrega = 'Por confirmar';\nif (existencias.length > 0 && existenciaTotal >= cantidad) {\n  tiempoEntrega = 'Inmediato, salvo previa venta';\n} else if (existencias.length > 0 && existenciaTotal < cantidad) {\n  tiempoEntrega = 'Existencia insuficiente; confirmar plazo de entrega';\n}\n\nconst fecha = new Intl.DateTimeFormat('es-GT', {\n  day: '2-digit',\n  month: '2-digit',\n  year: 'numeric',\n  timeZone: 'America/Guatemala'\n}).format(new Date());\n\nconst datosDocumento = {\n  cotizacion: 'PENDIENTE',\n  fecha,\n  empresa: limpio(c.nombre_cliente),\n  cuenta_cliente: limpio(c.cuenta),\n  nit: limpio(c.nit),\n  atencion: contactoFinal,\n  correo: correoFinal,\n  telefono: telefonoFinal,\n  direccion_cliente: limpio(c.direccion),\n  direccion_entrega: limpio(draft.direccion_entrega) || limpio(c.direccion) || 'Por confirmar',\n  condiciones_pago: limpio(c.terminos) || 'Por confirmar',\n  condiciones_pago_caf: limpio(c.terminos) || 'Por confirmar',\n  validez: '15 días',\n  moneda: 'GTQ',\n  iva_estado: '',\n  asesor: 'Por asignar',\n  telefono_asesor: '',\n  correo_asesor: '',\n  items: [{\n    item: 1,\n    cantidad,\n    codigo: limpio(p.codpro),\n    descripcion: limpio(p.nombre_prod),\n    unidad: limpio(p.umedida),\n    precio_unitario_preliminar: precioUnitario,\n    precio_total_preliminar: totalPreliminar,\n    existencia_total: existenciaTotal,\n    tiempo_entrega: tiempoEntrega\n  }],\n  total_preliminar: totalPreliminar,\n  estado: 'PENDIENTE_REVISION',\n  fuente_precio: 'Precio A CAF',\n  nota_control: 'BORRADOR INTERNO. No enviar al cliente sin revisión técnica y comercial.'\n};\n\nestado.active = false;\nestado.phase = 'completa';\nestado.pendingField = '';\nestado.draft = {};\nestado.lastCompleted = datosDocumento;\nestado.commercialApproved = false;\n\nconst formatoNumero = v => {\n  const n = Number(v);\n  const seguro = Number.isFinite(n) ? n : 0;\n  const partes = seguro.toFixed(2).split('.');\n  partes[0] = partes[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',');\n  return partes.join('.');\n};\nconst dinero = v => 'Q' + formatoNumero(v);\n\nconst mensaje =\n  'Perfecto. Registré **' + cantidad + ' ' + (cantidad === 1 ? 'unidad' : 'unidades') + '**.\\n\\n' +\n  '✅ Borrador de cotización preparado con datos consultados en CAF Web.\\n\\n' +\n  '**Cliente**\\n' +\n  '- Cuenta: ' + datosDocumento.cuenta_cliente + '\\n' +\n  '- Empresa: ' + datosDocumento.empresa + '\\n' +\n  '- Atención: ' + datosDocumento.atencion + '\\n' +\n  '- Correo: ' + limpiar(datosDocumento.correo).replace(/\\\\+@/g, '@') + '\\n' +\n  '- Teléfono: ' + datosDocumento.telefono + '\\n\\n' +\n  '**Producto**\\n' +\n  '- Código: ' + datosDocumento.items[0].codigo + '\\n' +\n  '- Descripción: ' + datosDocumento.items[0].descripcion + '\\n' +\n  '- Cantidad: ' + cantidad + '\\n' +\n  '- Precio A CAF: ' + dinero(precioUnitario) + '\\n' +\n  '- Total preliminar: ' + dinero(totalPreliminar) + '\\n' +\n  '- Existencia total: ' + existenciaTotal.toLocaleString('en-US', {maximumFractionDigits: 2}) + '\\n' +\n  '- Entrega: ' + tiempoEntrega + '\\n\\n' +\n  '⚠️ **Estado: PENDIENTE DE REVISIÓN**\\n' +\n  (existenciaTotal < cantidad\n    ? 'La cantidad solicitada supera la existencia disponible. Antes de generar la cotización debemos confirmar el **plazo de entrega** para las unidades faltantes.\\n\\n'\n    : 'Antes de generar la cotización final debemos revisar las condiciones comerciales y de entrega.\\n\\n') +\n  'Cuando estés listo, escribe **Generar cotización** para continuar con la revisión comercial.';\n\nreturn [{\n  json: salidaPersistente({\n    listoDocumento: true,\n    estado: 'PENDIENTE_REVISION',\n    datosDocumento,\n    mensaje\n  })\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1951,7 +1951,7 @@
             {
               "id": "praisa-output-19",
               "name": "output",
-              "value": "={{ $('Cotización - Preparar datos Word PDF').item.json.mensaje }}",
+              "value": "={{ $('Cotización - Preparar datos Word PDF').first().json.mensaje }}",
               "type": "string"
             }
           ]
@@ -2077,15 +2077,15 @@
             {
               "keyName": "session_id",
               "condition": "eq",
-              "keyValue": "={{ $('Cotización - Gestionar borrador').item.json.persist_session_id }}"
+              "keyValue": "={{ $('Cotización - Gestionar borrador').first().json.persist_session_id }}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "session_id": "={{ $('Cotización - Gestionar borrador').item.json.persist_session_id }}",
-            "state_json": "={{ $('Cotización - Gestionar borrador').item.json.persist_state_json }}"
+            "session_id": "={{ $('Cotización - Gestionar borrador').first().json.persist_session_id }}",
+            "state_json": "={{ $('Cotización - Gestionar borrador').first().json.persist_state_json }}"
           },
           "schema": [
             {
@@ -2120,7 +2120,8 @@
       ],
       "id": "911f13da-9ee7-4371-a1bb-4420f45748ec",
       "name": "Memoria - Guardar borrador",
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -2137,15 +2138,15 @@
             {
               "keyName": "session_id",
               "condition": "eq",
-              "keyValue": "={{ $('Cotización - Preparar datos Word PDF').item.json.persist_session_id }}"
+              "keyValue": "={{ $('Cotización - Preparar datos Word PDF').first().json.persist_session_id }}"
             }
           ]
         },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "session_id": "={{ $('Cotización - Preparar datos Word PDF').item.json.persist_session_id }}",
-            "state_json": "={{ $('Cotización - Preparar datos Word PDF').item.json.persist_state_json }}"
+            "session_id": "={{ $('Cotización - Preparar datos Word PDF').first().json.persist_session_id }}",
+            "state_json": "={{ $('Cotización - Preparar datos Word PDF').first().json.persist_state_json }}"
           },
           "schema": [
             {
@@ -2180,7 +2181,8 @@
       ],
       "id": "51166c92-ab63-4994-b07d-d3f8e2990d5a",
       "name": "Memoria - Guardar estado final",
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -5268,6 +5270,6 @@
   "nodeGroups": [],
   "tags": [],
   "meta": {
-    "praisaVersion": "1.6.7"
+    "praisaVersion": "1.6.8"
   }
 }
