@@ -217,10 +217,12 @@ function sendPromptNow(prompt) {
     const input = chatInput();
     if (!root || !input) return;
 
+    const fallbackButtons = [...root.querySelectorAll('.chat-input button, .chat-inputs button')]
+      .filter((button) => !button.classList.contains('praisa-voice-button'));
     const sendButton =
       root.querySelector('.chat-input-send-button') ||
       root.querySelector('button[type="submit"]') ||
-      root.querySelector('.chat-input button:last-of-type');
+      fallbackButtons.at(-1);
 
     if (sendButton && !sendButton.disabled) {
       sendButton.click();
