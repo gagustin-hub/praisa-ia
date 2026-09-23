@@ -1,5 +1,5 @@
 {
-  "name": "Praisa IA - Asistente Interno - Piloto v1.1 - Chat privado",
+  "name": "Praisa IA - Asistente Interno - Piloto v1.2 - Web privada",
   "nodes": [
     {
       "parameters": {
@@ -94,10 +94,12 @@
     },
     {
       "parameters": {
-        "public": false,
+        "public": true,
+        "mode": "webhook",
+        "authentication": "basicAuth",
         "availableInChat": true,
         "agentName": "Praisa IA Interno",
-        "agentDescription": "Asistente virtual interno de Praisa para consultas de CAF, productos, existencias, clientes, historial, base técnica y cotizaciones.",
+        "agentDescription": "Asistente virtual interno de Praisa para consultar CAF, productos, existencias, clientes, historial, base técnica y preparar cotizaciones.",
         "suggestedPrompts": {
           "prompts": [
             {
@@ -131,7 +133,9 @@
           ]
         },
         "options": {
-          "responseMode": "lastNode"
+          "allowedOrigins": "https://gagustin-hub.github.io",
+          "responseMode": "lastNode",
+          "loadPreviousSession": "notSupported"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
