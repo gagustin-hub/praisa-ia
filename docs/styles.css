@@ -1081,3 +1081,23 @@ html[data-theme="light"] #n8n-chat .chat-inputs textarea{
   height:auto!important;
   align-self:start!important;
 }
+
+
+/* FIX final de altura: la columna central usa flex y jamás iguala la altura del rail derecho */
+.main-column{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:12px!important;
+  align-self:start!important;
+  height:auto!important;
+  min-height:0!important;
+}
+.hero-card{
+  flex:0 0 auto!important;
+}
+.chat-shell{
+  flex:0 0 auto!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+}
