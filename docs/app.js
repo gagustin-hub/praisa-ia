@@ -1,6 +1,7 @@
 import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
 const WEBHOOK_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/c4c5322d-8e15-4f0c-a9fd-9a889fa30b27/chat';
+const PREF_KEY = 'praisa-ia-preferences-v1';
 
 const gate = document.getElementById('access-gate');
 const form = document.getElementById('access-form');
@@ -14,8 +15,130 @@ const statusText = document.getElementById('status-text');
 const helperText = document.getElementById('helper-text');
 const currentDate = document.getElementById('current-date');
 const currentTime = document.getElementById('current-time');
+const globalSearch = document.getElementById('global-search');
+const settingsButton = document.getElementById('settings-button');
+const settingsDrawer = document.getElementById('settings-drawer');
+const settingsBackdrop = document.getElementById('settings-backdrop');
+const settingsClose = document.getElementById('settings-close');
+const themeCycleButton = document.getElementById('theme-cycle-button');
+const motionToggle = document.getElementById('motion-toggle');
+const compactToggle = document.getElementById('compact-toggle');
+const resetPreferences = document.getElementById('reset-preferences');
+const navChat = document.getElementById('nav-chat');
 
 let chatStarted = false;
+let preferences = {
+  theme: 'dark',
+  motion: true,
+  compact: false
+};
+
+function loadPreferences() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PREF_KEY) || '{}');
+    preferences = { ...preferences, ...saved };
+  } catch {}
+}
+
+function savePreferences() {
+  localStorage.setItem(PREF_KEY, JSON.stringify(preferences));
+}
+
+function resolvedTheme() {
+  if (preferences.theme === 'system') {
+    return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  return preferences.theme;
+}
+
+function updateLogos(theme) {
+  const src = theme === 'light' ? 'logo-light.svg' : 'logo-dark.svg';
+  document.querySelectorAll('[data-theme-logo]').forEach((img) => {
+    if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+  });
+}
+
+function applyPreferences() {
+  const theme = resolvedTheme();
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.classList.toggle('reduce-motion', !preferences.motion);
+  document.documentElement.classList.toggle('compact', preferences.compact);
+  updateLogos(theme);
+
+  document.querySelectorAll('[data-theme-choice]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.themeChoice === preferences.theme);
+  });
+
+  if (motionToggle) motionToggle.checked = preferences.motion;
+  if (compactToggle) compactToggle.checked = preferences.compact;
+  if (themeCycleButton) {
+    themeCycleButton.textContent = theme === 'light' ? '☀' : '◐';
+    themeCycleButton.title = theme === 'light' ? 'Cambiar a tema oscuro' : 'Cambiar a tema claro';
+  }
+
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) metaTheme.setAttribute('content', theme === 'light' ? '#f4f7f9' : '#0d141d');
+}
+
+function setTheme(value) {
+  preferences.theme = value;
+  savePreferences();
+  applyPreferences();
+}
+
+loadPreferences();
+applyPreferences();
+
+matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => {
+  if (preferences.theme === 'system') applyPreferences();
+});
+
+function openSettings() {
+  settingsDrawer.classList.add('open');
+  settingsDrawer.setAttribute('aria-hidden', 'false');
+  settingsBackdrop.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSettings() {
+  settingsDrawer.classList.remove('open');
+  settingsDrawer.setAttribute('aria-hidden', 'true');
+  settingsBackdrop.hidden = true;
+  document.body.style.overflow = '';
+}
+
+settingsButton?.addEventListener('click', openSettings);
+settingsClose?.addEventListener('click', closeSettings);
+settingsBackdrop?.addEventListener('click', closeSettings);
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && settingsDrawer.classList.contains('open')) closeSettings();
+});
+
+document.querySelectorAll('[data-theme-choice]').forEach((button) => {
+  button.addEventListener('click', () => setTheme(button.dataset.themeChoice));
+});
+
+themeCycleButton?.addEventListener('click', () => {
+  setTheme(resolvedTheme() === 'dark' ? 'light' : 'dark');
+});
+
+motionToggle?.addEventListener('change', () => {
+  preferences.motion = motionToggle.checked;
+  savePreferences();
+  applyPreferences();
+});
+
+compactToggle?.addEventListener('change', () => {
+  preferences.compact = compactToggle.checked;
+  savePreferences();
+  applyPreferences();
+});
+
+resetPreferences?.addEventListener('click', () => {
+  preferences = { theme: 'dark', motion: true, compact: false };
+  savePreferences();
+  applyPreferences();
+});
 
 function setStatus(kind, title, text) {
   statusDot.classList.remove('online', 'error');
@@ -44,9 +167,17 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 30000);
 
+function chatInput() {
+  return document.querySelector('#n8n-chat textarea, #n8n-chat input[type="text"]');
+}
+
+function focusChat() {
+  document.querySelector('.chat-shell')?.scrollIntoView({ behavior: preferences.motion ? 'smooth' : 'auto', block: 'center' });
+  setTimeout(() => chatInput()?.focus(), preferences.motion ? 300 : 0);
+}
+
 function putPromptInChat(prompt) {
-  const root = document.getElementById('n8n-chat');
-  const input = root.querySelector('textarea, input[type="text"]');
+  const input = chatInput();
 
   if (!input) {
     helperText.textContent = 'El chat todavía está cargando.';
@@ -62,15 +193,44 @@ function putPromptInChat(prompt) {
   input.dispatchEvent(new Event('input', { bubbles: true }));
   input.dispatchEvent(new Event('change', { bubbles: true }));
   helperText.textContent = 'Mensaje preparado. Puedes editarlo antes de enviarlo.';
+  focusChat();
+}
+
+function setActiveNav(button) {
+  document.querySelectorAll('.side-link').forEach((item) => item.classList.remove('active'));
+  if (button?.classList.contains('side-link')) button.classList.add('active');
 }
 
 document.querySelectorAll('.quick-prompt').forEach((button) => {
   button.addEventListener('click', () => {
-    document.querySelectorAll('.side-link').forEach((item) => item.classList.remove('active'));
-    if (button.classList.contains('side-link')) button.classList.add('active');
+    setActiveNav(button);
     const prompt = button.dataset.prompt || '';
     if (prompt) putPromptInChat(prompt);
   });
+});
+
+navChat?.addEventListener('click', () => {
+  setActiveNav(navChat);
+  focusChat();
+});
+
+globalSearch?.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    const query = globalSearch.value.trim();
+    if (query) {
+      putPromptInChat(query);
+      globalSearch.value = '';
+    }
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+    event.preventDefault();
+    globalSearch?.focus();
+    globalSearch?.select();
+  }
 });
 
 function startChat(username, password) {
@@ -143,6 +303,4 @@ form.addEventListener('submit', (event) => {
   }
 });
 
-logoutButton.addEventListener('click', () => {
-  location.reload();
-});
+logoutButton.addEventListener('click', () => location.reload());
