@@ -378,3 +378,9 @@ html[data-theme="light"] .chat-card #n8n-chat .chat-message-from-bot .chat-messa
   background:#fff5f5!important;
   border-color:#e4a1a5!important;
 }
+
+
+.chat-card #n8n-chat.praisa-validating-stock .chat-message-typing::before{
+  content:"Validando producto y existencias en CAF";
+  color:#f4f7fa!important;
+}
