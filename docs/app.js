@@ -259,12 +259,16 @@ function updateSessionContext(text) {
     flashContext(contextClient);
   }
 
+  const explicitProduct = upper.match(/(?:CÓDIGO|CODIGO)(?:\s+CAF)?\s*:\s*([A-Z0-9-]{5,})/)?.[1];
+  const internalProduct = upper.match(/\b\d{2}[A-Z]{2,}\d{3,}\b/)?.[0];
   const allCodes = upper.match(/\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\d)[A-Z0-9-]{5,}\b/g) || [];
-  const product = [...allCodes].reverse().find((value) =>
+  const fallbackProduct = [...allCodes].reverse().find((value) =>
     !/^[A-Z]{1,5}-\d{2,8}$/.test(value) &&
+    !/^\d{2,}-[A-Z]/.test(value) &&
     !/^COT-/.test(value) &&
     !/^GTQ/.test(value)
   );
+  const product = explicitProduct || internalProduct || fallbackProduct;
   if (product && contextProduct && contextProduct.textContent !== product) {
     contextProduct.textContent = product;
     flashContext(contextProduct);
