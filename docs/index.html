@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Asistente Comercial Praisa para cotizaciones, existencias y soporte técnico." />
+  <title>Praisa | Asistente Comercial</title>
+
+  <link rel="icon" href="logo.svg" type="image/svg+xml" />
+  <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="logo.svg" alt="Praisa - Proveedores y Asesores Industriales, S.A." class="brand-logo" />
+      <div class="brand-divider" aria-hidden="true"></div>
+      <div>
+        <p class="eyebrow">ASISTENTE COMERCIAL</p>
+        <h1>Praisa IA</h1>
+        <p class="brand-subtitle">Cotizaciones, existencias y soporte técnico</p>
+      </div>
+    </div>
+
+    <div class="topbar-status">
+      <span class="status-dot" id="status-dot"></span>
+      <div>
+        <strong id="status-title">Conectando</strong>
+        <span id="status-text">Preparando el asistente</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="left-panel">
+      <nav class="nav-card" aria-label="Opciones del asistente">
+        <button class="nav-item active" type="button" data-prompt="">
+          <span class="nav-icon">✦</span>
+          <span><strong>Chat</strong><small>Asistente Praisa IA</small></span>
+        </button>
+        <button class="nav-item quick-prompt" type="button" data-prompt="Quiero iniciar una cotización.">
+          <span class="nav-icon">▤</span>
+          <span><strong>Cotizar</strong><small>Crear borrador</small></span>
+        </button>
+        <button class="nav-item quick-prompt" type="button" data-prompt="Quiero consultar la existencia de un producto.">
+          <span class="nav-icon">▣</span>
+          <span><strong>Existencias</strong><small>Consultar CAF</small></span>
+        </button>
+        <button class="nav-item quick-prompt" type="button" data-prompt="Necesito buscar un producto por descripción técnica.">
+          <span class="nav-icon">⌕</span>
+          <span><strong>Buscar producto</strong><small>Descripción técnica</small></span>
+        </button>
+      </nav>
+
+      <section class="industry-card">
+        <p class="eyebrow">PRAISA</p>
+        <h2>La industria cuenta con nosotros.</h2>
+        <p>Soluciones industriales con respaldo técnico y comercial.</p>
+        <div class="industry-lines" aria-hidden="true"><i></i><i></i><i></i></div>
+      </section>
+    </aside>
+
+    <section class="chat-column">
+      <div class="chat-heading">
+        <div>
+          <span class="live-badge"><i></i> Asistente en línea</span>
+          <h2>¿En qué podemos ayudarle?</h2>
+          <p>Escriba su necesidad en lenguaje natural. Praisa IA consultará las fuentes disponibles del flujo.</p>
+        </div>
+      </div>
+
+      <div class="quick-actions" aria-label="Acciones rápidas">
+        <button class="action-chip quick-prompt" type="button" data-prompt="Quiero cotizar un producto.">Cotizar producto</button>
+        <button class="action-chip quick-prompt" type="button" data-prompt="Quiero consultar existencia.">Consultar existencia</button>
+        <button class="action-chip quick-prompt" type="button" data-prompt="Estoy buscando un producto y quiero describir mi necesidad.">Buscar por descripción</button>
+      </div>
+
+      <div class="chat-card">
+        <div id="n8n-chat" aria-label="Chat con Praisa IA"></div>
+      </div>
+
+      <p class="helper-text" id="helper-text">
+        Puede escribir, por ejemplo: “válvula de bola de 2 pulgadas para vapor” o “cotizar 4 unidades del código 18DEL0005 para AR-026”.
+      </p>
+    </section>
+
+    <aside class="right-panel">
+      <section class="info-card">
+        <div class="info-card-head">
+          <span class="info-icon">●</span>
+          <h3>Estado del servicio</h3>
+        </div>
+        <strong class="online-text">En línea</strong>
+        <p>Conectado al flujo de Praisa IA en n8n.</p>
+      </section>
+
+      <section class="info-card">
+        <div class="info-card-head">
+          <span class="info-icon">✓</span>
+          <h3>Puede ayudarle con</h3>
+        </div>
+        <ul class="feature-list">
+          <li>Productos y Precio A</li>
+          <li>Existencias por bodega</li>
+          <li>Clientes e historial</li>
+          <li>Borradores de cotización</li>
+          <li>Búsqueda técnica asistida</li>
+        </ul>
+      </section>
+
+      <section class="info-card accent-card">
+        <p class="eyebrow">SOPORTE</p>
+        <h3>¿Necesita asesoría?</h3>
+        <p>Praisa IA puede recopilar la necesidad y facilitar el seguimiento comercial.</p>
+      </section>
+    </aside>
+  </main>
+
+  <footer>
+    <span>© 2026 Praisa. Proveedores y Asesores Industriales, S.A.</span>
+    <span>Soluciones industriales para un mejor mañana.</span>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
