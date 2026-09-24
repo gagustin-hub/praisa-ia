@@ -1,0 +1,113 @@
+{
+  "name": "Praisa IA - Voz en Tiempo Real v2.0",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "praisa-realtime-token-7c6d5f2a-2026",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://gagustin-hub.github.io"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a1000000-0000-4000-8000-000000000001",
+      "name": "Realtime - Solicitar sesión",
+      "webhookId": "7c6d5f2a-1a11-4b22-9333-000000000200"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/realtime/client_secrets",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"session\": {\n    \"type\": \"transcription\",\n    \"audio\": {\n      \"input\": {\n        \"transcription\": {\n          \"model\": \"gpt-live-transcribe\",\n          \"prompt\": \"Dictado interno de Praisa en español de Guatemala para ventas industriales, consultas de clientes, productos, existencias y cotizaciones. Transcribe literalmente sin inventar texto.\",\n          \"keywords\": [\n            \"Praisa\",\n            \"CAF\",\n            \"cotización\",\n            \"cotizar\",\n            \"cliente\",\n            \"producto\",\n            \"código\",\n            \"existencia\",\n            \"asesor\",\n            \"Ingenio Magdalena\",\n            \"Ingenio Tululá\",\n            \"Olmeca\",\n            \"válvula\",\n            \"manómetro\",\n            \"trampa de vapor\",\n            \"aislamiento térmico\"\n          ],\n          \"languages\": [\"es\"],\n          \"delay\": \"low\"\n        },\n        \"turn_detection\": null\n      }\n    }\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        260,
+        0
+      ],
+      "id": "a1000000-0000-4000-8000-000000000002",
+      "name": "Realtime - Crear token OpenAI"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://gagustin-hub.github.io"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        520,
+        0
+      ],
+      "id": "a1000000-0000-4000-8000-000000000003",
+      "name": "Realtime - Entregar token"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Realtime - Solicitar sesión": {
+      "main": [
+        [
+          {
+            "node": "Realtime - Crear token OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Realtime - Crear token OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Realtime - Entregar token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "praisaVoiceVersion": "2.0",
+    "mode": "realtime-transcription",
+    "requiresOpenAICredential": true
+  },
+  "tags": []
+}
