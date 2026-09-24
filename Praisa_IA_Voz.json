@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "praisa-voice-transcribe",
+        "path": "praisa-voice-b8a6c1f4-7a10-4a3f-91d9-0a0000000180",
         "responseMode": "responseNode",
         "options": {
           "allowedOrigins": "https://gagustin-hub.github.io"
