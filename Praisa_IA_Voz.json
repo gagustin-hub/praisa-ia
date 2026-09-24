@@ -1,0 +1,129 @@
+{
+  "name": "Praisa IA - Transcripción de Voz v1.0",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "praisa-voice-transcribe",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://gagustin-hub.github.io"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c4bd6b60-voice-4000-8000-000000000001",
+      "name": "Voz - Recibir audio",
+      "webhookId": "b8a6c1f4-7a10-4a3f-91d9-0a0000000180"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "audiofile",
+        "options": {
+          "language": "es",
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "c4bd6b60-voice-4000-8000-000000000002",
+      "name": "Voz - Transcribir audio"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json || {};\nconst texto = String(j.text ?? j.transcript ?? j.data?.text ?? '').trim();\nreturn [{ json: { text: texto, success: Boolean(texto) } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "id": "c4bd6b60-voice-4000-8000-000000000003",
+      "name": "Voz - Normalizar texto"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { text: $json.text, success: $json.success } }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://gagustin-hub.github.io"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        720,
+        0
+      ],
+      "id": "c4bd6b60-voice-4000-8000-000000000004",
+      "name": "Voz - Responder transcripción"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Voz - Recibir audio": {
+      "main": [
+        [
+          {
+            "node": "Voz - Transcribir audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voz - Transcribir audio": {
+      "main": [
+        [
+          {
+            "node": "Voz - Normalizar texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voz - Normalizar texto": {
+      "main": [
+        [
+          {
+            "node": "Voz - Responder transcripción",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "praisaVoiceVersion": "1.0",
+    "requiresOpenAICredential": true
+  },
+  "tags": []
+}
