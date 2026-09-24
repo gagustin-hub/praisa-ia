@@ -1,8 +1,9 @@
 import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
 const WEBHOOK_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/8f4d8f21-7b6a-4f47-9d2e-166000000167/chat';
+const VOICE_TRANSCRIBE_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/praisa-voice-b8a6c1f4-7a10-4a3f-91d9-0a0000000180';
 const PREF_KEY = 'praisa-ia-preferences-v1';
-const UI_BUILD = 'v20-direct-audio';
+const UI_BUILD = 'v21-record-transcribe';
 
 const gate = document.getElementById('access-gate');
 const form = document.getElementById('access-form');
@@ -239,20 +240,12 @@ function sendPromptNow(prompt) {
   }, 90);
 }
 
-const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-let voiceRecognition = null;
-let voiceListening = false;
-let voiceFinalText = '';
-let voiceInterimText = '';
-let voiceBaseText = '';
-let voiceHadError = false;
-let micPermissionGranted = false;
+const MIC_DEVICE_KEY = 'praisa-ia-mic-device-v1';
 let voiceStream = null;
-let voiceAudioContext = null;
-let voiceAnalyser = null;
-let voiceMeterFrame = null;
-let voiceAudioDetected = false;
-let voiceTranscriptDetected = false;
+let voiceRecorder = null;
+let voiceChunks = [];
+let voiceRecording = false;
+let voiceSending = false;
 
 function setChatInputValue(value) {
   const input = chatInput();
@@ -268,437 +261,290 @@ function setChatInputValue(value) {
   return true;
 }
 
-function updateVoiceButtonState() {
-  const button = document.querySelector('#n8n-chat .praisa-voice-button');
-  const root = document.getElementById('n8n-chat');
-  if (!button || !root) return;
-
-  button.classList.toggle('is-listening', voiceListening);
-  button.setAttribute('aria-pressed', voiceListening ? 'true' : 'false');
-  button.setAttribute('aria-label', voiceListening ? 'Detener dictado' : 'Hablar con Praisa IA');
-  button.title = voiceListening ? 'Detener dictado' : 'Hablar con Praisa IA';
-  root.classList.toggle('praisa-voice-listening', voiceListening);
+function voiceButton() {
+  return document.querySelector('#n8n-chat .praisa-voice-button');
 }
 
-function ensureVoiceMeter() {
-  const root = document.getElementById('n8n-chat');
-  if (!root) return null;
-
-  let meter = root.querySelector('.praisa-voice-meter');
-  if (meter) return meter;
-
-  const helper = helperText?.parentElement || helperText;
-  if (!helper) return null;
-
-  meter = document.createElement('div');
-  meter.className = 'praisa-voice-meter';
-  meter.setAttribute('aria-hidden','true');
-  meter.innerHTML = '<span></span>';
-  helper.appendChild(meter);
-  return meter;
+function microphoneSelect() {
+  return document.querySelector('#n8n-chat .praisa-mic-select');
 }
 
-function resetVoiceMeter() {
+function setVoiceUi(state, message) {
   const root = document.getElementById('n8n-chat');
-  const meter = root?.querySelector('.praisa-voice-meter');
-  root?.classList.remove('praisa-audio-detected');
-  if (meter) meter.style.setProperty('--voice-level','0');
+  const button = voiceButton();
+  if (!root || !button) return;
+
+  const recording = state === 'recording';
+  const sending = state === 'sending';
+
+  voiceRecording = recording;
+  voiceSending = sending;
+
+  root.classList.toggle('praisa-voice-listening', recording);
+  root.classList.toggle('praisa-voice-sending', sending);
+  button.classList.toggle('is-listening', recording);
+  button.classList.toggle('is-sending', sending);
+  button.disabled = sending;
+
+  button.setAttribute('aria-pressed', recording ? 'true' : 'false');
+  button.setAttribute('aria-label', recording ? 'Detener grabación' : 'Hablar con Praisa IA');
+  button.title = recording ? 'Detener grabación' : 'Hablar con Praisa IA';
+
+  if (message) helperText.textContent = message;
 }
 
-function stopVoiceCapture() {
-  if (voiceMeterFrame) {
-    cancelAnimationFrame(voiceMeterFrame);
-    voiceMeterFrame = null;
-  }
-
-  if (voiceAudioContext) {
-    try { voiceAudioContext.close(); } catch {}
-    voiceAudioContext = null;
-  }
-
-  voiceAnalyser = null;
-
+function cleanupVoiceStream() {
   if (voiceStream) {
     try { voiceStream.getTracks().forEach(track => track.stop()); } catch {}
-    voiceStream = null;
   }
-
-  resetVoiceMeter();
+  voiceStream = null;
 }
 
-function finishVoiceState() {
-  voiceListening = false;
-  updateVoiceButtonState();
-}
-
-function voicePermissionMessage(error) {
-  const name = error?.name || error?.message || '';
-
-  if (/NotAllowedError|PermissionDeniedError|not-allowed|service-not-allowed/i.test(name)) {
-    return 'Chrome tiene bloqueado el micrófono. Pulsa el icono del micrófono/candado junto a la dirección → Micrófono → Permitir.';
-  }
-  if (/NotFoundError|DevicesNotFoundError|no-audio-track/i.test(name)) {
-    return 'No encontré un micrófono disponible. Revisa el dispositivo de entrada de Windows.';
-  }
-  if (/NotReadableError|TrackStartError/i.test(name)) {
-    return 'El micrófono no puede abrirse. Puede estar ocupado por otra aplicación.';
-  }
-  if (/insecure-context/i.test(name)) {
-    return 'El micrófono requiere una conexión HTTPS.';
-  }
-  return 'No pude abrir el micrófono. Revisa los permisos de Chrome.';
-}
-
-async function openVoiceStream() {
-  if (!window.isSecureContext) throw new Error('insecure-context');
-  if (!navigator.mediaDevices?.getUserMedia) throw new Error('media-devices-unavailable');
-
-  stopVoiceCapture();
-
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-      channelCount: 1
-    }
-  });
-
-  const track = stream.getAudioTracks()[0];
-  if (!track || track.readyState !== 'live') {
-    stream.getTracks().forEach(t => t.stop());
-    throw new Error('no-audio-track');
-  }
-
-  try { track.contentHint = 'speech-recognition'; } catch {}
-
-  voiceStream = stream;
-  micPermissionGranted = true;
-  return { stream, track };
-}
-
-function startVoiceMeter(stream) {
-  const root = document.getElementById('n8n-chat');
-  const meter = ensureVoiceMeter();
-  if (!root || !meter) return;
-
-  const AudioContextAPI = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextAPI) return;
+async function refreshMicrophoneDevices() {
+  const select = microphoneSelect();
+  if (!select || !navigator.mediaDevices?.enumerateDevices) return;
 
   try {
-    voiceAudioContext = new AudioContextAPI();
-    const source = voiceAudioContext.createMediaStreamSource(stream);
-    voiceAnalyser = voiceAudioContext.createAnalyser();
-    voiceAnalyser.fftSize = 512;
-    voiceAnalyser.smoothingTimeConstant = 0.72;
-    source.connect(voiceAnalyser);
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const microphones = devices.filter(device => device.kind === 'audioinput');
+    const saved = localStorage.getItem(MIC_DEVICE_KEY) || '';
 
-    const data = new Uint8Array(voiceAnalyser.fftSize);
-    let consecutive = 0;
+    select.innerHTML = '';
 
-    const draw = () => {
-      if (!voiceAnalyser) return;
+    const auto = document.createElement('option');
+    auto.value = '';
+    auto.textContent = 'Micrófono predeterminado';
+    select.appendChild(auto);
 
-      voiceAnalyser.getByteTimeDomainData(data);
-      let sum = 0;
-      for (let i = 0; i < data.length; i++) {
-        const sample = (data[i] - 128) / 128;
-        sum += sample * sample;
-      }
+    microphones.forEach((device, index) => {
+      const option = document.createElement('option');
+      option.value = device.deviceId;
+      option.textContent = device.label || ('Micrófono ' + (index + 1));
+      select.appendChild(option);
+    });
 
-      const rms = Math.sqrt(sum / data.length);
-      const level = Math.min(1, rms * 9);
-      meter.style.setProperty('--voice-level', String(level));
+    if (saved && [...select.options].some(option => option.value === saved)) {
+      select.value = saved;
+    }
+  } catch (error) {
+    console.warn('No pude listar micrófonos:', error);
+  }
+}
 
-      if (rms > 0.018) consecutive++;
-      else consecutive = Math.max(0, consecutive - 1);
+function selectedAudioConstraints() {
+  const selected = microphoneSelect()?.value || '';
+  const base = {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+    channelCount: 1
+  };
 
-      if (consecutive >= 3 && !voiceAudioDetected) {
-        voiceAudioDetected = true;
-        root.classList.add('praisa-audio-detected');
+  return selected
+    ? { ...base, deviceId: { exact: selected } }
+    : base;
+}
 
-        if (!voiceTranscriptDetected) {
-          helperText.textContent = '🔊 Audio detectado. Reconociendo lo que dices…';
-        }
-      }
+function chooseRecorderMimeType() {
+  const candidates = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/ogg;codecs=opus',
+    'audio/mp4'
+  ];
 
-      voiceMeterFrame = requestAnimationFrame(draw);
+  return candidates.find(type => window.MediaRecorder?.isTypeSupported?.(type)) || '';
+}
+
+async function sendRecordedAudio(blob, mimeType) {
+  if (!blob || blob.size < 500) {
+    setVoiceUi('idle', 'La grabación quedó vacía. Inténtalo de nuevo.');
+    return;
+  }
+
+  setVoiceUi('sending', '⏳ Enviando audio a Praisa IA para transcribir…');
+
+  const extension =
+    mimeType.includes('mp4') ? 'm4a' :
+    mimeType.includes('ogg') ? 'ogg' : 'webm';
+
+  const form = new FormData();
+  form.append('audiofile', blob, 'praisa-voz.' + extension);
+
+  try {
+    const response = await fetch(VOICE_TRANSCRIBE_URL, {
+      method: 'POST',
+      body: form
+    });
+
+    const raw = await response.text();
+
+    if (!response.ok) {
+      throw new Error('HTTP ' + response.status + ': ' + raw.slice(0,220));
+    }
+
+    let data = {};
+    try { data = JSON.parse(raw); }
+    catch { data = { text: raw }; }
+
+    const transcript = String(data.text || data.transcript || '').trim();
+
+    if (!transcript) {
+      throw new Error('La transcripción llegó vacía.');
+    }
+
+    setChatInputValue(transcript);
+    setVoiceUi('idle', '✅ Entendí: “' + transcript + '” · enviando al chat…');
+    setTimeout(() => sendPromptNow(transcript), 250);
+  } catch (error) {
+    console.error('Transcripción de voz:', error);
+    setVoiceUi(
+      'idle',
+      'La grabación sí se realizó, pero el servicio de transcripción aún no está conectado en n8n.'
+    );
+  }
+}
+
+async function startVoiceRecording() {
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+    helperText.textContent = 'Este navegador no permite grabar audio desde esta página.';
+    return;
+  }
+
+  if (voiceSending) return;
+
+  if (voiceRecording && voiceRecorder) {
+    setVoiceUi('idle', 'Procesando grabación…');
+    try { voiceRecorder.stop(); } catch {}
+    return;
+  }
+
+  cleanupVoiceStream();
+  voiceChunks = [];
+
+  try {
+    helperText.textContent = 'Abriendo el micrófono seleccionado…';
+
+    voiceStream = await navigator.mediaDevices.getUserMedia({
+      audio: selectedAudioConstraints()
+    });
+
+    await refreshMicrophoneDevices();
+
+    const audioTrack = voiceStream.getAudioTracks()[0];
+    const deviceName = audioTrack?.label || 'Micrófono';
+
+    const mimeType = chooseRecorderMimeType();
+    const options = mimeType ? { mimeType } : undefined;
+
+    voiceRecorder = new MediaRecorder(voiceStream, options);
+
+    voiceRecorder.ondataavailable = event => {
+      if (event.data && event.data.size > 0) voiceChunks.push(event.data);
     };
 
-    draw();
-  } catch (error) {
-    console.warn('Medidor de audio no disponible:', error);
-  }
-}
+    voiceRecorder.onerror = event => {
+      console.error('MediaRecorder:', event.error || event);
+      cleanupVoiceStream();
+      voiceRecorder = null;
+      setVoiceUi('idle', 'No pude grabar el audio. Revisa el micrófono seleccionado.');
+    };
 
-async function configureRecognitionLanguage(recognition) {
-  const localCtor = window.SpeechRecognition;
-  const localSupported =
-    localCtor &&
-    typeof localCtor.available === 'function' &&
-    typeof localCtor.install === 'function' &&
-    'processLocally' in recognition;
+    voiceRecorder.onstop = async () => {
+      const actualMime = voiceRecorder?.mimeType || mimeType || 'audio/webm';
+      const blob = new Blob(voiceChunks, { type: actualMime });
 
-  const remoteFallback = () => {
-    recognition.lang = 'es-GT';
-    try { recognition.processLocally = false; } catch {}
-    return { mode:'remote', lang:'es-GT' };
-  };
+      cleanupVoiceStream();
+      voiceRecorder = null;
+      voiceChunks = [];
 
-  if (!localSupported) return remoteFallback();
+      await sendRecordedAudio(blob, actualMime);
+    };
 
-  const candidates = ['es-MX','es-ES'];
+    voiceRecorder.start(250);
 
-  for (const lang of candidates) {
-    try {
-      const status = await localCtor.available({
-        langs:[lang],
-        processLocally:true,
-        quality:'dictation'
-      });
-
-      if (status === 'available') {
-        recognition.lang = lang;
-        recognition.processLocally = true;
-        return { mode:'local', lang };
-      }
-
-      if (status === 'downloadable') {
-        helperText.textContent = 'Preparando reconocimiento de voz en español por primera vez…';
-        const installed = await localCtor.install({
-          langs:[lang],
-          processLocally:true,
-          quality:'dictation'
-        });
-
-        if (installed) {
-          recognition.lang = lang;
-          recognition.processLocally = true;
-          return { mode:'local', lang };
-        }
-      }
-    } catch (error) {
-      console.warn('Reconocimiento local no disponible para', lang, error);
-    }
-  }
-
-  return remoteFallback();
-}
-
-async function startVoiceDictation() {
-  if (voiceListening && voiceRecognition) {
-    try { voiceRecognition.stop(); } catch {}
-    return;
-  }
-
-  if (!SpeechRecognitionAPI) {
-    helperText.textContent = 'Este navegador no ofrece reconocimiento de voz. Usa Chrome o Edge actualizado.';
-    return;
-  }
-
-  if (!chatInput()) {
-    helperText.textContent = 'El chat todavía está cargando.';
-    return;
-  }
-
-  let capture;
-  try {
-    helperText.textContent = micPermissionGranted
-      ? 'Abriendo micrófono…'
-      : 'Solicitando acceso al micrófono…';
-
-    capture = await openVoiceStream();
+    setVoiceUi(
+      'recording',
+      '🔴 Grabando con ' + deviceName + ' · habla y vuelve a pulsar 🎙️ para terminar.'
+    );
   } catch (error) {
     console.error('Micrófono:', error);
-    helperText.textContent = voicePermissionMessage(error);
-    stopVoiceCapture();
-    return;
-  }
+    cleanupVoiceStream();
 
-  const { stream, track } = capture;
-  const deviceLabel = track.label || 'Micrófono de Windows';
-
-  voiceFinalText = '';
-  voiceInterimText = '';
-  voiceBaseText = (chatInput()?.value || '').trim();
-  voiceHadError = false;
-  voiceAudioDetected = false;
-  voiceTranscriptDetected = false;
-
-  startVoiceMeter(stream);
-
-  const recognition = new SpeechRecognitionAPI();
-  voiceRecognition = recognition;
-  recognition.interimResults = true;
-  recognition.continuous = false;
-  recognition.maxAlternatives = 3;
-
-  const recognitionConfig = await configureRecognitionLanguage(recognition);
-
-  recognition.onstart = () => {
-    voiceListening = true;
-    updateVoiceButtonState();
-    helperText.textContent =
-      '🎙️ ' + deviceLabel + ' activo · habla ahora' +
-      (recognitionConfig.mode === 'local' ? ' · reconocimiento local' : '');
-  };
-
-  recognition.onaudiostart = () => {
-    helperText.textContent = '🎙️ Micrófono activo · esperando voz…';
-  };
-
-  recognition.onsoundstart = () => {
-    if (!voiceTranscriptDetected) helperText.textContent = '🔊 Sonido detectado · procesando…';
-  };
-
-  recognition.onspeechstart = () => {
-    helperText.textContent = '🗣️ Voz detectada · sigue hablando…';
-  };
-
-  recognition.onresult = (event) => {
-    voiceTranscriptDetected = true;
-    let interim = '';
-    let finalChunk = '';
-
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const transcript = (event.results[i][0]?.transcript || '').trim();
-      if (!transcript) continue;
-
-      if (event.results[i].isFinal) {
-        finalChunk += (finalChunk ? ' ' : '') + transcript;
-      } else {
-        interim += (interim ? ' ' : '') + transcript;
-      }
-    }
-
-    if (finalChunk) {
-      voiceFinalText = [voiceFinalText, finalChunk].filter(Boolean).join(' ').trim();
-    }
-
-    voiceInterimText = interim.trim();
-
-    const spoken = [voiceFinalText, voiceInterimText].filter(Boolean).join(' ').trim();
-    const combined = [voiceBaseText, spoken]
-      .filter(Boolean)
-      .join(voiceBaseText && spoken ? ' ' : '')
-      .trim();
-
-    if (combined) setChatInputValue(combined);
-    if (spoken) helperText.textContent = '🗣️ “' + spoken + '”';
-  };
-
-  recognition.onerror = (event) => {
-    const code = event.error || '';
-    console.error('Reconocimiento de voz:', code, event);
-
-    if (code === 'aborted') return;
-
-    voiceHadError = true;
-
-    if (code === 'not-allowed' || code === 'service-not-allowed') {
-      helperText.textContent = 'El servicio de reconocimiento de voz está bloqueado por Chrome.';
-    } else if (code === 'audio-capture') {
-      helperText.textContent = 'Chrome perdió la pista de audio. Revisa el dispositivo de entrada.';
-    } else if (code === 'network') {
-      helperText.textContent = 'El reconocimiento remoto de Chrome falló por red.';
-    } else if (code === 'language-not-supported') {
-      helperText.textContent = 'El paquete de español no está disponible. Cambiando a reconocimiento remoto…';
-    } else if (code === 'no-speech') {
-      helperText.textContent = voiceAudioDetected
-        ? '🔊 Sí recibí audio del micrófono, pero Chrome no lo convirtió a texto.'
-        : 'No llegó señal de voz. Revisa el micrófono seleccionado en Windows/Chrome.';
+    const name = error?.name || '';
+    if (name === 'NotAllowedError') {
+      helperText.textContent = 'Chrome tiene bloqueado el micrófono. Permítelo desde el icono junto a la dirección.';
+    } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+      helperText.textContent = 'El micrófono seleccionado ya no está disponible. Elige otro en la lista.';
+      localStorage.removeItem(MIC_DEVICE_KEY);
+      await refreshMicrophoneDevices();
     } else {
-      helperText.textContent = 'No pude reconocer la voz (' + code + ').';
-    }
-  };
-
-  recognition.onend = () => {
-    const recognised = (voiceFinalText || voiceInterimText || '').trim();
-    const finalMessage = [voiceBaseText, recognised]
-      .filter(Boolean)
-      .join(voiceBaseText && recognised ? ' ' : '')
-      .trim();
-
-    finishVoiceState();
-    voiceRecognition = null;
-    stopVoiceCapture();
-
-    if (recognised && finalMessage) {
-      setChatInputValue(finalMessage);
-      helperText.textContent = '✅ Voz reconocida. Enviando a Praisa IA…';
-      setTimeout(() => sendPromptNow(finalMessage), 220);
-      return;
-    }
-
-    if (!voiceHadError) {
-      helperText.textContent = voiceAudioDetected
-        ? '🔊 El micrófono sí recibió tu voz, pero el motor de Chrome no devolvió texto.'
-        : 'No detecté señal de voz del micrófono.';
-    }
-  };
-
-  try {
-    // Modern Web Speech can accept the exact MediaStreamTrack. This avoids
-    // Chrome selecting a different input device behind the scenes.
-    recognition.start(track);
-  } catch (error) {
-    console.warn('start(audioTrack) no disponible; usando micrófono por defecto.', error);
-    try {
-      recognition.start();
-    } catch (fallbackError) {
-      console.error(fallbackError);
-      finishVoiceState();
-      voiceRecognition = null;
-      stopVoiceCapture();
-      helperText.textContent = 'No pude iniciar el reconocimiento de voz.';
+      helperText.textContent = 'No pude abrir el micrófono seleccionado.';
     }
   }
 }
 
-function ensureVoiceButton() {
+function ensureVoiceControls() {
   const root = document.getElementById('n8n-chat');
   const input = chatInput();
   if (!root || !input) return;
 
-  if (root.querySelector('.praisa-voice-button')) {
-    updateVoiceButtonState();
-    return;
-  }
-
   const composer = input.closest('.chat-inputs') || input.parentElement;
   if (!composer) return;
 
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'praisa-voice-button';
-  button.innerHTML = '<span aria-hidden="true">🎙️</span>';
-  button.setAttribute('aria-label', 'Hablar con Praisa IA');
-  button.setAttribute('aria-pressed', 'false');
-  button.title = 'Hablar con Praisa IA';
+  if (!root.querySelector('.praisa-voice-button')) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'praisa-voice-button';
+    button.innerHTML = '<span aria-hidden="true">🎙️</span>';
+    button.setAttribute('aria-label', 'Hablar con Praisa IA');
+    button.title = 'Hablar con Praisa IA';
 
-  if (!SpeechRecognitionAPI || !navigator.mediaDevices?.getUserMedia) {
-    button.classList.add('is-unsupported');
-    button.title = 'Dictado no disponible en este navegador';
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      startVoiceRecording();
+    });
+
+    const sendButton =
+      composer.querySelector('.chat-input-send-button') ||
+      composer.querySelector('button[type="submit"]');
+
+    if (sendButton && sendButton.parentElement === composer) {
+      composer.insertBefore(button, sendButton);
+    } else {
+      composer.appendChild(button);
+    }
   }
 
-  button.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    startVoiceDictation();
-  });
+  if (!root.querySelector('.praisa-mic-device-wrap')) {
+    const wrap = document.createElement('div');
+    wrap.className = 'praisa-mic-device-wrap';
 
-  const sendButton =
-    composer.querySelector('.chat-input-send-button') ||
-    composer.querySelector('button[type="submit"]');
+    const label = document.createElement('span');
+    label.textContent = 'Micrófono:';
 
-  if (sendButton && sendButton.parentElement === composer) {
-    composer.insertBefore(button, sendButton);
-  } else {
-    composer.appendChild(button);
+    const select = document.createElement('select');
+    select.className = 'praisa-mic-select';
+    select.setAttribute('aria-label', 'Seleccionar micrófono');
+
+    select.addEventListener('change', () => {
+      localStorage.setItem(MIC_DEVICE_KEY, select.value || '');
+      helperText.textContent = 'Micrófono seleccionado. Pulsa 🎙️ para comenzar a grabar.';
+    });
+
+    wrap.append(label, select);
+
+    const helperParent = helperText?.parentElement || root;
+    helperParent.appendChild(wrap);
+
+    refreshMicrophoneDevices();
   }
-
-  ensureVoiceMeter();
 }
+
+navigator.mediaDevices?.addEventListener?.('devicechange', () => {
+  refreshMicrophoneDevices();
+});
 
 function enhanceAdvisorSelector(message) {
   if (!message || message.dataset.praisaAdvisorSelector === 'true') return;
@@ -905,7 +751,7 @@ function observeChatContext() {
       updateSessionContext(text);
     }
     enhanceMessages();
-    ensureVoiceButton();
+    ensureVoiceControls();
   };
 
   const observer = new MutationObserver(read);
@@ -958,7 +804,7 @@ function startChat(username, password) {
   setStatus('online', 'Sesión interna', 'Praisa IA conectado');
   passInput.value = '';
   setTimeout(() => {
-    helperText.textContent = 'Praisa IA ' + UI_BUILD + ' · Puedes escribir o usar el micrófono 🎙️.';
+    helperText.textContent = 'Praisa IA ' + UI_BUILD + ' · Elige micrófono, pulsa 🎙️ para grabar y vuelve a pulsar para enviar.';
     observeChatContext();
   }, 600);
 }
