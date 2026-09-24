@@ -3,7 +3,7 @@ import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bun
 const WEBHOOK_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/8f4d8f21-7b6a-4f47-9d2e-166000000167/chat';
 const VOICE_TRANSCRIBE_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/praisa-voice-b8a6c1f4-7a10-4a3f-91d9-0a0000000180';
 const PREF_KEY = 'praisa-ia-preferences-v1';
-const UI_BUILD = 'v21-record-transcribe';
+const UI_BUILD = 'v22-mic-selector-fix';
 
 const gate = document.getElementById('access-gate');
 const form = document.getElementById('access-form');
@@ -266,7 +266,7 @@ function voiceButton() {
 }
 
 function microphoneSelect() {
-  return document.querySelector('#n8n-chat .praisa-mic-select');
+  return document.querySelector('.praisa-mic-select');
 }
 
 function setVoiceUi(state, message) {
@@ -302,19 +302,23 @@ function cleanupVoiceStream() {
 
 async function refreshMicrophoneDevices() {
   const select = microphoneSelect();
-  if (!select || !navigator.mediaDevices?.enumerateDevices) return;
+  if (!select) return;
+
+  select.innerHTML = '';
+  const auto = document.createElement('option');
+  auto.value = '';
+  auto.textContent = 'Micrófono predeterminado';
+  select.appendChild(auto);
+
+  if (!navigator.mediaDevices?.enumerateDevices) {
+    select.disabled = true;
+    return;
+  }
 
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const microphones = devices.filter(device => device.kind === 'audioinput');
     const saved = localStorage.getItem(MIC_DEVICE_KEY) || '';
-
-    select.innerHTML = '';
-
-    const auto = document.createElement('option');
-    auto.value = '';
-    auto.textContent = 'Micrófono predeterminado';
-    select.appendChild(auto);
 
     microphones.forEach((device, index) => {
       const option = document.createElement('option');
@@ -323,11 +327,18 @@ async function refreshMicrophoneDevices() {
       select.appendChild(option);
     });
 
+    select.disabled = false;
+
     if (saved && [...select.options].some(option => option.value === saved)) {
       select.value = saved;
     }
+
+    if (microphones.length === 0) {
+      helperText.textContent = 'No encontré micrófonos. Pulsa 🎙️ una vez para conceder acceso y volveré a buscarlos.';
+    }
   } catch (error) {
     console.warn('No pude listar micrófonos:', error);
+    helperText.textContent = 'No pude listar los micrófonos. Pulsa 🎙️ para solicitar acceso.';
   }
 }
 
@@ -431,6 +442,16 @@ async function startVoiceRecording() {
 
     await refreshMicrophoneDevices();
 
+    const currentSelect = microphoneSelect();
+    if (currentSelect && !currentSelect.value) {
+      const activeTrack = voiceStream.getAudioTracks()[0];
+      const settings = activeTrack?.getSettings?.() || {};
+      if (settings.deviceId && [...currentSelect.options].some(o => o.value === settings.deviceId)) {
+        currentSelect.value = settings.deviceId;
+        localStorage.setItem(MIC_DEVICE_KEY, settings.deviceId);
+      }
+    }
+
     const audioTrack = voiceStream.getAudioTracks()[0];
     const deviceName = audioTrack?.label || 'Micrófono';
 
@@ -517,7 +538,7 @@ function ensureVoiceControls() {
     }
   }
 
-  if (!root.querySelector('.praisa-mic-device-wrap')) {
+  if (!document.querySelector('.praisa-mic-device-wrap')) {
     const wrap = document.createElement('div');
     wrap.className = 'praisa-mic-device-wrap';
 
@@ -535,8 +556,12 @@ function ensureVoiceControls() {
 
     wrap.append(label, select);
 
-    const helperParent = helperText?.parentElement || root;
-    helperParent.appendChild(wrap);
+    const footer =
+      root.querySelector('.chat-footer') ||
+      root.querySelector('.chat-layout') ||
+      root;
+
+    footer.appendChild(wrap);
 
     refreshMicrophoneDevices();
   }
