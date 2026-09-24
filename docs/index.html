@@ -8,7 +8,7 @@
   <title>Praisa IA Interno</title>
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
-  <link rel="stylesheet" href="styles-v31.css" />
+  <link rel="stylesheet" href="styles-v34.css" />
 </head>
 <body>
   <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -84,24 +84,64 @@
 
       <div class="side-divider"></div>
 
+      <div class="side-section-label">HERRAMIENTAS</div>
+      <button class="side-link quick-prompt" type="button" data-prompt="Quiero generar el documento de la cotización actual.">
+        <span class="side-icon">▣</span><span><strong>Generar documento</strong><small>Word / PDF</small></span><b>›</b>
+      </button>
+      <button class="side-link quick-prompt" type="button" data-prompt="Necesito buscar documentación o una ficha técnica en Drive.">
+        <span class="side-icon">△</span><span><strong>Buscar en Drive</strong><small>Manuales y fichas</small></span><b>›</b>
+      </button>
+      <button class="side-link quick-prompt" type="button" data-prompt="Quiero guardar una nota rápida de esta conversación.">
+        <span class="side-icon">▤</span><span><strong>Notas rápidas</strong><small>Guardar información</small></span><b>›</b>
+      </button>
+
+      <div class="side-divider"></div>
+
       <button class="side-link" id="settings-button" type="button">
         <span class="side-icon">⚙</span><span><strong>Configuración</strong><small>Tema e integraciones</small></span><b>›</b>
       </button>
+
+      <div class="sidebar-help">
+        <span class="sidebar-help-icon">◉</span>
+        <div><strong>¿Necesitas ayuda?</strong><small>Soporte interno Praisa</small></div>
+      </div>
 </aside>
 
     <section class="main-column">
       <section class="hero-card">
+        <div class="hero-grid" aria-hidden="true"></div>
+        <div class="hero-orb hero-orb-a" aria-hidden="true"></div>
+        <div class="hero-orb hero-orb-b" aria-hidden="true"></div>
+
         <div class="hero-copy">
-          <p>CENTRO DE OPERACIONES</p>
+          <div class="hero-kicker">CENTRO DE OPERACIONES · PRAISA IA</div>
           <h2>Operaciones <span>IA</span></h2>
-          <h3>CAF, clientes, cotizaciones y base técnica en un solo lugar.</h3>
+          <h3>Tu asistente inteligente para operaciones comerciales industriales.</h3>
+          <div class="hero-statusline"><i></i> CAF · Clientes · Cotizaciones · Base técnica</div>
         </div>
-        <div class="hero-actions">
-          <button class="hero-action quick-prompt" data-prompt="Quiero consultar información de un producto en CAF.">⌕ Consultar CAF</button>
-          <button class="hero-action quick-prompt" data-prompt="Quiero preparar una cotización.">▣ Crear cotización</button>
-          <button class="hero-action quick-prompt" data-prompt="Quiero consultar un cliente en CAF.">♙ Buscar cliente</button>
-          <button class="hero-action quick-prompt" data-prompt="Necesito buscar información en la base técnica.">▥ Base técnica</button>
-          <button class="hero-action quick-prompt" data-prompt="Ayúdame a preparar un reporte interno con la información disponible.">▥ Generar reporte</button>
+
+        <div class="hero-industrial-copy">
+          <strong>SOLUCIONES INDUSTRIALES<br>QUE MUEVEN TU OPERACIÓN</strong>
+          <span></span>
+          <small>MÁS INDUSTRIA · MÁS EFICIENCIA · MÁS RESULTADOS</small>
+        </div>
+
+        <div class="hero-actions hero-action-cards">
+          <button class="hero-action quick-prompt" data-prompt="Quiero consultar información de un producto en CAF.">
+            <span class="hero-action-icon">◇</span><strong>Consultar CAF</strong><small>Precio, existencias y ficha técnica</small><b>›</b>
+          </button>
+          <button class="hero-action quick-prompt" data-prompt="Quiero consultar un cliente en CAF.">
+            <span class="hero-action-icon">♙</span><strong>Buscar cliente</strong><small>Por cuenta CAF o nombre</small><b>›</b>
+          </button>
+          <button class="hero-action quick-prompt" data-prompt="Quiero preparar una cotización.">
+            <span class="hero-action-icon">▣</span><strong>Crear cotización</strong><small>Flujo guiado y validación</small><b>›</b>
+          </button>
+          <button class="hero-action quick-prompt" data-prompt="Necesito buscar información en la base técnica.">
+            <span class="hero-action-icon">▥</span><strong>Base técnica</strong><small>Manuales y documentación</small><b>›</b>
+          </button>
+          <button class="hero-action quick-prompt" data-prompt="Ayúdame a preparar un reporte interno con la información disponible.">
+            <span class="hero-action-icon">▥</span><strong>Generar reporte</strong><small>Operativo o comercial</small><b>›</b>
+          </button>
         </div>
       </section>
 
@@ -135,13 +175,56 @@
 
     <aside class="right-rail">
       <section class="rail-card context-card">
-        <div class="section-title"><span>◎</span><h3>Contexto de la sesión</h3></div>
+        <div class="section-title">
+          <span>◎</span>
+          <h3>Contexto de la sesión</h3>
+          <button class="rail-ghost-button" type="button" title="Información contextual">•••</button>
+        </div>
         <p>Lo que Praisa IA está utilizando en la conversación actual.</p>
         <div class="context-list">
-          <div class="context-item"><span class="context-icon product">◇</span><div><small>Producto actual</small><strong id="context-product">Sin seleccionar</strong></div></div>
-          <div class="context-item"><span class="context-icon client">♙</span><div><small>Cliente actual</small><strong id="context-client">Sin seleccionar</strong></div></div>
-          <div class="context-item"><span class="context-icon quote">▤</span><div><small>Cotización</small><strong id="context-quote">Sin iniciar</strong></div></div>
-          <div class="context-item"><span class="context-icon approval">✓</span><div><small>Validación técnica</small><strong id="context-tech">Sin requerir</strong></div></div>
+          <div class="context-item"><span class="context-icon product">◇</span><div><small>Producto actual</small><strong id="context-product">Sin seleccionar</strong></div><b>›</b></div>
+          <div class="context-item"><span class="context-icon client">♙</span><div><small>Cliente actual</small><strong id="context-client">Sin seleccionar</strong></div><b>›</b></div>
+          <div class="context-item"><span class="context-icon quote">▤</span><div><small>Cotización</small><strong id="context-quote">Sin iniciar</strong></div><b>›</b></div>
+          <div class="context-item"><span class="context-icon approval">✓</span><div><small>Validación técnica</small><strong id="context-tech">Sin requerir</strong></div><b>›</b></div>
+        </div>
+      </section>
+
+      <section class="rail-card quick-rail-card">
+        <div class="rail-mini-head"><h3>Accesos rápidos</h3><span>OPERACIONES</span></div>
+        <div class="rail-quick-grid">
+          <button class="quick-prompt" data-prompt="Quiero consultar información de un producto en CAF."><span>◇</span><strong>Producto</strong></button>
+          <button class="quick-prompt" data-prompt="Quiero consultar un cliente en CAF."><span>♙</span><strong>Cliente</strong></button>
+          <button class="quick-prompt" data-prompt="Quiero preparar una cotización."><span>▣</span><strong>Cotización</strong></button>
+          <button class="quick-prompt" data-prompt="Necesito buscar información en la base técnica."><span>▥</span><strong>Base técnica</strong></button>
+          <button class="quick-prompt" data-prompt="Ayúdame a preparar un reporte interno con la información disponible."><span>▥</span><strong>Reporte</strong></button>
+          <button class="quick-prompt" data-prompt="Necesito buscar documentación o una ficha técnica en Drive."><span>△</span><strong>Drive</strong></button>
+        </div>
+      </section>
+
+      <section class="rail-card session-summary-card">
+        <div class="rail-mini-head"><h3>Resumen de la sesión</h3><span>EN VIVO</span></div>
+        <div class="session-summary-grid">
+          <div><small>Producto</small><strong id="summary-product">—</strong></div>
+          <div><small>Cliente</small><strong id="summary-client">—</strong></div>
+          <div><small>Cotización</small><strong id="summary-quote">—</strong></div>
+          <div><small>Estado</small><strong id="summary-status">Activa</strong></div>
+        </div>
+      </section>
+
+      <section class="rail-card recent-card">
+        <div class="rail-mini-head"><h3>Actividad reciente</h3><span>SESIÓN</span></div>
+        <div class="activity-list" id="activity-list">
+          <div class="activity-item"><i class="green"></i><div><strong>Praisa IA conectada</strong><small>Sesión preparada para trabajar</small></div></div>
+          <div class="activity-item"><i class="blue"></i><div><strong>CAF disponible</strong><small>Consultas comerciales habilitadas</small></div></div>
+          <div class="activity-item"><i class="red"></i><div><strong>Modo piloto</strong><small>Valida información crítica antes de enviar</small></div></div>
+        </div>
+      </section>
+
+      <section class="rail-card support-card">
+        <div class="rail-mini-head"><h3>Soporte interno</h3><span>PRAISA</span></div>
+        <div class="support-grid">
+          <button class="quick-prompt" data-prompt="Necesito ayuda para encontrar documentación técnica."><span>▥</span><div><strong>Documentación</strong><small>Manuales y guías</small></div></button>
+          <button class="quick-prompt" data-prompt="Necesito orientación sobre una incidencia técnica del asistente."><span>◉</span><div><strong>Soporte técnico</strong><small>Incidencias del piloto</small></div></button>
         </div>
       </section>
     </aside>
@@ -193,6 +276,6 @@
     <span>Praisa IA Interno · Piloto</span><span>Uso exclusivo interno</span><span>Praisa · 2026</span>
   </footer>
 
-  <script type="module" src="app-v31.js"></script>
+  <script type="module" src="app-v34.js"></script>
 </body>
 </html>
