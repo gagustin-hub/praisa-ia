@@ -572,3 +572,64 @@ html[data-theme="light"] .chat-card #n8n-chat .praisa-voice-button.is-listening{
 html[data-theme="light"] .praisa-voice-meter{
   background:rgba(20,35,45,.12);
 }
+
+
+/* ===== Selector de micrófono + grabación servidor v21 ===== */
+.praisa-mic-device-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  margin-top:7px;
+  font-size:.56rem;
+  color:#8fa1af;
+}
+.praisa-mic-device-wrap span{
+  white-space:nowrap;
+}
+.praisa-mic-select{
+  max-width:270px;
+  min-width:180px;
+  padding:5px 8px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:8px;
+  background:#122330;
+  color:#dfe8ee;
+  font:inherit;
+  outline:none;
+}
+.praisa-mic-select:focus{
+  border-color:rgba(239,48,56,.72);
+}
+.chat-card #n8n-chat .praisa-voice-button.is-sending{
+  opacity:.72;
+  cursor:wait;
+  animation:praisaVoiceSending .9s linear infinite;
+}
+.chat-card #n8n-chat.praisa-voice-sending .chat-inputs{
+  border-color:#6f8ea5!important;
+}
+@keyframes praisaVoiceSending{
+  0%{transform:rotate(0deg)}
+  100%{transform:rotate(360deg)}
+}
+html[data-theme="light"] .praisa-mic-device-wrap{
+  color:#61727f;
+}
+html[data-theme="light"] .praisa-mic-select{
+  background:#fff;
+  color:#1d2a34;
+  border-color:#ccd7df;
+}
+@media(max-width:680px){
+  .praisa-mic-device-wrap{
+    align-items:stretch;
+    flex-direction:column;
+    gap:4px;
+    padding:0 10px;
+  }
+  .praisa-mic-select{
+    max-width:none;
+    width:100%;
+  }
+}
