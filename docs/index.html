@@ -8,7 +8,7 @@
   <title>Praisa IA Interno</title>
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
-  <link rel="stylesheet" href="styles-v41.css?v=41" />
+  <link rel="stylesheet" href="styles-v42.css?v=42" />
 </head>
 <body>
   <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -62,37 +62,34 @@
         <button class="side-link active" id="nav-chat" type="button">
           <span class="side-icon">□</span><span><strong>Chat IA</strong><small>Asistente Praisa IA</small></span><b>›</b>
         </button>
-        <button class="side-link quick-prompt" type="button" data-prompt="Quiero consultar información de un producto en CAF.">
+        <button class="side-link quick-prompt" type="button" data-prompt="¿Cuánta existencia y qué precio tiene el código ">
           <span class="side-icon">▤</span><span><strong>Consultar CAF</strong><small>Existencias y precios</small></span><b>›</b>
         </button>
-        <button class="side-link quick-prompt" type="button" data-prompt="Necesito buscar información en la base técnica.">
+        <button class="side-link quick-prompt" type="button" data-prompt="Busca en la base técnica: ">
           <span class="side-icon">▥</span><span><strong>Base técnica</strong><small>Documentación y soporte</small></span><b>›</b>
         </button>
-        <button class="side-link quick-prompt" type="button" data-prompt="Quiero consultar un cliente en CAF.">
+        <button class="side-link quick-prompt" type="button" data-prompt="¿Cuál fue la última compra de ">
           <span class="side-icon">♙</span><span><strong>Clientes</strong><small>Información e historial</small></span><b>›</b>
         </button>
-        <button class="side-link quick-prompt" type="button" data-prompt="Quiero preparar una cotización.">
+        <button class="side-link quick-prompt" type="button" data-prompt="Quiero cotizar ">
           <span class="side-icon">▧</span><span><strong>Cotizaciones</strong><small>Crear y gestionar</small></span><b>›</b>
         </button>
-        <button class="side-link quick-prompt" type="button" data-prompt="Quiero revisar una aprobación técnica de la sesión actual.">
-          <span class="side-icon">✓</span><span><strong>Aprobaciones</strong><small>Flujos y validaciones</small></span><span class="nav-badge">Piloto</span>
+        <button class="side-link quick-prompt" type="button" data-prompt="Aprobar técnicamente CÓDIGO por NOMBRE">
+          <span class="side-icon">✓</span><span><strong>Aprobación técnica</strong><small>Validar un código</small></span><span class="nav-badge">Piloto</span>
         </button>
-        <button class="side-link quick-prompt" type="button" data-prompt="Ayúdame a preparar un reporte interno con la información disponible.">
-          <span class="side-icon">▥</span><span><strong>Reportes</strong><small>Análisis interno</small></span><b>›</b>
+        <button class="side-link quick-prompt" type="button" data-prompt="¿Qué productos llevan más de dos años sin movimiento?">
+          <span class="side-icon">▥</span><span><strong>Sin movimiento</strong><small>Inventario detenido</small></span><b>›</b>
         </button>
       </nav>
 
       <div class="side-divider"></div>
 
       <div class="side-section-label">HERRAMIENTAS</div>
-      <button class="side-link quick-prompt" type="button" data-prompt="Quiero generar el documento de la cotización actual.">
+      <button class="side-link quick-prompt" type="button" data-prompt="Generar cotización">
         <span class="side-icon">▣</span><span><strong>Generar documento</strong><small>Word / PDF</small></span><b>›</b>
       </button>
-      <button class="side-link quick-prompt" type="button" data-prompt="Necesito buscar documentación o una ficha técnica en Drive.">
-        <span class="side-icon">△</span><span><strong>Buscar en Drive</strong><small>Manuales y fichas</small></span><b>›</b>
-      </button>
-      <button class="side-link quick-prompt" type="button" data-prompt="Quiero guardar una nota rápida de esta conversación.">
-        <span class="side-icon">▤</span><span><strong>Notas rápidas</strong><small>Guardar información</small></span><b>›</b>
+      <button class="side-link quick-prompt" type="button" data-prompt="¿Qué dice la ficha técnica de ">
+        <span class="side-icon">△</span><span><strong>Ficha técnica</strong><small>Catálogos de proveedores</small></span><b>›</b>
       </button>
 
       <div class="side-divider"></div>
@@ -101,10 +98,10 @@
         <span class="side-icon">⚙</span><span><strong>Configuración</strong><small>Tema e integraciones</small></span><b>›</b>
       </button>
 
-      <div class="sidebar-help">
+      <a class="sidebar-help" href="mailto:gagustin@praisa.com?subject=Praisa%20IA%20-%20ayuda">
         <span class="sidebar-help-icon">◉</span>
-        <div><strong>¿Necesitas ayuda?</strong><small>Soporte interno Praisa</small></div>
-      </div>
+        <div><strong>¿Necesitas ayuda?</strong><small>Escríbele a Gerber Agustín</small></div>
+      </a>
 </aside>
 
     <section class="main-column">
@@ -127,20 +124,20 @@
         </div>
 
         <div class="hero-actions hero-action-cards">
-          <button class="hero-action quick-prompt" data-prompt="Quiero consultar información de un producto en CAF.">
+          <button class="hero-action quick-prompt" data-prompt="¿Cuánta existencia y qué precio tiene el código ">
             <span class="hero-action-icon">◇</span><strong>Consultar CAF</strong><small>Precio, existencias y ficha técnica</small><b>›</b>
           </button>
-          <button class="hero-action quick-prompt" data-prompt="Quiero consultar un cliente en CAF.">
+          <button class="hero-action quick-prompt" data-prompt="¿Cuál fue la última compra de ">
             <span class="hero-action-icon">♙</span><strong>Buscar cliente</strong><small>Por cuenta CAF o nombre</small><b>›</b>
           </button>
-          <button class="hero-action quick-prompt" data-prompt="Quiero preparar una cotización.">
+          <button class="hero-action quick-prompt" data-prompt="Quiero cotizar ">
             <span class="hero-action-icon">▣</span><strong>Crear cotización</strong><small>Flujo guiado y validación</small><b>›</b>
           </button>
-          <button class="hero-action quick-prompt" data-prompt="Necesito buscar información en la base técnica.">
+          <button class="hero-action quick-prompt" data-prompt="Busca en la base técnica: ">
             <span class="hero-action-icon">▥</span><strong>Base técnica</strong><small>Manuales y documentación</small><b>›</b>
           </button>
-          <button class="hero-action quick-prompt" data-prompt="Ayúdame a preparar un reporte interno con la información disponible.">
-            <span class="hero-action-icon">▥</span><strong>Generar reporte</strong><small>Operativo o comercial</small><b>›</b>
+          <button class="hero-action quick-prompt" data-prompt="¿Qué productos llevan más de dos años sin movimiento?">
+            <span class="hero-action-icon">▥</span><strong>Sin movimiento</strong><small>Inventario detenido</small><b>›</b>
           </button>
         </div>
       </section>
@@ -164,12 +161,12 @@
 
         <div class="suggestions">
           <span>Sugerencias:</span>
-          <button class="quick-prompt" data-prompt="Quiero consultar otro código de producto.">Consultar otro código</button>
-          <button class="quick-prompt" data-prompt="Quiero crear una cotización.">Crear cotización</button>
-          <button class="quick-prompt" data-prompt="Necesito revisar información técnica del producto actual.">Ficha técnica</button>
-          <button class="quick-prompt" data-prompt="Quiero consultar el historial de un cliente.">Ver historial</button>
+          <button class="quick-prompt" data-prompt="¿Cuánta existencia hay del código ">Consultar otro código</button>
+          <button class="quick-prompt" data-prompt="Quiero cotizar ">Crear cotización</button>
+          <button class="quick-prompt" data-prompt="¿Qué dice la ficha técnica de ">Ficha técnica</button>
+          <button class="quick-prompt" data-prompt="¿Cuál fue la última compra de ">Ver historial</button>
         </div>
-        <p class="helper-text" id="helper-text">Puedes escribir en lenguaje natural. Praisa IA entiende el contexto de la sesión.</p>
+        <p class="helper-text" id="helper-text">Escribe tu consulta o usa un acceso rápido. Califica cada respuesta con 👍 o 👎.</p>
       </section>
     </section>
 
@@ -178,7 +175,6 @@
         <div class="section-title">
           <span>◎</span>
           <h3>Contexto de la sesión</h3>
-          <button class="rail-ghost-button" type="button" title="Información contextual">•••</button>
         </div>
         <p>Lo que Praisa IA está utilizando en la conversación actual.</p>
         <div class="context-list">
@@ -192,12 +188,12 @@
       <section class="rail-card quick-rail-card">
         <div class="rail-mini-head"><h3>Accesos rápidos</h3><span>OPERACIONES</span></div>
         <div class="rail-quick-grid">
-          <button class="quick-prompt" data-prompt="Quiero consultar información de un producto en CAF."><span>◇</span><strong>Producto</strong></button>
-          <button class="quick-prompt" data-prompt="Quiero consultar un cliente en CAF."><span>♙</span><strong>Cliente</strong></button>
-          <button class="quick-prompt" data-prompt="Quiero preparar una cotización."><span>▣</span><strong>Cotización</strong></button>
-          <button class="quick-prompt" data-prompt="Necesito buscar información en la base técnica."><span>▥</span><strong>Base técnica</strong></button>
-          <button class="quick-prompt" data-prompt="Ayúdame a preparar un reporte interno con la información disponible."><span>▥</span><strong>Reporte</strong></button>
-          <button class="quick-prompt" data-prompt="Necesito buscar documentación o una ficha técnica en Drive."><span>△</span><strong>Drive</strong></button>
+          <button class="quick-prompt" data-prompt="¿Cuánta existencia y qué precio tiene el código "><span>◇</span><strong>Producto</strong></button>
+          <button class="quick-prompt" data-prompt="¿Cuál fue la última compra de "><span>♙</span><strong>Cliente</strong></button>
+          <button class="quick-prompt" data-prompt="Quiero cotizar "><span>▣</span><strong>Cotización</strong></button>
+          <button class="quick-prompt" data-prompt="Busca en la base técnica: "><span>▥</span><strong>Base técnica</strong></button>
+          <button class="quick-prompt" data-prompt="¿Qué productos llevan más de dos años sin movimiento?"><span>▥</span><strong>Sin movimiento</strong></button>
+          <button class="quick-prompt" data-prompt="¿Qué dice la ficha técnica de "><span>△</span><strong>Ficha técnica</strong></button>
         </div>
       </section>
 
@@ -223,8 +219,8 @@
       <section class="rail-card support-card">
         <div class="rail-mini-head"><h3>Soporte interno</h3><span>PRAISA</span></div>
         <div class="support-grid">
-          <button class="quick-prompt" data-prompt="Necesito ayuda para encontrar documentación técnica."><span>▥</span><div><strong>Documentación</strong><small>Manuales y guías</small></div></button>
-          <button class="quick-prompt" data-prompt="Necesito orientación sobre una incidencia técnica del asistente."><span>◉</span><div><strong>Soporte técnico</strong><small>Incidencias del piloto</small></div></button>
+          <button class="quick-prompt" data-prompt="Busca en la base técnica: "><span>▥</span><div><strong>Documentación</strong><small>Manuales y guías</small></div></button>
+          <a class="support-link" href="mailto:gagustin@praisa.com?subject=Praisa%20IA%20-%20incidencia"><span>◉</span><div><strong>Soporte técnico</strong><small>Reportar una falla</small></div></a>
         </div>
       </section>
     </aside>
@@ -276,6 +272,6 @@
     <span>Praisa IA Interno · Piloto</span><span>Uso exclusivo interno</span><span>Praisa · 2026</span>
   </footer>
 
-  <script type="module" src="app-v40.js?v=41"></script>
+  <script type="module" src="app-v42.js?v=42"></script>
 </body>
 </html>

@@ -1,9 +1,12 @@
 import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
-const WEBHOOK_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/8f4d8f21-7b6a-4f47-9d2e-166000000167/chat';
+const WEBHOOK_URL = 'https://serious-porpoise.pikapod.net/webhook/8f4d8f21-7b6a-4f47-9d2e-166000000167/chat';
 const VOICE_TRANSCRIBE_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/praisa-voice-b8a6c1f4-7a10-4a3f-91d9-0a0000000180';
 const PREF_KEY = 'praisa-ia-preferences-v1';
-const UI_BUILD = 'v29-handsfree-voice';
+const UI_BUILD = 'v42';
+const FEEDBACK_URL = 'https://serious-porpoise.pikapod.net/webhook/praisa-calificacion-3f6c2a91';
+let authHeader = '';
+let authUser = '';
 
 const gate = document.getElementById('access-gate');
 const form = document.getElementById('access-form');
@@ -31,6 +34,33 @@ const contextProduct = document.getElementById('context-product');
 const contextClient = document.getElementById('context-client');
 const contextQuote = document.getElementById('context-quote');
 const contextTech = document.getElementById('context-tech');
+
+function isInvalidDeviceProduct(value) {
+  return /\b(H630BT|HAVIT|REALTEK|MICROPHONE|MICR[ÓO]FONO|AURICULARES|HEADSET|DROIDCAM|PREDETERMINADO|COMUNICACIONES|STEREO MIX|VB-AUDIO|OBS)\b/i.test(String(value || ''));
+}
+
+function sanitizeVisibleContext() {
+  if (contextProduct && isInvalidDeviceProduct(contextProduct.textContent)) {
+    contextProduct.textContent = 'Sin seleccionar';
+    contextProduct.removeAttribute('title');
+  }
+
+  const summaryProduct = document.getElementById('summary-product');
+  if (summaryProduct && isInvalidDeviceProduct(summaryProduct.textContent)) {
+    summaryProduct.textContent = '—';
+  }
+
+  const tech = (contextTech?.textContent || '').trim().toLowerCase();
+  const summaryStatus = document.getElementById('summary-status');
+  if (summaryStatus && /sin requerir|sin validaci[oó]n/.test(tech)) {
+    summaryStatus.textContent = 'Normal';
+  }
+}
+
+if (contextProduct) contextProduct.textContent = 'Sin seleccionar';
+if (contextClient) contextClient.textContent = 'Sin seleccionar';
+if (contextQuote) contextQuote.textContent = 'Sin iniciar';
+if (contextTech) contextTech.textContent = 'Sin requerir';
 
 let chatStarted = false;
 
@@ -76,6 +106,8 @@ function updateLogos(theme) {
 function applyPreferences() {
   const theme = resolvedTheme();
   document.documentElement.dataset.theme = theme;
+  document.body?.classList.toggle('theme-light-active', theme === 'light');
+  document.body?.classList.toggle('theme-dark-active', theme === 'dark');
   document.documentElement.classList.toggle('reduce-motion', !preferences.motion);
   document.documentElement.classList.toggle('compact', preferences.compact);
   updateLogos(theme);
@@ -207,7 +239,7 @@ function putPromptInChat(prompt) {
 
   input.dispatchEvent(new Event('input', { bubbles: true }));
   input.dispatchEvent(new Event('change', { bubbles: true }));
-  helperText.textContent = 'Mensaje preparado. Puedes editarlo antes de enviarlo.';
+  helperText.textContent = 'Completa el mensaje y presiona enviar.';
   focusChat();
 }
 
@@ -258,6 +290,9 @@ let handsFreeSpeechStarted = false;
 let handsFreeLastBotSignature = '';
 let handsFreeRestartTimer = null;
 let handsFreeStopRequested = false;
+let voiceSpeechFrames = 0;
+let voiceStrongSpeechFrames = 0;
+let voicePeakRms = 0;
 
 function setChatInputValue(value) {
   const input = chatInput();
@@ -400,36 +435,360 @@ function scheduleHandsFreeListen(delay = 550) {
 
 function maybeResumeHandsFreeAfterBot() {
   if (!handsFreeMode || handsFreeStopRequested) return;
-  if (botIsTyping()) return;
+  if (botIsTyping() || voiceSending || voiceRecording) return;
 
   const signature = latestBotMessageSignature();
   if (!signature || signature === handsFreeLastBotSignature) return;
 
   handsFreeLastBotSignature = signature;
-  helperText.textContent = '🎙️ Praisa IA respondió. Preparando micrófono…';
-  scheduleHandsFreeListen(650);
+  helperText.textContent = '🎙️ Praisa IA terminó de responder. Te escucho en un momento…';
+  scheduleHandsFreeListen(500);
+}
+
+function userMessageCount() {
+  const root = document.getElementById('n8n-chat');
+  return root ? root.querySelectorAll('.chat-message-from-user').length : 0;
+}
+
+function latestUserMessageText() {
+  const root = document.getElementById('n8n-chat');
+  const messages = root ? [...root.querySelectorAll('.chat-message-from-user')] : [];
+  const last = messages.at(-1);
+  return (last?.innerText || last?.textContent || '').trim();
+}
+
+async function waitForUserMessageSent(previousCount, expectedText, timeoutMs = 1400) {
+  const started = performance.now();
+
+  while (performance.now() - started < timeoutMs) {
+    const count = userMessageCount();
+    const last = latestUserMessageText();
+
+    if (count > previousCount || (last && last === expectedText)) {
+      return true;
+    }
+
+    await new Promise(resolve => setTimeout(resolve,90));
+  }
+
+  return false;
+}
+
+async function sendHandsFreeMessageReliably(value) {
+  const input = chatInput();
+  const root = document.getElementById('n8n-chat');
+  if (!input || !root) return false;
+
+  const before = userMessageCount();
+  setChatInputValue(value);
+  input.focus();
+
+  await new Promise(resolve => setTimeout(resolve,180));
+
+  const sendButton =
+    root.querySelector('.chat-input-send-button') ||
+    root.querySelector('button[type="submit"]') ||
+    [...root.querySelectorAll('.chat-input button, .chat-inputs button')]
+      .filter(button => !button.classList.contains('praisa-voice-button'))
+      .find(button => !button.disabled);
+
+  if (sendButton && !sendButton.disabled) {
+    sendButton.click();
+    if (await waitForUserMessageSent(before,value,900)) return true;
+  }
+
+  input.dispatchEvent(new KeyboardEvent('keydown',{
+    key:'Enter',
+    code:'Enter',
+    bubbles:true,
+    cancelable:true
+  }));
+
+  input.dispatchEvent(new KeyboardEvent('keyup',{
+    key:'Enter',
+    code:'Enter',
+    bubbles:true,
+    cancelable:true
+  }));
+
+  if (await waitForUserMessageSent(before,value,900)) return true;
+
+  const form = input.closest('form');
+  if (form?.requestSubmit) {
+    try { form.requestSubmit(); } catch {}
+    if (await waitForUserMessageSent(before,value,700)) return true;
+  }
+
+  return false;
+}
+
+function lastBotPromptText() {
+  const root = document.getElementById('n8n-chat');
+  if (!root) return '';
+
+  const messages = [...root.querySelectorAll('.chat-message-from-bot')]
+    .filter(m => !m.classList.contains('chat-message-typing'));
+
+  const last = messages.at(-1);
+  return (last?.innerText || last?.textContent || '').trim();
+}
+
+function expectedVoiceAnswerType() {
+  const text = lastBotPromptText()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase();
+
+  if (/que cliente|nombre o cuenta caf|cliente deseas|cuenta caf/.test(text)) return 'client';
+  if (/codigo del producto|codigo.*cotizar|dime el codigo|otro codigo/.test(text)) return 'product_code';
+  if (/cuantas unidades|cantidad deseas|cantidad.*cotizar/.test(text)) return 'quantity';
+  if (/condiciones? de pago|condicion de pago/.test(text)) return 'payment';
+  if (/selecciona el asesor|asesor responsable|que asesor/.test(text)) return 'advisor';
+  if (/correo/.test(text)) return 'email';
+  if (/telefono/.test(text)) return 'phone';
+  return 'free';
+}
+
+function isExplicitIntentSwitch(text) {
+  const n = String(text || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase();
+
+  return (
+    /\b(quiero|necesito|deseo|consultar|buscar|informacion)\b.*\b(producto|manometro|valvula|trampa|existencia|precio|cotizacion|cliente)\b/.test(n) ||
+    /\b(crear|iniciar|hacer)\b.*\bcotizacion\b/.test(n)
+  );
+}
+
+function isGarbageVoiceTranscript(text) {
+  const n = String(text || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  if (!n) return true;
+
+  const exactGarbage = new Set([
+    'gracias',
+    'muchas gracias',
+    'gracias muchas gracias',
+    'hasta luego',
+    'subtitulos realizados por la comunidad de amara org',
+    'subtitulos por la comunidad de amara org',
+    'amara org',
+    'thank you',
+    'thank you for watching'
+  ]);
+
+  return exactGarbage.has(n);
+}
+
+function spanishNumberToDigits(text) {
+  const n = String(text || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().trim();
+
+  const direct = n.match(/\b\d+(?:[.,]\d+)?\b/);
+  if (direct) return direct[0].replace(',','.');
+
+  const basic = {
+    'uno':1,'una':1,'un':1,'dos':2,'tres':3,'cuatro':4,'cinco':5,'seis':6,'siete':7,'ocho':8,'nueve':9,
+    'diez':10,'once':11,'doce':12,'trece':13,'catorce':14,'quince':15,'dieciseis':16,'diecisiete':17,
+    'dieciocho':18,'diecinueve':19,'veinte':20,'veintiuno':21,'veintidos':22,'veintitres':23,'veinticuatro':24,
+    'veinticinco':25,'veintiseis':26,'veintisiete':27,'veintiocho':28,'veintinueve':29,'treinta':30,
+    'cuarenta':40,'cincuenta':50,'sesenta':60,'setenta':70,'ochenta':80,'noventa':90,'cien':100
+  };
+
+  if (Object.prototype.hasOwnProperty.call(basic,n)) return String(basic[n]);
+
+  const parts=n.split(/\s+y\s+/);
+  if(parts.length===2 && basic[parts[0]]>=30 && basic[parts[1]]>0 && basic[parts[1]]<10){
+    return String(basic[parts[0]]+basic[parts[1]]);
+  }
+
+  return '';
+}
+
+function looksLikeSuspiciousClientTranscript(text) {
+  const n = String(text || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  if (!n) return true;
+
+  // CAF account-like response: let it pass.
+  if (/^[a-z]{1,5}-?\d{2,8}$/i.test(n.replace(/\s+/g,''))) return false;
+
+  // Common client/company terms are plausible names.
+  if (/\b(ingenio|sociedad|anonima|olme(c|k)a|pantaleon|magdalena|tulula|union|san diego|bimbo|cerveceria|alimentos|industria|industrial)\b/.test(n)) {
+    return false;
+  }
+
+  const conversationalNoise = [
+    'para','ahi','tiene','otro','lugar','cosa','asi','quedarme',
+    'gracias','muchas','bueno','pues','entonces','dale','correcto'
+  ];
+
+  const words = n.split(' ').filter(Boolean);
+  const noiseCount = words.filter(word => conversationalNoise.includes(word)).length;
+
+  // A short phrase dominated by conversational filler is very unlikely to be a client.
+  return words.length <= 8 && noiseCount >= 2;
+}
+
+function normalizeVoiceText(text) {
+  return String(text || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/[^a-z0-9@.+_ -]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function isGenericAssistantPrompt() {
+  const n = normalizeVoiceText(lastBotPromptText());
+  return (
+    /que necesitas hacer|en que puedo ayudarte|puedo ayudarte a consultar/.test(n) ||
+    /hola soy praisa ia/.test(n)
+  );
+}
+
+function hasPraisaIntent(text) {
+  const n = normalizeVoiceText(text);
+
+  const intentTerms = [
+    'cotizacion','cotizar','cotiza','cliente','producto','codigo','caf',
+    'existencia','existencias','precio','precios','manometro','valvula',
+    'trampa','actuador','ficha tecnica','base tecnica','documentacion',
+    'historial','asesor','reporte','pedido','movimiento'
+  ];
+
+  if (intentTerms.some(term => n.includes(term))) return true;
+  if (extractPraisaProductCode(text)) return true;
+  if (/\b[a-z]{1,5}-?\d{2,8}\b/i.test(n.replace(/\s+/g,''))) return true;
+
+  return false;
+}
+
+function isLikelyVoiceHallucination(text) {
+  const n = normalizeVoiceText(text);
+  if (!n) return true;
+
+  const knownHallucinationFragments = [
+    'respecto a todos',
+    'para que tengamos una accion',
+    'quiero brindar por ti',
+    'su ansiedad',
+    'gracias por ver',
+    'muchas gracias',
+    'subtitulos',
+    'amara org'
+  ];
+
+  if (knownHallucinationFragments.some(fragment => n.includes(fragment))) return true;
+
+  if (isGenericAssistantPrompt() && !hasPraisaIntent(text)) return true;
+
+  return false;
+}
+
+function prepareHandsFreeReply(rawText) {
+  let value = String(rawText || '').trim();
+  const expected = expectedVoiceAnswerType();
+
+  if (isGarbageVoiceTranscript(value) || isLikelyVoiceHallucination(value)) {
+    return {
+      ok:false,
+      retry:true,
+      reason:'No entendí una instrucción clara de Praisa en esa frase.'
+    };
+  }
+
+  if (isExplicitIntentSwitch(value)) {
+    return { ok:true, value, expected:'intent_switch' };
+  }
+
+  if (expected === 'product_code') {
+    const code = extractPraisaProductCode(value);
+    if (!code) {
+      return { ok:false, retry:true, reason:'No identifiqué un código de producto válido.' };
+    }
+    return { ok:true, value:code, expected };
+  }
+
+  if (expected === 'quantity') {
+    const quantity = spanishNumberToDigits(value);
+    if (!quantity) {
+      return { ok:false, retry:true, reason:'No identifiqué la cantidad.' };
+    }
+    return { ok:true, value:quantity, expected };
+  }
+
+  if (expected === 'email') {
+    const email = value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '';
+    if (!email) return { ok:false,retry:true,reason:'No identifiqué un correo válido.' };
+    return { ok:true,value:email,expected };
+  }
+
+  if (expected === 'phone') {
+    const phone = value.match(/\+?\d[\d\s().-]{6,}\d/)?.[0]?.trim() || '';
+    if (!phone) return { ok:false,retry:true,reason:'No identifiqué un teléfono válido.' };
+    return { ok:true,value:phone,expected };
+  }
+
+  if (expected === 'client') {
+    if (value.length < 3 || looksLikeSuspiciousClientTranscript(value)) {
+      return {
+        ok:false,
+        retry:true,
+        reason:'No entendí con suficiente claridad el nombre o la cuenta del cliente.'
+      };
+    }
+  }
+
+  return { ok:true,value,expected };
 }
 
 async function autoSendHandsFreeText(text) {
-  const value = String(text || '').trim();
-  if (!value) {
-    helperText.textContent = 'No entendí esa respuesta. Te escucho de nuevo…';
-    scheduleHandsFreeListen(650);
+  const prepared = prepareHandsFreeReply(text);
+
+  if (!prepared.ok) {
+    helperText.textContent = '⚠️ ' + prepared.reason + ' Te escucho otra vez…';
+    setChatInputValue('');
+    scheduleHandsFreeListen(850);
     return;
   }
 
-  setChatInputValue(value);
+  const value = prepared.value;
   helperText.textContent = '✅ Entendí: “' + value + '” · enviando automáticamente…';
 
-  await new Promise(resolve => setTimeout(resolve,180));
-  sendPromptNow(value);
+  const sent = await sendHandsFreeMessageReliably(value);
 
   handsFreeArmed = false;
   handsFreeSpeechStarted = false;
   handsFreeSilenceSince = 0;
-  handsFreeLastBotSignature = latestBotMessageSignature();
 
-  helperText.textContent = '⏳ Esperando respuesta de Praisa IA…';
+  if (!sent) {
+    helperText.textContent =
+      '⚠️ No pude enviar automáticamente. Reintentando…';
+
+    await new Promise(resolve => setTimeout(resolve,350));
+    const retry = await sendHandsFreeMessageReliably(value);
+
+    if (!retry) {
+      setChatInputValue(value);
+      helperText.textContent =
+        '⚠️ Dejé la respuesta en la barra porque el envío automático no respondió.';
+      return;
+    }
+  }
+
+  handsFreeLastBotSignature = latestBotMessageSignature();
+  helperText.textContent = '⏳ Mensaje enviado. Esperando respuesta de Praisa IA…';
 }
 
 function startVoiceMeter(stream) {
@@ -459,10 +818,13 @@ function startVoiceMeter(stream) {
       }
 
       const rms = Math.sqrt(sum / data.length);
+      voicePeakRms = Math.max(voicePeakRms, rms);
+      if (rms > 0.015) voiceSpeechFrames++;
+      if (rms > 0.03) voiceStrongSpeechFrames++;
       const level = Math.min(1, rms * 10);
       root.style.setProperty('--praisa-voice-level', String(level));
 
-      const speaking = rms > 0.020;
+      const speaking = rms > 0.015;
 
       if (speaking) framesAbove++;
       else framesAbove = Math.max(0,framesAbove - 1);
@@ -483,7 +845,7 @@ function startVoiceMeter(stream) {
 
         const silenceMs = performance.now() - handsFreeSilenceSince;
 
-        if (silenceMs >= 1150 && voiceRecorder?.state === 'recording') {
+        if (silenceMs >= 1750 && voiceRecorder?.state === 'recording') {
           helperText.textContent = '⏳ Terminaste de hablar. Procesando…';
 
           try {
@@ -577,7 +939,9 @@ function selectedAudioConstraints() {
     echoCancellation: true,
     noiseSuppression: true,
     autoGainControl: true,
-    channelCount: 1
+    channelCount: 1,
+    sampleRate: 48000,
+    sampleSize: 16
   };
 
   return selected
@@ -694,6 +1058,19 @@ function normalizePraisaTranscript(transcript) {
 async function sendRecordedAudio(blob, mimeType) {
   if (!blob || blob.size < 500) {
     setVoiceUi('idle', '⚠️ La grabación quedó vacía. Habla durante al menos 1 segundo.');
+    if (handsFreeMode) scheduleHandsFreeListen(850);
+    return;
+  }
+
+  if (
+    handsFreeMode &&
+    (voiceSpeechFrames < 18 || voiceStrongSpeechFrames < 4 || voicePeakRms < 0.022)
+  ) {
+    setVoiceUi(
+      'idle',
+      '🎙️ Escuché ruido, pero no una voz suficientemente clara. Te escucho otra vez…'
+    );
+    scheduleHandsFreeListen(850);
     return;
   }
 
@@ -748,8 +1125,11 @@ async function sendRecordedAudio(blob, mimeType) {
     if (falseTranscripts.some(text => normalized.includes(text))) {
       setVoiceUi(
         'idle',
-        '⚠️ n8n recibió el audio, pero la transcripción no fue válida. Prueba con el micrófono Realtek y habla más cerca.'
+        handsFreeMode
+          ? '⚠️ La transcripción no fue válida. Te escucho otra vez…'
+          : '⚠️ n8n recibió el audio, pero la transcripción no fue válida. Prueba con el micrófono Realtek y habla más cerca.'
       );
+      if (handsFreeMode) scheduleHandsFreeListen(700);
       return;
     }
 
@@ -815,6 +1195,9 @@ async function startVoiceRecording(options = {}) {
   voiceChunks = [];
   voicePeakSeen = false;
   voiceStartedAt = 0;
+  voiceSpeechFrames = 0;
+  voiceStrongSpeechFrames = 0;
+  voicePeakRms = 0;
   handsFreeSpeechStarted = false;
   handsFreeSilenceSince = 0;
   handsFreeArmed = handsFree;
@@ -894,7 +1277,7 @@ async function startVoiceRecording(options = {}) {
           ? '🎙️ Sigo escuchando… responde cuando quieras.'
           : '⚠️ El micrófono está abierto, pero todavía no detecto sonido. Revisa el nivel de entrada de Windows o cambia de micrófono.';
       }
-    },2200);
+    },3200);
   } catch (error) {
     console.error('Micrófono:', error);
     cleanupVoiceStream();
@@ -947,7 +1330,7 @@ function ensureVoiceControls() {
 
       setHandsFreeMode(
         true,
-        '🎙️ Conversación por voz activada. Responde hablando; yo enviaré cada respuesta automáticamente.'
+        '🎙️ Modo voz automático activo. Ya no necesitas pulsar Enviar: habla y Praisa IA hará el resto.'
       );
 
       handsFreeLastBotSignature = latestBotMessageSignature();
@@ -1004,6 +1387,49 @@ function ensureVoiceControls() {
 navigator.mediaDevices?.addEventListener?.('devicechange', () => {
   refreshMicrophoneDevices();
 });
+
+setInterval(() => {
+  if (handsFreeMode && !handsFreeStopRequested) {
+    maybeResumeHandsFreeAfterBot();
+  }
+},450);
+
+function syncCommandCenterSummary() {
+  sanitizeVisibleContext();
+
+  const pairs = [
+    ['context-product','summary-product'],
+    ['context-client','summary-client'],
+    ['context-quote','summary-quote']
+  ];
+
+  pairs.forEach(([sourceId,targetId]) => {
+    const source = document.getElementById(sourceId);
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    const value = (source?.textContent || '').trim();
+    target.textContent =
+      !value || /sin seleccionar|sin iniciar/i.test(value) ? '—' : value;
+  });
+
+  const status = document.getElementById('summary-status');
+  if (status) {
+    const tech = (document.getElementById('context-tech')?.textContent || '').trim().toLowerCase();
+
+    if (!tech || /sin requerir|sin validaci[oó]n/.test(tech)) {
+      status.textContent = 'Normal';
+    } else if (/aprobada|validada/.test(tech)) {
+      status.textContent = 'Aprobada';
+    } else if (/pendiente|revisi[oó]n/.test(tech)) {
+      status.textContent = 'Revisión';
+    } else {
+      status.textContent = 'Activa';
+    }
+  }
+
+  sanitizeVisibleContext();
+}
 
 function enhanceAdvisorSelector(message) {
   if (!message || message.dataset.praisaAdvisorSelector === 'true') return;
@@ -1119,16 +1545,20 @@ function updateSessionContext(text) {
   }
 
   const explicitProduct = upper.match(/(?:CÓDIGO|CODIGO)(?:\s+CAF)?\s*:\s*([A-Z0-9-]{5,})/)?.[1];
-  const internalProduct = upper.match(/\b\d{2}[A-Z]{2,}\d{3,}\b/)?.[0];
-  const allCodes = upper.match(/\b(?=[A-Z0-9-]*[A-Z])(?=[A-Z0-9-]*\d)[A-Z0-9-]{5,}\b/g) || [];
-  const fallbackProduct = [...allCodes].reverse().find((value) =>
-    !/^[A-Z]{1,5}-\d{2,8}$/.test(value) &&
-    !/^\d{2,}-[A-Z]/.test(value) &&
-    !/^COT-/.test(value) &&
-    !/^GTQ/.test(value)
-  );
-  const product = explicitProduct || internalProduct || fallbackProduct;
-  if (product && contextProduct && contextProduct.textContent !== product) {
+
+  const productMention = upper.match(
+    /(?:PRODUCTO|MANÓMETRO|MANOMETRO|VÁLVULA|VALVULA|TRAMPA|ACTUADOR|REGULADOR)[^\n]{0,45}?\b(\d{2}[A-Z]{2,4}\d{3,})\b/
+  )?.[1];
+
+  const standalonePraisaCode = upper.match(/\b\d{2}[A-Z]{2,4}\d{3,}\b/)?.[0];
+
+  const product = explicitProduct || productMention || standalonePraisaCode;
+  if (
+    product &&
+    !isInvalidDeviceProduct(product) &&
+    contextProduct &&
+    contextProduct.textContent !== product
+  ) {
     contextProduct.textContent = product;
     flashContext(contextProduct);
   }
@@ -1161,6 +1591,76 @@ function observeChatContext() {
   if (!root) return;
 
   let lastText = '';
+
+  // Si el servidor no responde (reinicio, actualización o mantenimiento), muestra un aviso claro
+  // en lugar del error técnico del chat.
+  const avisoSinConexion = () => {
+    root.querySelectorAll('.chat-message:not([data-praisa-aviso])').forEach((message) => {
+      const texto = (message.innerText || message.textContent || '').trim();
+      if (/^(error:?\s*)?failed to receive response|^error:\s/i.test(texto)) {
+        message.dataset.praisaAviso = 'true';
+        message.innerHTML = '<p>🛠️ <strong>Praisa IA está en mantenimiento o no responde en este momento.</strong><br>Vuelve a intentarlo en unos minutos. Si es urgente, consulta directamente en CAF Web.</p>';
+      }
+    });
+  };
+
+
+  // Calificación de cada respuesta (👍 / 👎 + comentario opcional). Se guarda en n8n para revisar las pruebas.
+  const MARCA_FB = 'praisa-fb';
+  const textoMensaje = (el) => {
+    const copia = el.cloneNode(true);
+    copia.querySelectorAll('.' + MARCA_FB).forEach(n => n.remove());
+    return (copia.innerText || copia.textContent || '').trim();
+  };
+  const preguntaAnterior = (el) => {
+    let n = el.previousElementSibling;
+    while (n && !n.classList.contains('chat-message-from-user')) n = n.previousElementSibling;
+    return n ? textoMensaje(n) : '';
+  };
+  const enviarCalificacion = async (message, valoracion, comentario) => {
+    try {
+      await fetch(FEEDBACK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: authHeader },
+        body: JSON.stringify({
+          valoracion, comentario: comentario || '', usuario: authUser,
+          pregunta: preguntaAnterior(message).slice(0, 1500),
+          respuesta: textoMensaje(message).slice(0, 3000),
+          pagina: UI_BUILD
+        })
+      });
+      return true;
+    } catch (e) { console.warn('Calificación no enviada:', e); return false; }
+  };
+  const agregarCalificacion = () => {
+    root.querySelectorAll('.chat-message-from-bot:not(.chat-message-typing):not([data-praisa-fb]):not([data-praisa-aviso])').forEach((message) => {
+      const texto = textoMensaje(message);
+      if (!texto || /^Hola, soy Praisa IA/.test(texto)) { message.dataset.praisaFb = 'omitido'; return; }
+      message.dataset.praisaFb = 'listo';
+      const barra = document.createElement('div');
+      barra.className = MARCA_FB;
+      barra.innerHTML = '<span>¿Te sirvió?</span><button type="button" data-v="bien" aria-label="Me sirvió">👍</button><button type="button" data-v="mal" aria-label="No me sirvió">👎</button>';
+      barra.addEventListener('click', async (ev) => {
+        const b = ev.target.closest('button');
+        if (!b) return;
+        if (b.dataset.v === 'bien') {
+          barra.innerHTML = '<span>Enviando…</span>';
+          barra.innerHTML = (await enviarCalificacion(message, 'bien', '')) ? '<span>✅ Gracias</span>' : '<span>⚠️ No se pudo enviar</span>';
+        } else if (b.dataset.v === 'mal') {
+          barra.innerHTML = '<input type="text" maxlength="400" placeholder="¿Qué estuvo mal? (opcional)" /><button type="button" data-v="enviar">Enviar</button>';
+          const campo = barra.querySelector('input');
+          campo.focus();
+          campo.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); barra.querySelector('[data-v="enviar"]').click(); } });
+        } else if (b.dataset.v === 'enviar') {
+          const comentario = barra.querySelector('input')?.value.trim() || '';
+          barra.innerHTML = '<span>Enviando…</span>';
+          barra.innerHTML = (await enviarCalificacion(message, 'mal', comentario)) ? '<span>✅ Gracias, lo revisaremos</span>' : '<span>⚠️ No se pudo enviar</span>';
+        }
+      });
+      (message.querySelector('.chat-message-markdown') || message).appendChild(barra);
+    });
+  };
+
 
   const enhanceMessages = () => {
     const body = root.querySelector('.chat-body');
@@ -1204,14 +1704,24 @@ function observeChatContext() {
   };
 
   const read = () => {
-    const text = root.innerText || root.textContent || '';
-    if (text !== lastText) {
-      lastText = text;
-      updateSessionContext(text);
+    avisoSinConexion();
+    agregarCalificacion();
+    const messagesOnly = [...root.querySelectorAll('.chat-message')]
+      .filter(message => !message.classList.contains('chat-message-typing'))
+      .map(message => textoMensaje(message))
+      .filter(Boolean)
+      .join('\n');
+
+    if (messagesOnly !== lastText) {
+      lastText = messagesOnly;
+      updateSessionContext(messagesOnly);
     }
+
     enhanceMessages();
     ensureVoiceControls();
     maybeResumeHandsFreeAfterBot();
+    syncCommandCenterSummary();
+    sanitizeVisibleContext();
   };
 
   const observer = new MutationObserver(read);
@@ -1223,6 +1733,8 @@ function startChat(username, password) {
   if (chatStarted) return;
 
   const token = btoa(unescape(encodeURIComponent(username + ':' + password)));
+  authHeader = 'Basic ' + token;
+  authUser = username;
 
   createChat({
     webhookUrl: WEBHOOK_URL,
@@ -1259,12 +1771,18 @@ function startChat(username, password) {
   });
 
   chatStarted = true;
+
+  if (contextProduct) contextProduct.textContent = 'Sin seleccionar';
+  if (contextClient) contextClient.textContent = 'Sin seleccionar';
+  if (contextQuote) contextQuote.textContent = 'Sin iniciar';
+  if (contextTech) contextTech.textContent = 'Sin requerir';
+
   gate.hidden = true;
   logoutButton.hidden = false;
   setStatus('online', 'Sesión interna', 'Praisa IA conectado');
   passInput.value = '';
   setTimeout(() => {
-    helperText.textContent = 'Praisa IA ' + UI_BUILD + ' · Pulsa 🎙️ una vez para conversación por voz manos libres.';
+    helperText.textContent = 'Escribe tu consulta o usa un acceso rápido. Califica cada respuesta con 👍 o 👎 para mejorar el asistente.';
     observeChatContext();
   }, 600);
 }
