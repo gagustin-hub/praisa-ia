@@ -1,6 +1,6 @@
 import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
-const WEBHOOK_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/8f4d8f21-7b6a-4f47-9d2e-166000000167/chat';
+const WEBHOOK_URL = 'https://serious-porpoise.pikapod.net/webhook/8f4d8f21-7b6a-4f47-9d2e-166000000167/chat';
 const VOICE_TRANSCRIBE_URL = 'https://asistentepraisa.app.n8n.cloud/webhook/praisa-voice-b8a6c1f4-7a10-4a3f-91d9-0a0000000180';
 const PREF_KEY = 'praisa-ia-preferences-v1';
 const UI_BUILD = 'v22-mic-selector-fix';
@@ -728,6 +728,19 @@ function observeChatContext() {
 
   let lastText = '';
 
+  // Si el servidor no responde (reinicio, actualización o mantenimiento), muestra un aviso claro
+  // en lugar del error técnico del chat.
+  const avisoSinConexion = () => {
+    root.querySelectorAll('.chat-message:not([data-praisa-aviso])').forEach((message) => {
+      const texto = (message.innerText || message.textContent || '').trim();
+      if (/^(error:?\s*)?failed to receive response|^error:\s/i.test(texto)) {
+        message.dataset.praisaAviso = 'true';
+        message.innerHTML = '<p>🛠️ <strong>Praisa IA está en mantenimiento o no responde en este momento.</strong><br>Vuelve a intentarlo en unos minutos. Si es urgente, consulta directamente en CAF Web.</p>';
+      }
+    });
+  };
+
+
   const enhanceMessages = () => {
     const body = root.querySelector('.chat-body');
 
@@ -770,6 +783,7 @@ function observeChatContext() {
   };
 
   const read = () => {
+    avisoSinConexion();
     const text = root.innerText || root.textContent || '';
     if (text !== lastText) {
       lastText = text;
