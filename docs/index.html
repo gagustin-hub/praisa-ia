@@ -8,7 +8,7 @@
   <title>Praisa IA Interno</title>
   <link rel="icon" href="logo.svg" type="image/svg+xml" />
   <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
-  <link rel="stylesheet" href="styles-v42.css?v=42" />
+  <link rel="stylesheet" href="styles-v43.css?v=43" />
 </head>
 <body>
   <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -252,6 +252,16 @@
     </section>
 
     <section class="settings-section">
+      <h3>Voz</h3>
+      <p>El botón 🎙️ junto a Enviar dicta tu mensaje. El texto aparece en la caja para revisarlo antes de enviarlo.</p>
+      <label class="settings-field">Micrófono
+        <select id="mic-select" aria-label="Micrófono"><option value="">Automático (recomendado)</option></select>
+      </label>
+      <p class="settings-note">Deja “Automático” salvo que el navegador tome un micrófono equivocado (por ejemplo, uno virtual).</p>
+      <div class="setting-row" style="margin-top:12px"><div><h3>Enviar al terminar de hablar</h3><p>Manda el mensaje sin revisarlo. Útil con manos ocupadas.</p></div><label class="switch"><input id="voice-autosend-toggle" type="checkbox" /><span></span></label></div>
+    </section>
+
+    <section class="settings-section">
       <h3>Sistema e integraciones</h3>
       <p>Fuentes previstas en el piloto interno.</p>
       <div class="settings-integrations">
@@ -272,6 +282,6 @@
     <span>Praisa IA Interno · Piloto</span><span>Uso exclusivo interno</span><span>Praisa · 2026</span>
   </footer>
 
-  <script type="module" src="app-v42.js?v=42"></script>
+  <script type="module" src="app-v43.js?v=43"></script>
 </body>
 </html>
