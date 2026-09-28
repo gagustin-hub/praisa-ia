@@ -853,7 +853,7 @@ function observeChatContext() {
   const agregarCalificacion = () => {
     root.querySelectorAll('.chat-message-from-bot:not(.chat-message-typing):not([data-praisa-fb]):not([data-praisa-aviso])').forEach((message) => {
       const texto = textoMensaje(message);
-      if (!texto || /^Hola, soy Praisa IA/.test(texto)) { message.dataset.praisaFb = 'omitido'; return; }
+      if (!texto || /^Hola, soy Praisa IA/.test(texto) || /en mantenimiento/i.test(texto)) { message.dataset.praisaFb = 'omitido'; return; }
       message.dataset.praisaFb = 'listo';
       const barra = document.createElement('div');
       barra.className = MARCA_FB;
