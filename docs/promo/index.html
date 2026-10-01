@@ -33,6 +33,8 @@ button:disabled{opacity:.6;cursor:wait}
 .legal{color:#888;font-size:12px;margin-top:16px;line-height:1.5}
 #ok{display:none;text-align:center}
 .check{width:64px;height:64px;border-radius:50%;background:#e8f5e9;color:#2e7d32;font-size:36px;line-height:64px;margin:6px auto 12px}
+.code.off{color:#999;border-color:#bbb;text-decoration:line-through}
+.check.off{background:#f3f3f3;color:#777}
 .code{display:inline-block;border:2px dashed var(--red);color:var(--red);font-weight:bold;font-size:30px;letter-spacing:4px;padding:12px 26px;border-radius:8px;margin:12px 0 16px}
 #ok p{line-height:1.6;color:#444}
 .contact{font-size:14px;color:var(--mut);margin-top:18px;line-height:1.8}
@@ -69,14 +71,14 @@ button:disabled{opacity:.6;cursor:wait}
   </form>
 
   <section id="ok" aria-live="polite">
-    <div class="check">✓</div>
+    <div class="check" id="okIcono">✓</div>
     <h1>¡Gracias, <span id="okNombre"></span>!</h1>
     <p id="okTexto">Sus datos fueron actualizados.<br>Su código de descuento es:</p>
     <div class="code" id="okCodigo"></div>
-    <p><b>¿Cómo usarlo?</b> Menciónelo al solicitar su cotización.<br>
+    <p id="okUso"><b>¿Cómo usarlo?</b> Menciónelo al solicitar su cotización.<br>
       10% de descuento, válido únicamente en su primera compra.<br>
       Vigente hasta el <b id="okVence"></b>.</p>
-    <p style="font-size:14px">Le recomendamos tomar una captura de pantalla de este código.</p>
+    <p style="font-size:14px" id="okTip">Le recomendamos tomar una captura de pantalla de este código.</p>
     <div class="contact">📞 <a href="tel:+50223878000">+502 2387 8000</a> · ✉️ <a href="mailto:ventas@praisa.com">ventas@praisa.com</a><br>🌐 <a href="https://www.praisa.com">www.praisa.com</a></div>
   </section>
 </main>
@@ -115,7 +117,23 @@ form.addEventListener('submit', async e => {
     document.getElementById('okNombre').textContent = data.nombre || f.nombre;
     document.getElementById('okCodigo').textContent = data.codigo;
     document.getElementById('okVence').textContent = data.vence || '';
-    if (data.yaRegistrado) document.getElementById('okTexto').innerHTML = 'Usted ya se había registrado.<br>Este es su código de descuento:';
+    const txt = document.getElementById('okTexto');
+    const apagar = () => {
+      document.getElementById('okCodigo').classList.add('off');
+      document.getElementById('okIcono').classList.add('off');
+      document.getElementById('okIcono').textContent = 'i';
+      document.getElementById('okUso').style.display = 'none';
+      document.getElementById('okTip').textContent = 'Si tiene alguna consulta o desea cotizar, con gusto le atendemos.';
+    };
+    if (data.usado) {
+      txt.innerHTML = 'Usted ya se había registrado y su código de descuento ya fue utilizado' + (data.fechaUso ? ' el <b>' + data.fechaUso + '</b>' : '') + '.<br>El descuento aplica únicamente en la primera compra.';
+      apagar();
+    } else if (data.vencido) {
+      txt.innerHTML = 'Usted ya se había registrado, pero su código de descuento venció' + (data.vence ? ' el <b>' + data.vence + '</b>' : '') + '.';
+      apagar();
+    } else if (data.yaRegistrado) {
+      txt.innerHTML = 'Usted ya se había registrado.<br>Este es su código de descuento:';
+    }
     form.style.display = 'none';
     document.getElementById('ok').style.display = 'block';
     window.scrollTo(0, 0);
