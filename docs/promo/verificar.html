@@ -53,7 +53,7 @@ dt{color:var(--mut)}dd{margin:0}
   <!-- Clave -->
   <section class="card" id="login">
     <h1>Acceso de vendedores</h1>
-    <p class="sub">Escriba la clave de vendedores que le compartió Gerber.</p>
+    <p class="sub">Escriba su clave personal. Es solo suya: no la comparta, porque todo lo que marque queda registrado a su nombre.</p>
     <form id="loginForm">
       <label for="clave">Clave</label>
       <input id="clave" type="password" autocomplete="current-password" required>
@@ -64,7 +64,7 @@ dt{color:var(--mut)}dd{margin:0}
 
   <div id="app">
     <section class="card">
-      <div class="top"><h1>Verificar código</h1><button class="link" id="salir" type="button">Salir</button></div>
+      <div class="top"><h1>Verificar código</h1><span class="help">Sesión: <b id="quien"></b> · <button class="link" id="salir" type="button">Salir</button></span></div>
       <p class="sub">Escriba el código del cliente (por ejemplo <b>PRA-7K4M</b>). Si no lo tiene, busque por empresa, NIT o nombre.</p>
       <form class="searchrow" id="buscarForm">
         <input id="q" placeholder="Código, empresa, NIT o nombre" autocomplete="off" required>
@@ -79,18 +79,17 @@ dt{color:var(--mut)}dd{margin:0}
 
 <script>
 const ENDPOINT = 'https://serious-porpoise.pikapod.net/webhook/praisa-promo-vendedores';
-const VENDEDORES = ['Fátima', 'Luis', 'Aury'];
 const $ = id => document.getElementById(id);
-let clave = '';
-try { clave = sessionStorage.getItem('praisa_clave_vend') || ''; } catch (e) {}
+let clave = '', vendedor = '';
+try { clave = sessionStorage.getItem('praisa_clave_vend') || ''; vendedor = sessionStorage.getItem('praisa_vend') || ''; } catch (e) {}
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 async function llamar(datos) {
   const r = await fetch(ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Clave-Vendedores': clave },
-    body: JSON.stringify(datos)
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    body: JSON.stringify({ ...datos, clave })
   });
   if (r.status === 401 || r.status === 403) { const e = new Error('clave'); e.clave = true; throw e; }
   const d = await r.json().catch(() => ({}));
@@ -98,9 +97,9 @@ async function llamar(datos) {
   return d;
 }
 
-function mostrarApp() { $('login').style.display = 'none'; $('app').style.display = 'block'; $('q').focus(); }
+function mostrarApp() { $('quien').textContent = vendedor; $('login').style.display = 'none'; $('app').style.display = 'block'; $('q').focus(); }
 function mostrarLogin(msg) {
-  clave = ''; try { sessionStorage.removeItem('praisa_clave_vend'); } catch (e) {}
+  clave = ''; vendedor = ''; try { sessionStorage.removeItem('praisa_clave_vend'); sessionStorage.removeItem('praisa_vend'); } catch (e) {}
   $('app').style.display = 'none'; $('login').style.display = 'block'; $('loginMsg').textContent = msg || ''; $('clave').value = ''; $('clave').focus();
 }
 
@@ -109,8 +108,10 @@ $('loginForm').addEventListener('submit', async e => {
   clave = $('clave').value.trim();
   $('loginMsg').textContent = 'Verificando…';
   try {
-    await llamar({ accion: 'buscar', q: '___' });
-    try { sessionStorage.setItem('praisa_clave_vend', clave); } catch (e) {}
+    const d = await llamar({ accion: 'entrar' });
+    if (!d.ok || !d.vendedor) throw Object.assign(new Error('clave'), { clave: true });
+    vendedor = d.vendedor;
+    try { sessionStorage.setItem('praisa_clave_vend', clave); sessionStorage.setItem('praisa_vend', vendedor); } catch (e) {}
     $('loginMsg').textContent = '';
     mostrarApp();
   } catch (x) {
@@ -139,8 +140,8 @@ function tarjeta(r, canjeado) {
   if (r.mismaEmpresa > 1 && r.situacion === 'valido') html += `<div class="alert">⚠️ Hay ${r.mismaEmpresa} personas de esta empresa con código. Consulte con Gerencia antes de aplicar otro descuento a la misma empresa.</div>`;
   if (r.situacion === 'valido' && !canjeado) {
     html += `<form class="canje" data-codigo="${esc(r.codigo)}">
-      <div class="row"><div><label>No. de factura</label><input name="factura" required></div>
-      <div><label>Vendedor</label><select name="vendedor" required><option value="">Elegir…</option>${VENDEDORES.map(v => `<option>${v}</option>`).join('')}</select></div></div>
+      <label>No. de factura</label><input name="factura" required>
+      <p class="help" style="margin:8px 0 0">Quedará registrado a nombre de <b>${esc(vendedor)}</b>.</p>
       <button type="submit">Marcar como usado</button><div class="msg"></div></form>`;
   }
   return html + '</div></div>';
@@ -171,12 +172,12 @@ $('buscarForm').addEventListener('submit', async e => {
 async function canjear(e) {
   e.preventDefault();
   const f = e.target, msg = f.querySelector('.msg'), btn = f.querySelector('button');
-  const codigo = f.dataset.codigo, factura = f.factura.value.trim(), vendedor = f.vendedor.value;
-  if (!factura || !vendedor) { msg.textContent = 'Escriba la factura y elija el vendedor.'; return; }
-  if (!confirm(`¿Marcar ${codigo} como usado en la factura ${factura}?\nEsto no se puede deshacer desde aquí.`)) return;
+  const codigo = f.dataset.codigo, factura = f.factura.value.trim();
+  if (!factura) { msg.textContent = 'Escriba el número de factura.'; return; }
+  if (!confirm(`¿Marcar ${codigo} como usado en la factura ${factura}, a nombre de ${vendedor}?\nEsto no se puede deshacer desde aquí.`)) return;
   btn.disabled = true; msg.textContent = 'Guardando…';
   try {
-    const d = await llamar({ accion: 'canjear', codigo, factura, vendedor });
+    const d = await llamar({ accion: 'canjear', codigo, factura });
     if (!d.ok) { msg.textContent = d.error || 'No se pudo guardar.'; btn.disabled = false; return; }
     pintar(d.resultados || [], true);
   } catch (x) {
