@@ -137,7 +137,7 @@ function tarjeta(r, canjeado) {
   if (r.necesidad) filas.push(['Necesidad', r.necesidad]);
   let html = `<div class="res ${canjeado ? 'valido' : r.situacion}"><div class="badge"><span class="ic">${canjeado ? '✅' : ic}</span>${esc(canjeado ? 'LISTO: quedó registrado como usado' : txt)}</div><div class="body">
     <div class="code">${esc(r.codigo)}</div><dl>${filas.filter(f => f[1]).map(f => `<dt>${esc(f[0])}</dt><dd>${esc(f[1])}</dd>`).join('')}</dl>`;
-  if (r.mismaEmpresa > 1 && r.situacion === 'valido') html += `<div class="alert">⚠️ Hay ${r.mismaEmpresa} personas de esta empresa con código. Consulte con Gerencia antes de aplicar otro descuento a la misma empresa.</div>`;
+  if (r.mismaEmpresa > 1 && r.situacion === 'valido') html += `<div class="alert" style="background:#eef4ff;color:#1d3d7a">ℹ️ Hay ${r.mismaEmpresa} personas de esta empresa con código. El descuento es por persona, así que puede aplicarlo.</div>`;
   if (r.situacion === 'valido' && !canjeado) {
     html += `<form class="canje" data-codigo="${esc(r.codigo)}">
       <label>No. de factura</label><input name="factura" required>
