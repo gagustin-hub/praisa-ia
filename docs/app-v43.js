@@ -1005,13 +1005,46 @@ function startChat(username, password) {
   }, 600);
 }
 
-form.addEventListener('submit', (event) => {
+// Revisa usuario y contraseña con n8n antes de abrir el chat.
+// Usa la acción "loadPreviousSession", que no ejecuta el asistente (no consume nada).
+async function verificarAcceso(username, password) {
+  const token = btoa(unescape(encodeURIComponent(username + ':' + password)));
+  try {
+    const r = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Basic ' + token },
+      body: JSON.stringify({ action: 'loadPreviousSession', sessionId: 'verificacion-acceso' })
+    });
+    if (r.status === 401 || r.status === 403) return 'credenciales';
+    return 'ok';
+  } catch (e) {
+    return 'red';
+  }
+}
+
+form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const username = userInput.value.trim();
   const password = passInput.value;
 
   if (!username || !password) {
     errorBox.textContent = 'Ingresa usuario y contraseña.';
+    return;
+  }
+
+  const boton = form.querySelector('button[type="submit"]');
+  errorBox.textContent = 'Verificando acceso…';
+  if (boton) boton.disabled = true;
+  const acceso = await verificarAcceso(username, password);
+  if (boton) boton.disabled = false;
+  if (acceso === 'credenciales') {
+    errorBox.textContent = 'Usuario o contraseña incorrectos. Revisa mayúsculas y que no haya espacios.';
+    passInput.value = '';
+    passInput.focus();
+    return;
+  }
+  if (acceso === 'red') {
+    errorBox.textContent = 'No se pudo conectar con el asistente. Revisa tu internet e intenta de nuevo.';
     return;
   }
 

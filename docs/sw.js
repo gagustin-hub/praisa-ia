@@ -1,8 +1,8 @@
 // Praisa IA - service worker
 // Solo guarda la "cáscara" de la página (HTML, estilos, logos) para que abra rápido.
 // Nunca guarda conversaciones ni respuestas del asistente: todo lo que va a n8n pasa directo.
-const CACHE = 'praisa-ia-v43';
-const BASE = ['./', 'index.html', 'styles-v43.css?v=43', 'app-v43.js?v=43b',
+const CACHE = 'praisa-ia-v43c';
+const BASE = ['./', 'index.html', 'styles-v43.css?v=43', 'app-v43.js?v=43c',
   'logo.svg', 'logo-dark.svg', 'logo-light.svg', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => {
